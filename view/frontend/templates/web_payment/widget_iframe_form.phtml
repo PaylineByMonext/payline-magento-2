@@ -1,0 +1,9 @@
+<html>
+    <head>
+        <script src="<?php echo $block->escapeHtml($block->getWidgetJsUrl()) ?>"></script>
+        <link href="<?php echo $block->escapeHtml($block->getWidgetCssUrl()) ?>" rel="stylesheet" />
+    </head>
+    <body>
+        <div id="PaylineWidget" data-token="<?php echo $block->escapeHtml($block->getToken()) ?>" data-template="column"/>
+    </body>
+</html>

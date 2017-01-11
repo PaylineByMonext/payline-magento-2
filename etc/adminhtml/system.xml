@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2016 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="payline" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Payline</label>
+                <attribute type="expanded">0</attribute>
+                <fieldset_css>complex</fieldset_css>
+                <frontend_model>Monext\Payline\Block\Adminhtml\System\Config\Fieldset\Group</frontend_model>
+                <comment><![CDATA[Access your <a href="%1">Monext Administrative Center</a> in order to manage your Payline account, check follow transactions or check technical issues.]]></comment>
+                <help_url>https://homologation-admin.payline.com/userManager.do?reqCode=prepareLogin</help_url>
+                <group id="payline_common" translate="label" showInDefault="1" showInWebsite="1" sortOrder="10">
+                    <label>Common settings</label>
+                    <attribute type="expanded">1</attribute>
+                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                    <field id="merchant_id" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Merchant ID</label>
+                        <!--<backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>-->
+                        <config_path>payment/payline/merchant_id</config_path>
+                    </field>
+                    <field id="access_key" translate="label" type="obscure" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Access key</label>
+                        <!--<backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>-->
+                        <config_path>payment/payline/access_key</config_path>
+                    </field>
+                    <field id="environment" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Environment</label>
+                        <source_model>Monext\Payline\Model\System\Config\Source\Environment</source_model>
+                        <config_path>payment/payline/environment</config_path>
+                    </field>
+                    <field id="debug" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Debug</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/payline/debug</config_path>
+                    </field>
+                    <field id="proxy_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Proxy Enabled</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/payline/proxy_enabled</config_path>
+                    </field>
+                    <field id="proxy_host" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Proxy Host</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/payline/proxy_host</config_path>
+                        <depends>
+                            <field id="proxy_enabled">1</field>
+                        </depends>
+                    </field>
+                    <field id="proxy_port" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Proxy Port</label>
+                        <config_path>payment/payline/proxy_port</config_path>
+                        <depends>
+                            <field id="proxy_enabled">1</field>
+                        </depends>
+                    </field>
+                    <field id="proxy_login" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Proxy Login</label>
+                        <config_path>payment/payline/proxy_login</config_path>
+                        <depends>
+                            <field id="proxy_enabled">1</field>
+                        </depends>
+                    </field>
+                    <field id="proxy_password" translate="label" type="obscure" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Proxy Password</label>
+                        <config_path>payment/payline/proxy_password</config_path>
+                        <depends>
+                            <field id="proxy_enabled">1</field>
+                        </depends>
+                    </field>
+                </group>
+                <!-- <group id="payline_contracts" translate="label" showInDefault="1" showInWebsite="0" showInStore="0" sortOrder="20">
+                    <label>Payment Contracts</label>
+                    <attribute type="expanded">0</attribute>
+                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                    <field id="payline_contracts" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Contracts</label>
+                        <config_path>payment/payline_contract/contract</config_path>
+                        <frontend_model>Monext\Payline\Block\Adminhtml\System\Config\Form\Field\ContractList</frontend_model> 
+                        <backend_model>Monext\Payline\Model\Adminhtml\Config\Backend\ContractList</backend_model>
+                    </field>
+                </group> -->
+                <group id="payline_solutions" translate="label" showInDefault="1" showInWebsite="1" sortOrder="30">
+                    <label>Payment solutions</label>
+                    <attribute type="expanded">0</attribute>
+                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>  
+                    <group id="payline_cpt" translate="label" showInDefault="1" showInWebsite="1" sortOrder="10">
+                        <label>Payline - Cash web payment</label>
+                        <comment><![CDATA[Select payments in your shopping cart. Payline will process your card payments through the Payline Gateway.]]></comment>
+                        <attribute type="expanded">0</attribute>
+                        <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                        <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Enabled</label>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                            <config_path>payment/payline_web_payment_cpt/active</config_path>
+                        </field>
+                        <field id="title" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Title</label>
+                            <config_path>payment/payline_web_payment_cpt/title</config_path>
+                        </field>
+                        <field id="payment_workflow" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Payment Workflow</label>
+                            <source_model>Monext\Payline\Model\System\Config\Source\PaymentWorkflow</source_model>
+                            <config_path>payment/payline_web_payment_cpt/payment_workflow</config_path>
+                        </field>
+                        <field id="payment_action" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Payment Action</label>
+                            <source_model>Monext\Payline\Model\System\Config\Source\PaymentAction</source_model>
+                            <config_path>payment/payline_web_payment_cpt/payment_action</config_path>
+                        </field>
+                    </group>
+                </group>
+            </group>
+        </section>
+    </system>
+</config>
