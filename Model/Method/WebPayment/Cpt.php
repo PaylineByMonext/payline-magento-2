@@ -5,6 +5,7 @@ namespace Monext\Payline\Model\Method\WebPayment;
 use Magento\Sales\Model\Order\Payment as OrderPayment;
 use Monext\Payline\Model\Method\AbstractMethod;
 use Monext\Payline\Helper\Constants as HelperConstants;
+use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
 class Cpt extends AbstractMethod
 {
@@ -25,10 +26,11 @@ class Cpt extends AbstractMethod
     public function initialize($paymentAction, $stateObject)
     {
         $payment = $this->getInfoInstance();
-        
-        if($payment instanceof OrderPayment) {
+
+        if($payment instanceof OrderPayment 
+        && $this->getConfigData('payment_workflow') == PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT) {
             $quoteId = $payment->getOrder()->getQuoteId();
-            $result = $this->paymentManagement->wrapCallPaylineApiDoWebPayment($quoteId);
+            $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPayment($quoteId);
         
             $additionalInformation = $payment->getAdditionalInformation();
             $additionalInformation['do_web_payment_response_data'] = $result;

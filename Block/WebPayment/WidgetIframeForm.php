@@ -3,7 +3,6 @@
 namespace Monext\Payline\Block\WebPayment;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Registry;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Monext\Payline\Helper\Constants as HelperConstants;
@@ -16,15 +15,9 @@ class WidgetIframeForm extends Template
      */
     protected $scopeConfig;
     
-    /**
-     * @var Registry 
-     */
-    protected $registry;
-    
     public function __construct(
         Context $context, 
         ScopeConfigInterface $scopeConfig,
-        Registry $registry,
         array $data = []
     )
     {
@@ -52,7 +45,6 @@ class WidgetIframeForm extends Template
     
     public function getToken()
     {
-        $lastResponseDoWebPaymentData = $this->registry->registry(HelperConstants::REGISTRY_KEY_LAST_RESPONSE_DO_WEB_PAYMENT_DATA);
-        return $lastResponseDoWebPaymentData['token'];
+        return $this->getRequest()->getParam('token');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Monext\Payline\Model;
 
+
 use Magento\Checkout\Api\PaymentInformationManagementInterface;
 use Magento\Framework\Registry;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -11,12 +12,14 @@ use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Api\Data\TotalsInterface;
 use Magento\Quote\Api\PaymentMethodManagementInterface;
-use Monext\Payline\Api\PaymentManagementInterface;
+use Monext\Payline\Api\PaymentManagementInterface as PaylinePaymentManagementInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
+use Monext\Payline\Model\CartManagement as PaylineCartManagement;
+use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
 use Monext\Payline\PaylineApi\Client as PaylineApiClient;
 use Monext\Payline\PaylineApi\Request\DoWebPaymentFactory as RequestDoWebPaymentFactory;
 
-class PaymentManagement implements PaymentManagementInterface
+class PaymentManagement implements PaylinePaymentManagementInterface
 {
     /**
      * @var CartRepositoryInterface
@@ -53,6 +56,16 @@ class PaymentManagement implements PaymentManagementInterface
      */
     protected $registry;
     
+    /**
+     * @var PaylineCartManagement 
+     */
+    protected $paylineCartManagement;
+    
+    /**
+     * @var OrderIncrementIdTokenFactory 
+     */
+    protected $orderIncrementIdTokenFactory;
+    
     public function __construct(
         CartRepositoryInterface $cartRepository, 
         CartTotalRepositoryInterface $cartTotalRepository,
@@ -60,7 +73,9 @@ class PaymentManagement implements PaymentManagementInterface
         PaymentMethodManagementInterface $paymentMethodManagement,
         RequestDoWebPaymentFactory $requestDoWebPaymentFactory,
         PaylineApiClient $paylineApiClient,
-        Registry $registry
+        Registry $registry,
+        PaylineCartManagement $paylineCartManagement,
+        OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory
     )
     {
         $this->cartRepository = $cartRepository;
@@ -70,17 +85,24 @@ class PaymentManagement implements PaymentManagementInterface
         $this->requestDoWebPaymentFactory = $requestDoWebPaymentFactory;
         $this->paylineApiClient = $paylineApiClient;
         $this->registry = $registry;
+        $this->paylineCartManagement = $paylineCartManagement;
+        $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
     }
     
-    public function savePaymentInformationAndCallPaylineApiDoWebPayment(
+    public function savePaymentInformationFacade(
         $cartId,
         PaymentInterface $paymentMethod,
         AddressInterface $billingAddress = null
     )
     {
         $this->paymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
-        $this->wrapCallPaylineApiDoWebPayment($cartId);
-        return $this;
+        $this->paylineCartManagement->reserveCartOrderId($cartId);
+        $result = $this->wrapCallPaylineApiDoWebPayment($cartId);
+        $this->orderIncrementIdTokenFactory->create()->associateTokenToOrderIncrementId(
+            $this->cartRepository->getActive($cartId)->getReservedOrderId(), 
+            $result['token']
+        );
+        return $result;
     }
     
     public function wrapCallPaylineApiDoWebPayment($cartId)

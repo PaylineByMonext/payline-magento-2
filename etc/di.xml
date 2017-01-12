@@ -7,12 +7,13 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Monext\Payline\Api\PaymentManagementInterface" type="Monext\Payline\Model\PaymentManagement" />
+    <preference for="Monext\Payline\Api\GuestPaymentManagementInterface" type="Monext\Payline\Model\GuestPaymentManagement" />
     <type name="Monext\Payline\PaylineApi\Client">
         <arguments>
             <argument name="logger" xsi:type="object">paylineLogger</argument>
         </arguments>
     </type>
-    <virtualType name="paylineLogger" type="Magento\Framework\Logger\Monolog">
+    <virtualType name="paylineLogger" type="Monolog\Logger">
         <arguments>
             <argument name="name" xsi:type="string">payline</argument>
             <argument name="handlers"  xsi:type="array">

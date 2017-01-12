@@ -115,7 +115,9 @@ class Client
                 'proxy_password' => null,
                 'environment' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_ENVIRONMENT),
             );
-
+            
+            $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
+            
             $this->paylineSDK = $this->paylineSDKFactory->create($paylineSdkParams);
         }
         

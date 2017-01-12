@@ -24,7 +24,8 @@
                         <!--<backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>-->
                         <config_path>payment/payline/merchant_id</config_path>
                     </field>
-                    <field id="access_key" translate="label" type="obscure" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="access_key" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                        <!--type="obscure"-->
                         <label>Access key</label>
                         <!--<backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>-->
                         <config_path>payment/payline/access_key</config_path>

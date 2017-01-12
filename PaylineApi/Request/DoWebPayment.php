@@ -3,10 +3,12 @@
 namespace Monext\Payline\PaylineApi\Request;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\UrlInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Api\Data\TotalsInterface;
 use Monext\Payline\Helper\Currency as HelperCurrency;
+use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 use Monext\Payline\PaylineApi\Request;
 
 class DoWebPayment extends Request
@@ -36,13 +38,20 @@ class DoWebPayment extends Request
      */
     protected $helperCurrency;
     
+    /**
+     * @var UrlInterface
+     */
+    protected $urlBuilder;
+    
     public function __construct(
         ScopeConfigInterface $scopeConfig,
-        HelperCurrency $helperCurrency
+        HelperCurrency $helperCurrency,
+        UrlInterface $urlBuilder
     )
     {
         $this->scopeConfig = $scopeConfig;
         $this->helperCurrency = $helperCurrency;
+        $this->urlBuilder = $urlBuilder;
     }
     
     public function setCart(CartInterface $cart)
@@ -69,6 +78,7 @@ class DoWebPayment extends Request
         
         $paymentMethod = $this->payment->getMethod();
         $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
+        $paymentWorkflow = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_workflow');
         
         // PAYMENT
         $data['payment']['amount'] = round($this->totals->getGrandTotal() * 100, 0);
@@ -84,10 +94,32 @@ class DoWebPayment extends Request
         $data['order']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['order']['date'] = $this->formatDateTime($this->cart->getCreatedAt());
         
-        $data['returnURL'] = 'http://127.0.0.1/magento2_payline/test3.html';
-        $data['cancelURL'] = 'http://127.0.0.1/magento2_payline/test3.html';
-        $data['notificationURL'] = 'http://127.0.0.1/magento2_payline/test3.html';
+        if($paymentWorkflow == PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT) {
+            $this->_prepareUrlsForPaymentWorkflowRedirect($data);
+        } elseif($paymentWorkflow == PaylineApiConstants::PAYMENT_WORKFLOW_WIDGET) {
+            $this->_prepareUrlsForPaymentWorkflowWidget($data);
+        }
         
         return $data;
+    }
+    
+    protected function _prepareUrlsForPaymentWorkflowRedirect(&$data)
+    {
+        $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
+        $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/cancelfrompaymentgateway');
+        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notify');
+    }
+    
+    protected function _prepareUrlsForPaymentWorkflowWidget(&$data)
+    {
+        if($this->cart->getCustomer()->getId()) {
+            $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
+            $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/cancelfromwidget');
+        } else {
+            $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/guestreturnfromwidget');
+            $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/guestcancelfromwidget');
+        }
+        
+        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notify');
     }
 }

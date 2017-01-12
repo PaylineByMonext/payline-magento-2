@@ -7,12 +7,7 @@ define(
         'use strict';
         
         return Component.extend({
-            /**
-             * @returns {String}
-             */
-            getCode: function () {
-                return 'payline_web_payment_cpt';
-            },
+            
             
             /**
              * @returns {String}
