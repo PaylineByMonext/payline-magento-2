@@ -5,6 +5,7 @@ namespace Monext\Payline\Model;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteFactory;
+use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
 
 class CartManagement
 {
@@ -23,15 +24,22 @@ class CartManagement
      */
     protected $quoteFactory;
     
+    /**
+     * @var OrderIncrementIdTokenFactory
+     */
+    protected $orderIncrementIdTokenFactory;
+    
     public function __construct(
         CartRepositoryInterface $cartRepository,
         CartManagementInterface $cartManagement,
+        OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
         QuoteFactory $quoteFactory
     )
     {
         $this->cartRepository = $cartRepository;
         $this->cartManagement = $cartManagement;
         $this->quoteFactory = $quoteFactory;
+        $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
     }
     
     public function reserveCartOrderId($cartId, $forceReserve = false)
@@ -50,10 +58,11 @@ class CartManagement
         return $this;
     }
     
-    public function placeOrderFromCartReservedOrderId($reservedOrderId)
+    public function placeOrderByToken($token)
     {
+        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
         // TODO Use QuoteRepository instead of quote::load
-        $quote = $this->quoteFactory->create()->load($reservedOrderId, 'reserved_order_id');
+        $quote = $this->quoteFactory->create()->load($orderIncrementId, 'reserved_order_id');
         $this->cartManagement->placeOrder($quote->getId());
         return $this;
     }

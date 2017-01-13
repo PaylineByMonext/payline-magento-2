@@ -13,7 +13,6 @@ define(
         
         return Component.extend({
             redirectAfterPlaceOrder: false,
-            isSavePaymentInformationFacadeActionAllowed: ko.observable(quote.billingAddress() != null),
             
             initialize: function () {
                 this._super();
@@ -22,11 +21,7 @@ define(
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
                     
                     quote.billingAddress.subscribe(function (address) {
-                        this.isSavePaymentInformationFacadeActionAllowed(address !== null);
-                    }, this);
-                    
-                    this.isSavePaymentInformationFacadeActionAllowed.subscribe(function (flag) {
-                        if(flag) {
+                        if(address !== null) {
                             this.savePaymentInformationFacade();
                         }
                     }, this);

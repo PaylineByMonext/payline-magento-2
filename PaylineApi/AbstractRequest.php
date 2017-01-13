@@ -2,7 +2,7 @@
 
 namespace Monext\Payline\PaylineApi;
 
-abstract class Request
+abstract class AbstractRequest
 {
     /**
      * @return array

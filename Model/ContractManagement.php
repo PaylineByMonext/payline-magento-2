@@ -71,7 +71,7 @@ class ContractManagement
             }
                         
             foreach($response->getContractsData() as $contractData) {
-                // TODO Create a crontact repository class
+                // TODO Create a contract repository class
                 $contract = $this->contractFactory->create();
                 $contract->setData($contractData);
                 $contract->save();

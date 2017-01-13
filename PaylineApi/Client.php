@@ -5,11 +5,14 @@ namespace Monext\Payline\PaylineApi;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\PaylineApi\Request\DoWebPayment as RequestDoWebPayment;
+use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantSettings;
+use Monext\Payline\PaylineApi\Request\GetWebPaymentDetails as RequestGetWebPaymentDetails;
 use Monext\Payline\PaylineApi\Response\DoWebPayment as ResponseDoWebPayment;
 use Monext\Payline\PaylineApi\Response\DoWebPaymentFactory as ResponseDoWebPaymentFactory;
-use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantSettings;
 use Monext\Payline\PaylineApi\Response\GetMerchantSettings as ResponseGetMerchantSettings;
 use Monext\Payline\PaylineApi\Response\GetMerchantSettingsFactory as ResponseGetMerchantSettingsFactory;
+use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetails;
+use Monext\Payline\PaylineApi\Response\GetWebPaymentDetailsFactory as ResponseGetWebPaymentDetailsFactory;
 use Monolog\Logger as LoggerConstants;
 use Payline\PaylineSDK;
 use Payline\PaylineSDKFactory;
@@ -43,6 +46,11 @@ class Client
     protected $responseGetMerchantSettingsFactory;
     
     /**
+     * @var ResponseGetWebPaymentDetailsFactory 
+     */
+    protected $responseGetWebPaymentDetailsFactory;
+    
+    /**
      * @var Logger
      */
     protected $logger;
@@ -52,6 +60,7 @@ class Client
         ScopeConfigInterface $scopeConfig,
         ResponseDoWebPaymentFactory $responseDoWebPaymentFactory,
         ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory,
+        ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory,
         Logger $logger
     )
     {
@@ -59,6 +68,7 @@ class Client
         $this->scopeConfig = $scopeConfig;
         $this->responseDoWebPaymentFactory = $responseDoWebPaymentFactory;
         $this->responseGetMerchantSettingsFactory = $responseGetMerchantSettingsFactory;
+        $this->responseGetWebPaymentDetailsFactory = $responseGetWebPaymentDetailsFactory;
         $this->logger = $logger;
         $this->initPaylineSDK();
     }
@@ -93,6 +103,24 @@ class Client
         $response = $this->responseGetMerchantSettingsFactory->create();
         $response->fromData(
             $this->paylineSDK->getMerchantSettings($request->getData())
+        );
+        
+        if(!$response->isSuccess()) {
+            throw new \Exception($response->getShortErrorMessage());
+        }
+        
+        return $response;
+    }
+    
+    /**
+     * @param RequestGetWebPaymentDetails $request
+     * @return ResponseGetWebPaymentDetails
+     */
+    public function callGetWebPaymentDetails(RequestGetWebPaymentDetails $request)
+    {
+        $response = $this->responseGetWebPaymentDetailsFactory->create();
+        $response->fromData(
+            $this->paylineSDK->getWebPaymentDetails($request->getData())
         );
         
         if(!$response->isSuccess()) {

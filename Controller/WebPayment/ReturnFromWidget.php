@@ -6,20 +6,14 @@ use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
 use Magento\Framework\View\Element\TemplateFactory;
-use Monext\Payline\Model\CartManagement;
-use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
+use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 
 class ReturnFromWidget extends Action
 {
     /**
-     * @var OrderIncrementIdTokenFactory
+     * @var PaylineCartManagement
      */
-    protected $orderIncrementIdTokenFactory;
-    
-    /**
-     * @var CartManagement
-     */
-    protected $cartManagement;
+    protected $paylineCartManagement;
     
     /**
      * @var ResultRawFactory 
@@ -33,25 +27,21 @@ class ReturnFromWidget extends Action
     
     public function __construct(
         Context $context,
-        CartManagement $cartManagement,
-        OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
+        PaylineCartManagement $paylineCartManagement,
         ResultRawFactory $resultRawFactory,
         TemplateFactory $templateFactory
     )
     {
         parent::__construct($context);
-        $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
         $this->resultRawFactory = $resultRawFactory;
-        $this->cartManagement = $cartManagement;
+        $this->paylineCartManagement = $paylineCartManagement;
         $this->templateFactory = $templateFactory;
     }
     
     public function execute() 
     {
         // TODO CatchException
-        $this->cartManagement->placeOrderFromCartReservedOrderId(
-            $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdFromToken($this->getRequest()->getParam('paylinetoken'))
-        );
+        $this->paylineCartManagement->placeOrderByToken($this->getRequest()->getParam('paylinetoken'));
         
         $resultRaw = $this->resultRawFactory->create();
         

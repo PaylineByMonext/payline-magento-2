@@ -6,20 +6,14 @@ use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
 use Magento\Framework\View\Element\TemplateFactory;
-use Monext\Payline\Model\GuestCartManagement;
-use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
+use Monext\Payline\Model\GuestCartManagement as PaylineGuestCartManagement;
 
 class GuestReturnFromWidget extends Action
 {
     /**
-     * @var OrderIncrementIdTokenFactory
+     * @var PaylineGuestCartManagement
      */
-    protected $orderIncrementIdTokenFactory;
-    
-    /**
-     * @var GuestCartManagement
-     */
-    protected $guestCartManagement;
+    protected $paylineGuestCartManagement;
     
     /**
      * @var ResultRawFactory 
@@ -33,25 +27,21 @@ class GuestReturnFromWidget extends Action
     
     public function __construct(
         Context $context,
-        GuestCartManagement $guestCartManagement,
-        OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
+        PaylineGuestCartManagement $paylineGuestCartManagement,
         ResultRawFactory $resultRawFactory,
         TemplateFactory $templateFactory
     )
     {
         parent::__construct($context);
-        $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
         $this->resultRawFactory = $resultRawFactory;
-        $this->guestCartManagement = $guestCartManagement;
+        $this->paylineGuestCartManagement = $paylineGuestCartManagement;
         $this->templateFactory = $templateFactory;
     }
     
     public function execute() 
     {
         // TODO CatchException
-        $this->guestCartManagement->placeOrderFromCartReservedOrderId(
-            $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdFromToken($this->getRequest()->getParam('paylinetoken'))
-        );
+        $this->paylineGuestCartManagement->placeOrderByToken($this->getRequest()->getParam('paylinetoken'));
         
         $resultRaw = $this->resultRawFactory->create();
         

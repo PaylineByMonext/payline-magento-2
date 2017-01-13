@@ -31,7 +31,7 @@ class OrderIncrementIdToken extends AbstractModel
     }
     
     // TODO Put this in a dedicated repository
-    public function getOrderIncrementIdFromToken($token)
+    public function getOrderIncrementIdByToken($token)
     {
         $itemCandidate = $this->getCollection()
             ->addFieldToFilter('token', $token)

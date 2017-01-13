@@ -13,4 +13,9 @@ class Constants
     const CONFIG_PATH_PAYMENT_PAYLINE_ENVIRONMENT = 'payment/payline/environment';
     const CONFIG_PATH_PAYMENT_PAYLINE_MERCHANT_ID = 'payment/payline/merchant_id';
     const CONFIG_PATH_PAYMENT_PAYLINE_ACCESS_KEY = 'payment/payline/access_key';
+    
+    const ORDER_STATUS_PAYLINE_PENDING = 'payline_pending';
+    const ORDER_STATUS_PAYLINE_WAITING_CAPTURE = 'payline_waiting_capture';
+    const ORDER_STATUS_PAYLINE_CAPTURED = 'payline_captured';
+    const ORDER_STATUS_PAYLINE_CANCELED = 'payline_canceled';
 }

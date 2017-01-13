@@ -2,9 +2,9 @@
 
 namespace Monext\Payline\PaylineApi\Request;
 
-use Monext\Payline\PaylineApi\Request;
+use Monext\Payline\PaylineApi\AbstractRequest;
 
-class GetMerchantSettings extends Request
+class GetMerchantSettings extends AbstractRequest
 {
     public function getData()
     {

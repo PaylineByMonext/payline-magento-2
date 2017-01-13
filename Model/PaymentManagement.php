@@ -12,12 +12,15 @@ use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Api\Data\TotalsInterface;
 use Magento\Quote\Api\PaymentMethodManagementInterface;
+use Magento\Sales\Model\OrderFactory as OrderFactory;
 use Monext\Payline\Api\PaymentManagementInterface as PaylinePaymentManagementInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
 use Monext\Payline\PaylineApi\Client as PaylineApiClient;
+use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 use Monext\Payline\PaylineApi\Request\DoWebPaymentFactory as RequestDoWebPaymentFactory;
+use Monext\Payline\PaylineApi\Request\GetWebPaymentDetailsFactory as RequestGetWebPaymentDetailsFactory;
 
 class PaymentManagement implements PaylinePaymentManagementInterface
 {
@@ -47,6 +50,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected $requestDoWebPaymentFactory;
     
     /**
+     * @var RequestGetWebPaymentDetailsFactory
+     */
+    protected $requestGetWebPaymentDetailsFactory;
+    
+    /**
      * @var PaylineApiClient 
      */
     protected $paylineApiClient;
@@ -66,6 +74,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      */
     protected $orderIncrementIdTokenFactory;
     
+    /**
+     * @var OrderFactory 
+     */
+    protected $orderFactory;
+    
     public function __construct(
         CartRepositoryInterface $cartRepository, 
         CartTotalRepositoryInterface $cartTotalRepository,
@@ -75,7 +88,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         PaylineApiClient $paylineApiClient,
         Registry $registry,
         PaylineCartManagement $paylineCartManagement,
-        OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory
+        OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
+        RequestGetWebPaymentDetailsFactory $requestGetWebPaymentDetailsFactory,
+        OrderFactory $orderFactory
     )
     {
         $this->cartRepository = $cartRepository;
@@ -87,6 +102,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->registry = $registry;
         $this->paylineCartManagement = $paylineCartManagement;
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
+        $this->requestGetWebPaymentDetailsFactory = $requestGetWebPaymentDetailsFactory;
+        $this->orderFactory = $orderFactory;
     }
     
     public function savePaymentInformationFacade(
@@ -130,11 +147,54 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         
         $result = array(
             'token' => $response->getToken(), 
-            'redirect_url' => $response->getRedirectUrl()
+            'redirect_url' => $response->getRedirectUrl(),
         );
         
         $this->registry->register(HelperConstants::REGISTRY_KEY_LAST_RESPONSE_DO_WEB_PAYMENT_DATA, $result);
         
         return $result;
+    }
+    
+    public function callPaylineApiGetWebPaymentDetails(
+        $token
+    )
+    {
+        $request = $this->requestGetWebPaymentDetailsFactory->create();
+        $request
+            ->setToken($token);
+        
+        $response = $this->paylineApiClient->callGetWebPaymentDetails($request);
+        
+        $result = array(
+            'transaction' => $response->getTransaction(),
+            'payment' => $response->getPayment(),
+        );
+        
+        return $result;
+    }
+    
+    public function handlePaymentGatewayNotifyByToken($token)
+    {
+        try {
+            $result = $this->callPaylineApiGetWebPaymentDetails($token);
+        } catch (\Exception $e) {
+            // TODO
+        }
+        
+        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
+        $order = $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
+        $orderPayment = $order->getPayment();
+        $orderPayment->setTransactionId($result['transaction']['id']);
+        
+        // TODO Add controls to avoid double authorization/capture
+        if($result['payment']['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION) {
+            $orderPayment->authorize(false, $order->getGrandTotal());
+            $order->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_WAITING_CAPTURE);
+        } elseif($result['payment']['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION_CAPTURE) {
+            $orderPayment->capture();
+            $order->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED);
+        }
+        
+        $order->save();
     }
 }

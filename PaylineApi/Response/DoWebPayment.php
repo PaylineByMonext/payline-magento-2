@@ -2,9 +2,9 @@
 
 namespace Monext\Payline\PaylineApi\Response;
 
-use Monext\Payline\PaylineApi\Response;
+use Monext\Payline\PaylineApi\AbstractResponse;
 
-class DoWebPayment extends Response
+class DoWebPayment extends AbstractResponse
 {
     protected $token;
     

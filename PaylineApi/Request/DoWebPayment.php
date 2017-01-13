@@ -8,10 +8,10 @@ use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Api\Data\TotalsInterface;
 use Monext\Payline\Helper\Currency as HelperCurrency;
+use Monext\Payline\PaylineApi\AbstractRequest;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
-use Monext\Payline\PaylineApi\Request;
 
-class DoWebPayment extends Request
+class DoWebPayment extends AbstractRequest
 {
     /**
      * @var CartInterface
@@ -106,7 +106,7 @@ class DoWebPayment extends Request
     {
         $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
         $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/cancelfrompaymentgateway');
-        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notify');
+        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
     }
     
     protected function _prepareUrlsForPaymentWorkflowWidget(&$data)
@@ -119,6 +119,6 @@ class DoWebPayment extends Request
             $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/guestcancelfromwidget');
         }
         
-        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notify');
+        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
     }
 }

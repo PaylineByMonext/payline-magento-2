@@ -4,7 +4,7 @@ namespace Monext\Payline\PaylineApi;
 
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
-abstract class Response
+abstract class AbstractResponse
 {
     protected $data;
     
