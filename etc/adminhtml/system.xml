@@ -75,24 +75,13 @@
                         </depends>
                     </field>
                 </group>
-                <!-- <group id="payline_contracts" translate="label" showInDefault="1" showInWebsite="0" showInStore="0" sortOrder="20">
-                    <label>Payment Contracts</label>
-                    <attribute type="expanded">0</attribute>
-                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-                    <field id="payline_contracts" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
-                        <label>Contracts</label>
-                        <config_path>payment/payline_contract/contract</config_path>
-                        <frontend_model>Monext\Payline\Block\Adminhtml\System\Config\Form\Field\ContractList</frontend_model> 
-                        <backend_model>Monext\Payline\Model\Adminhtml\Config\Backend\ContractList</backend_model>
-                    </field>
-                </group> -->
                 <group id="payline_solutions" translate="label" showInDefault="1" showInWebsite="1" sortOrder="30">
                     <label>Payment solutions</label>
                     <attribute type="expanded">0</attribute>
                     <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>  
                     <group id="payline_cpt" translate="label" showInDefault="1" showInWebsite="1" sortOrder="10">
-                        <label>Payline - Cash web payment</label>
-                        <comment><![CDATA[Select payments in your shopping cart. Payline will process your card payments through the Payline Gateway.]]></comment>
+                        <label>Payline - Web Payment Cpt</label>
+                        <comment><![CDATA[Select payments in your shopping cart. Payline will process your card payments through the Payline Gateway or the widget.]]></comment>
                         <attribute type="expanded">0</attribute>
                         <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
                         <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
@@ -113,6 +102,12 @@
                             <label>Payment Action</label>
                             <source_model>Monext\Payline\Model\System\Config\Source\PaymentAction</source_model>
                             <config_path>payment/payline_web_payment_cpt/payment_action</config_path>
+                        </field>
+                        <field id="contract" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Contract</label>
+                            <frontend_model>Monext\Payline\Block\Adminhtml\System\Config\Form\Field\Contract</frontend_model>
+                            <source_model>Monext\Payline\Model\System\Config\Source\Contract</source_model>
+                            <config_path>payment/payline_web_payment_cpt/contract</config_path>
                         </field>
                     </group>
                 </group>

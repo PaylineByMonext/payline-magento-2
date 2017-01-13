@@ -85,8 +85,7 @@ class DoWebPayment extends Request
         $data['payment']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['payment']['action'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_action');
         $data['payment']['mode'] = $paymentAdditionalInformation['payment_mode'];
-        // TODO
-        $data['payment']['contractNumber'] = '1234567';
+        $data['payment']['contractNumber'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/contract');
         
         // ORDER
         $data['order']['ref'] = $this->cart->getReservedOrderId();

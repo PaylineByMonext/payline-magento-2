@@ -6,5 +6,35 @@ use Monext\Payline\PaylineApi\Response;
 
 class GetMerchantSettings extends Response
 {
-    
+    public function getContractsData()
+    {
+        $result = array();
+        
+        foreach($this->data['listPointOfSell']['pointOfSell'] as $pointOfSell) {
+            if (is_object($pointOfSell)) {
+                $contractsList    = $pointOfSell->contracts->contract;
+                $pointOfSellLabel = $pointOfSell->label;
+            } else { //if only one point of sell, we parse an array
+                if(!empty($pointOfSell['contracts'])) {
+                    $contractsList = !empty($pointOfSell['contracts']['contract']) ? $pointOfSell['contracts']['contract'] : [];
+                }
+                $pointOfSellLabel = (!empty($pointOfSell['label'])) ? $pointOfSell['label']: '';
+            }
+
+            if (!is_array($contractsList)) {
+                $contractsList = [$contractsList];
+            }
+
+            foreach ($contractsList as $contract) {
+                $result[] = [
+                    'label' => $pointOfSellLabel . ' : ' . $contract['label'],
+                    'number' => $contract['contractNumber'],
+                    'card_type' => $contract['cardType'],
+                    'currency' => $contract['currency']
+                ];
+            }
+        }
+        
+        return $result;
+    }
 }

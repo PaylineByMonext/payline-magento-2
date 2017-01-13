@@ -79,6 +79,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
             $setup->getConnection()->createTable($table);
         }
         
+        if (version_compare($context->getVersion(), '1.0.2') < 0) {
+            $table = $setup->getConnection()->addColumn(
+                $setup->getTable('payline_contract'), 
+                'label', 
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Label',
+                    'nullable' => false,
+                ]
+            );
+        }
+        
         $setup->endSetup();
     }
 }

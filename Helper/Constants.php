@@ -4,7 +4,9 @@ namespace Monext\Payline\Helper;
 
 class Constants
 {
-    const REGISTRY_KEY_LAST_RESPONSE_DO_WEB_PAYMENT_DATA = 'last_response_do_web_payment_data';
+    const CACHE_KEY_MERCHANT_CONTRACT_IMPORT_FLAG = 'payline_merchant_contract_import_flag';
+    
+    const REGISTRY_KEY_LAST_RESPONSE_DO_WEB_PAYMENT_DATA = 'payline_last_response_do_web_payment_data';
     
     const WEB_PAYMENT_CPT = 'payline_web_payment_cpt';
     

@@ -3,17 +3,28 @@
 namespace Monext\Payline\Model\System\Config\Source;
 
 use Magento\Framework\Option\ArrayInterface;
+use Monext\Payline\Model\ContractManagement;
 use Monext\Payline\Model\ResourceModel\Contract\CollectionFactory as ContractCollectionFactory;
 
-class Environment implements ArrayInterface
+class Contract implements ArrayInterface
 {
+    /**
+     * @var ContractCollectionFactory 
+     */
     protected $contractCollectionFactory;
     
+    /**
+     * @var ContractManagement
+     */
+    protected $contractManagement;
+    
     public function __construct(
-        ContractCollectionFactory $contractCollectionFactory
+        ContractCollectionFactory $contractCollectionFactory,
+        ContractManagement $contractManagement
     )
     {
         $this->contractCollectionFactory = $contractCollectionFactory;
+        $this->contractManagement = $contractManagement;
     }
     
     /**
@@ -21,7 +32,10 @@ class Environment implements ArrayInterface
      */
     public function toOptionArray()
     {
+        $this->contractManagement->importContracts();
+        
         $result = array();
+        // TODO Use a contract repository for this
         $contractCollection = $this->contractCollectionFactory->create();
 
         foreach($contractCollection as $contract) {
@@ -30,7 +44,14 @@ class Environment implements ArrayInterface
                 'label' => $contract->getLabel(),
             ];
         }
-
+        
+        if(empty($result)) {
+            $result[] = [
+                'value' => '',
+                'label' => __('No contracts available.'),
+            ];
+        }
+        
         return $result;
     }
 }
