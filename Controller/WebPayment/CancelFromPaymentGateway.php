@@ -36,7 +36,7 @@ class CancelFromPaymentGateway extends Action
         $this->paylinePaymentManagement->handlePaymentGatewayCancelByToken($this->getToken());
         
         $resultRedirect = $this->resultRedirectFactory->create();
-        $resultRedirect->setUrl('checkout');
+        $resultRedirect->setPath('checkout');
         return $resultRedirect;
     }
 }
