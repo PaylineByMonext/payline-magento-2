@@ -8,6 +8,7 @@ use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Api\Data\TotalsInterface;
 use Monext\Payline\Helper\Currency as HelperCurrency;
+use Monext\Payline\Model\ContractManagement;
 use Monext\Payline\PaylineApi\AbstractRequest;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
@@ -43,15 +44,22 @@ class DoWebPayment extends AbstractRequest
      */
     protected $urlBuilder;
     
+    /**
+     * @var ContractManagement
+     */
+    protected $contractManagement;
+    
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         HelperCurrency $helperCurrency,
-        UrlInterface $urlBuilder
+        UrlInterface $urlBuilder,
+        ContractManagement $contractManagement
     )
     {
         $this->scopeConfig = $scopeConfig;
         $this->helperCurrency = $helperCurrency;
         $this->urlBuilder = $urlBuilder;
+        $this->contractManagement = $contractManagement;
     }
     
     public function setCart(CartInterface $cart)
@@ -85,7 +93,6 @@ class DoWebPayment extends AbstractRequest
         $data['payment']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['payment']['action'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_action');
         $data['payment']['mode'] = $paymentAdditionalInformation['payment_mode'];
-        $data['payment']['contractNumber'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/contract');
         
         // ORDER
         $data['order']['ref'] = $this->cart->getReservedOrderId();
@@ -94,22 +101,27 @@ class DoWebPayment extends AbstractRequest
         $data['order']['date'] = $this->formatDateTime($this->cart->getCreatedAt());
         
         if($paymentWorkflow == PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT) {
-            $this->_prepareUrlsForPaymentWorkflowRedirect($data);
+            $data['payment']['contractNumber'] = $paymentAdditionalInformation['contract_number'];
+            $data['contracts'] = [$paymentAdditionalInformation['contract_number']];
+            $this->prepareUrlsForPaymentWorkflowRedirect($data);
         } elseif($paymentWorkflow == PaylineApiConstants::PAYMENT_WORKFLOW_WIDGET) {
-            $this->_prepareUrlsForPaymentWorkflowWidget($data);
+            $usedContracts = $this->contractManagement->getUsedContracts();
+            $data['payment']['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
+            $data['contracts'] = $usedContracts->getColumnValues('number');
+            $this->prepareUrlsForPaymentWorkflowWidget($data);
         }
         
         return $data;
     }
     
-    protected function _prepareUrlsForPaymentWorkflowRedirect(&$data)
+    protected function prepareUrlsForPaymentWorkflowRedirect(&$data)
     {
         $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
         $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/cancelfrompaymentgateway');
         $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
     }
     
-    protected function _prepareUrlsForPaymentWorkflowWidget(&$data)
+    protected function prepareUrlsForPaymentWorkflowWidget(&$data)
     {
         if($this->cart->getCustomer()->getId()) {
             $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');

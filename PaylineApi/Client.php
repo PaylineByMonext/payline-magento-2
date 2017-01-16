@@ -5,9 +5,12 @@ namespace Monext\Payline\PaylineApi;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
+use Monext\Payline\PaylineApi\Request\DoCapture as RequestDoCapture;
 use Monext\Payline\PaylineApi\Request\DoWebPayment as RequestDoWebPayment;
 use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantSettings;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetails as RequestGetWebPaymentDetails;
+use Monext\Payline\PaylineApi\Response\DoCapture as ResponseDoCapture;
+use Monext\Payline\PaylineApi\Response\DoCaptureFactory as ResponseDoCaptureFactory;
 use Monext\Payline\PaylineApi\Response\DoWebPayment as ResponseDoWebPayment;
 use Monext\Payline\PaylineApi\Response\DoWebPaymentFactory as ResponseDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Response\GetMerchantSettings as ResponseGetMerchantSettings;
@@ -42,6 +45,11 @@ class Client
     protected $responseDoWebPaymentFactory;
     
     /**
+     * @var ResponseDoCaptureFactory
+     */
+    protected $responseDoCaptureFactory;
+    
+    /**
      * @var ResponseGetMerchantSettingsFactory 
      */
     protected $responseGetMerchantSettingsFactory;
@@ -65,6 +73,7 @@ class Client
         PaylineSDKFactory $paylineSDKFactory,
         ScopeConfigInterface $scopeConfig,
         ResponseDoWebPaymentFactory $responseDoWebPaymentFactory,
+        ResponseDoCaptureFactory $responseDoCaptureFactory,
         ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory,
         ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory,
         Logger $logger,
@@ -74,6 +83,7 @@ class Client
         $this->paylineSDKFactory = $paylineSDKFactory;
         $this->scopeConfig = $scopeConfig;
         $this->responseDoWebPaymentFactory = $responseDoWebPaymentFactory;
+        $this->responseDoCaptureFactory = $responseDoCaptureFactory;
         $this->responseGetMerchantSettingsFactory = $responseGetMerchantSettingsFactory;
         $this->responseGetWebPaymentDetailsFactory = $responseGetWebPaymentDetailsFactory;
         $this->logger = $logger;
@@ -90,6 +100,25 @@ class Client
         $response = $this->responseDoWebPaymentFactory->create();
         $response->fromData(
             $this->paylineSDK->doWebPayment($request->getData())
+        );
+
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_DEBUG)) {
+            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
+            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
+        }
+
+        return $response;
+    }
+    
+    /**
+     * @param RequestDoCapture $request
+     * @return ResponseDoCapture
+     */
+    public function callDoCapture(RequestDoCapture $request)
+    {
+        $response = $this->responseDoCaptureFactory->create();
+        $response->fromData(
+            $this->paylineSDK->doCapture($request->getData())
         );
 
         if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_DEBUG)) {

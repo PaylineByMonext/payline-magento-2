@@ -27,10 +27,11 @@ class GetMerchantSettings extends AbstractResponse
 
             foreach ($contractsList as $contract) {
                 $result[] = [
-                    'label' => $pointOfSellLabel . ' : ' . $contract['label'],
+                    'label' => $contract['label'],
                     'number' => $contract['contractNumber'],
                     'card_type' => $contract['cardType'],
-                    'currency' => $contract['currency']
+                    'currency' => $contract['currency'],
+                    'point_of_sell_label' => $pointOfSellLabel,
                 ];
             }
         }

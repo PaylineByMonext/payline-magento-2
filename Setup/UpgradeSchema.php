@@ -92,6 +92,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
         
+        if (version_compare($context->getVersion(), '1.0.6') < 0) {
+            $table = $setup->getConnection()->addColumn(
+                $setup->getTable('payline_contract'), 
+                'point_of_sell_label', 
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Point Of Sell Label',
+                    'nullable' => false,
+                ]
+            );
+        }
+        
         $setup->endSetup();
     }
 }

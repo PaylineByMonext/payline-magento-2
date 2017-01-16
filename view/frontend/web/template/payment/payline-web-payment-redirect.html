@@ -7,17 +7,16 @@
         <label data-bind="attr: {'for': getCode()}" class="label"><span data-bind="text: getTitle()"></span></label>
     </div>
     <div class="payment-method-content">
-        <div>
-            <img data-bind="attr: {'src': getCcLogoSrc()}"/>
-        </div>
+        <!-- ko foreach: getRegion('messages') -->
+        <!-- ko template: getTemplate() --><!-- /ko -->
+        <!--/ko-->
         
         <div>
             <span data-bind="i18n: 'You will be redirected on payline payment gateway after place order.'"></span>
         </div>
         
-        <!-- ko foreach: getRegion('messages') -->
-        <!-- ko template: getTemplate() --><!-- /ko -->
-        <!--/ko-->
+        <!-- ko template: 'Monext_Payline/payment/payline_contracts' --><!-- /ko -->
+
         <div class="payment-method-billing-address">
             <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
             <!-- ko template: getTemplate() --><!-- /ko -->

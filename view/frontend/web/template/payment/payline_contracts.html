@@ -1,0 +1,10 @@
+<!-- ko foreach: getContracts() -->
+    <div>
+        <input type="radio"
+            name="payment[payline_contract]"
+            class="radio"
+            data-bind="attr: {'id': id}, value: id, checked: $parent.isContractChecked"/>
+        <label data-bind="attr: {'for': id}" class="label"><span data-bind="text: label"></span></label>
+        <img data-bind="attr: {'src': logo}"/>
+    </div>
+<!-- /ko -->

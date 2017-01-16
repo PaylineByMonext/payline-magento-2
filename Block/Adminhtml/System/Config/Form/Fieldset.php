@@ -1,10 +1,10 @@
 <?php
 
-namespace Monext\Payline\Block\Adminhtml\System\Config\Fieldset;
+namespace Monext\Payline\Block\Adminhtml\System\Config\Form;
 
-use Magento\Config\Block\System\Config\Form\Fieldset;
+use Magento\Config\Block\System\Config\Form\Fieldset as BaseFieldset;
 
-class Group extends Fieldset
+class Fieldset extends BaseFieldset
 {
     /**
      * Return header comment part of html for fieldset

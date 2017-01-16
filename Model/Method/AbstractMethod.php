@@ -13,7 +13,9 @@ use Magento\Framework\Registry;
 use Magento\Payment\Helper\Data as PaymentHelperData;
 use Magento\Payment\Model\Method\AbstractMethod as BaseAbstractMethod;
 use Magento\Payment\Model\Method\Logger;
+use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
+use Monext\Payline\Model\ContractManagement;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
 class AbstractMethod extends BaseAbstractMethod
@@ -22,6 +24,11 @@ class AbstractMethod extends BaseAbstractMethod
      * @var PaylinePaymentManagement 
      */
     protected $paylinePaymentManagement;
+    
+    /**
+     * @var ContractManagement 
+     */
+    protected $contractManagement;
     
     public function __construct(
         Context $context,
@@ -32,6 +39,7 @@ class AbstractMethod extends BaseAbstractMethod
         ScopeConfigInterface $scopeConfig,
         Logger $logger,
         PaylinePaymentManagement $paylinePaymentManagement,
+        ContractManagement $contractManagement,
         AbstractResource $resource = null,
         CollectionAbstractDb $resourceCollection = null,
         array $data = []
@@ -49,6 +57,14 @@ class AbstractMethod extends BaseAbstractMethod
             $data
         );
         $this->paylinePaymentManagement = $paylinePaymentManagement;
+        $this->contractManagement = $contractManagement;
+    }
+    
+    public function isAvailable(CartInterface $quote = null)
+    {
+    	$parentResult = parent::isAvailable($quote);
+        $currentResult = $this->contractManagement->getUsedContracts()->getSize() > 0;
+        return $parentResult && $currentResult;
     }
     
     public function assignData(DataObject $data)
@@ -58,6 +74,17 @@ class AbstractMethod extends BaseAbstractMethod
         if(isset($data[PaymentInterface::KEY_ADDITIONAL_DATA]['payment_mode'])) {
             $this->getInfoInstance()
                 ->setAdditionalInformation('payment_mode', $data[PaymentInterface::KEY_ADDITIONAL_DATA]['payment_mode']);
+        }
+        
+        if(isset($data[PaymentInterface::KEY_ADDITIONAL_DATA]['contract_id']) && $data[PaymentInterface::KEY_ADDITIONAL_DATA]['contract_id'] != -1) {
+            $contract = $this->contractManagement->getUsedContracts()->getItemById($data[PaymentInterface::KEY_ADDITIONAL_DATA]['contract_id']);
+            
+            if(!$contract || !$contract->getId()) {
+                throw new \Exception(__('Invalid contract'));
+            }
+            
+            $this->getInfoInstance()
+                ->setAdditionalInformation('contract_number', $contract->getNumber());
         }
         
         return $this;

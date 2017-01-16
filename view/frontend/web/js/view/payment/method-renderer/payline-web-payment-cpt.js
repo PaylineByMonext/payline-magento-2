@@ -7,27 +7,26 @@ define(
         'use strict';
         
         return Component.extend({
-            
-            
-            /**
-             * @returns {String}
-             */
             getConfigKey: function () {
                 return 'paylineWebPaymentCpt';
             },
             
-            /**
-             * Get payment method data
-             */
             getData: function () {
                 var parent = this._super(),
                     additionalData = null;
-                
-                additionalData = {'payment_mode': 'CPT'};
+
+                additionalData = {
+                    'payment_mode': 'CPT',
+                    'contract_id': this.isContractChecked()
+                };
                 
                 return $.extend(true, parent, {
                     'additional_data': additionalData
                 });
+            },
+            
+            getMethodConfigData: function(field) {
+                return window.checkoutConfig['payment']['paylineWebPaymentCpt'][field];
             }
         });
     }

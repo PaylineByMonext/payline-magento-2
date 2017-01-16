@@ -20,6 +20,16 @@ class Constants
     const PAYMENT_WORKFLOW_REDIRECT = 'redirect';
     const PAYMENT_WORKFLOW_WIDGET = 'widget';
     
+    //
+    const PAYMENT_WIDGET_DISPLAY_COLUMN = 'column';
+    const PAYMENT_WIDGET_DISPLAY_TAB = 'tab';
+    const PAYMENT_WIDGET_DISPLAY_LIGHTBOX = 'lightbox';
+    
     // @see https://payline.atlassian.net/wiki/pages/viewpage.action?pageId=31588361
     const PAYMENT_BACK_CODE_RETURN_OK = '00000';
+    
+    //
+    const PAYMENT_CONTRACT_CARD_TYPE_CB = 'CB';
+    const PAYMENT_CONTRACT_CARD_TYPE_CB_3DS = 'CB_3DS';
+    const PAYMENT_CONTRACT_CARD_TYPE_PAYPAL = 'PAYPAL';
 }

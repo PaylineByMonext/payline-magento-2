@@ -40,8 +40,8 @@ class Contract implements ArrayInterface
 
         foreach($contractCollection as $contract) {
             $result[] = [
-                'value' => $contract->getNumber(),
-                'label' => $contract->getLabel(),
+                'value' => $contract->getId(),
+                'label' => $contract->getPointOfSellLabel() . ' : ' . $contract->getLabel() . ' (' . $contract->getCardType() . ')',
             ];
         }
         

@@ -44,7 +44,9 @@ class Cpt extends AbstractMethod
     {
         parent::capture($payment, $amount);
 
-        
+        if($payment instanceof OrderPayment) {
+            
+        }
 
         return $this;
     }

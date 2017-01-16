@@ -3,6 +3,7 @@ define(
         'jquery',
         'ko',
         'Magento_Checkout/js/view/payment/default',
+        'mage/translate',
         'Magento_Checkout/js/model/quote',
         'Magento_Checkout/js/model/payment/additional-validators',
         'Monext_Payline/js/action/redirect',
@@ -14,8 +15,9 @@ define(
         $, 
         ko,
         Component, 
+        $t,
         quote, 
-        additionalValidators, 
+        additionalValidators,
         redirect, 
         saveCheckoutPaymentInformationFacadeAction, 
         loadWidgetIframeFormAction, 
@@ -26,17 +28,20 @@ define(
         return Component.extend({
             redirectAfterPlaceOrder: false,
             flagSaveCheckoutPaymentInformationFacade: false,
-            widgetIframeFormId: 'widget-iframe-form',
-            widgetIframeFormContainerId: 'widget-iframe-form-container',
-            isPaymentWidgetMessageVisible: ko.observable(false),
-            
+
             initialize: function () {
                 this._super();
                 
-                if(this.getPaymentWorkflow() === 'widget') {
+                if(this.getMethodConfigData('paymentWorkflow') === 'widget') {
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
+                    this.widgetIframeFormId = 'widget-iframe-form';
+                    this.widgetIframeFormContainerId = 'widget-iframe-form-container';
+                    this.isPaymentWidgetMessageVisible = ko.observable(false);
+                    this.isContractChecked = ko.observable(-1);
                     
-                    quote.billingAddress.subscribe(function (address) {
+                    destroyWidgetIframeFormAction(this.widgetIframeFormId);
+                    
+                    quote.billingAddress.subscribe(function(address) {
                         if(address !== null && this.isCurrentMethodSelected()) {
                             this.saveCheckoutPaymentInformationFacade();
                         } else if(address === null) {
@@ -50,18 +55,20 @@ define(
                     }
                 } else {
                     this.template = 'Monext_Payline/payment/payline-web-payment-redirect';
+                    this.isContractChecked = ko.observable(null);
                 }
             },
             
             afterPlaceOrder: function () {
-                if(this.getPaymentWorkflow() === 'redirect') {
+                if(this.getMethodConfigData('paymentWorkflow') === 'redirect') {
                     redirect('payline/webpayment/redirecttopaymentgateway');
                 }
             },
             
             saveCheckoutPaymentInformationFacade: function() {
                 var self = this;
-                if(this.getPaymentWorkflow() === 'widget' 
+                
+                if(this.getMethodConfigData('paymentWorkflow') === 'widget' 
                 && !self.flagSaveCheckoutPaymentInformationFacade
                 && self.validate() && additionalValidators.validate()) {
                     self.flagSaveCheckoutPaymentInformationFacade = true;
@@ -79,23 +86,28 @@ define(
                 }
             },
             
-            /**
-             * @returns {String}
-             */
-            getConfigKey: function () {
-                return '';
-            },
-            
-            getPaymentWorkflow: function() {
-                return window.checkoutConfig['payment'][this.getConfigKey()]['paymentWorkflow'];
+            getMethodConfigData: function(field) {
+                throw new Error();
             },
             
             isCurrentMethodSelected: function() {
                 return quote.paymentMethod() && quote.paymentMethod().method === this.getCode();
             },
             
-            getCcLogoSrc: function() {
-                return window.checkoutConfig['payment']['payline']['ccLogoSrc'];
+            getContracts: function() {
+                return window.checkoutConfig['payment']['paylineContracts']['contracts'];
+            },
+            
+            validate: function() {
+                var parentValidate = this._super();
+                var currentValidate = true;
+                
+                if(!this.isContractChecked()) {
+                    this.messageContainer.addErrorMessage({'message' : $t('You must choose a card type.')});
+                    currentValidate = false;
+                }
+
+                return parentValidate && currentValidate;
             }
         });
     }

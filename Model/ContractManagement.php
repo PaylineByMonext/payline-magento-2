@@ -3,8 +3,10 @@
 namespace Monext\Payline\Model;
 
 use Magento\Framework\App\CacheInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\Model\ContractFactory;
+use Monext\Payline\Model\ResourceModel\Contract\Collection as ContractCollection;
 use Monext\Payline\Model\ResourceModel\Contract\CollectionFactory as ContractCollectionFactory;
 use Monext\Payline\PaylineApi\Client as PaylineApiClient;
 use Monext\Payline\PaylineApi\Request\GetMerchantSettingsFactory as RequestGetMerchantSettingsFactory;
@@ -36,12 +38,23 @@ class ContractManagement
      */
     protected $contractCollectionFactory;
     
+    /**
+     * @var ScopeConfigInterface 
+     */
+    protected $scopeConfig;
+    
+    /**
+     * @var ContractCollection 
+     */
+    protected $usedContracts;
+    
     public function __construct(
         CacheInterface $cache,
         ContractFactory $contractFactory,
         PaylineApiClient $paylineApiClient,
         RequestGetMerchantSettingsFactory $requestGetMerchantSettingsFactory,
-        ContractCollectionFactory $contractCollectionFactory
+        ContractCollectionFactory $contractCollectionFactory,
+        ScopeConfigInterface $scopeConfig
     )
     {
         $this->cache = $cache;
@@ -49,6 +62,7 @@ class ContractManagement
         $this->paylineApiClient = $paylineApiClient;
         $this->requestGetMerchantSettingsFactory = $requestGetMerchantSettingsFactory;
         $this->contractCollectionFactory = $contractCollectionFactory;
+        $this->scopeConfig = $scopeConfig;
     }
     
     public function refreshContracts()
@@ -66,23 +80,41 @@ class ContractManagement
             $response = $this->paylineApiClient->callGetMerchantSettings($request);
             
             if($response->isSuccess()) {
+                // TODO Create a contract repository class
                 $contractCollection = $this->contractCollectionFactory->create();
-                foreach($contractCollection as $contract) {
-                    $contract->delete();
-                }
 
                 foreach($response->getContractsData() as $contractData) {
-                    // TODO Create a contract repository class
-                    $contract = $this->contractFactory->create();
-                    $contract->setData($contractData);
+                    $contract = $contractCollection->getItemByColumnValue('number', $contractData['number']);
+                    if(!$contract || !$contract->getId()) {
+                        $contract = $this->contractFactory->create();
+                    }
+                                        
+                    $contract->addData($contractData);
+                    $contract->setIsUpdated(1);
                     $contract->save();
                 }
 
+                foreach($contractCollection as $contract) {
+                    if(!$contract->getIsUpdated()) {
+                        $contract->delete();
+                    }
+                }
+                
                 $this->cache->save("1", HelperConstants::CACHE_KEY_MERCHANT_CONTRACT_IMPORT_FLAG);
             }
         }
         
         return $this;
+    }
+    
+    public function getUsedContracts()
+    {
+        if(!isset($this->usedContracts)) {
+            $this->usedContracts = $this->contractCollectionFactory->create()
+                ->addFieldToFilter('id', ['in' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_CONTRACTS_CONTRACTS)]);
+        }
+        
+        return $this->usedContracts;
     }
 }
 

@@ -3,7 +3,6 @@
 namespace Monext\Payline\Model\System\Config\Source;
 
 use Magento\Framework\Option\ArrayInterface;
-use Magento\Payment\Model\Method\AbstractMethod;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
 class PaymentAction implements ArrayInterface

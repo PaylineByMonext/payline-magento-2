@@ -19,7 +19,7 @@ class UpgradeData implements UpgradeDataInterface
             $statuses = [
                 HelperConstants::ORDER_STATUS_PAYLINE_WAITING_CAPTURE => __('Payline Waiting Capture'),
                 HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED => __('Payline Captured'),
-                HelperConstants::ORDER_STATUS_PAYLINE_CANCELED  => __('Payline Canceled'),
+                HelperConstants::ORDER_STATUS_PAYLINE_CANCELED => __('Payline Canceled'),
             ];
             foreach ($statuses as $code => $info) {
                 $data[] = ['status' => $code, 'label' => $info];
@@ -67,6 +67,14 @@ class UpgradeData implements UpgradeDataInterface
                 $setup->getTable('sales_order_status_state'),
                 ['status', 'state', 'is_default', 'visible_on_front'],
                 $data
+            );
+        }
+        
+        if (version_compare($context->getVersion(), '1.0.5', '<')) {
+            $setup->getConnection()->update(
+                $setup->getTable('sales_order_status_state'),
+                ['state' => Order::STATE_CANCELED],
+                ['status = ?' => HelperConstants::ORDER_STATUS_PAYLINE_CANCELED]
             );
         }
         
