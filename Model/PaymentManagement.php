@@ -2,7 +2,6 @@
 
 namespace Monext\Payline\Model;
 
-
 use Magento\Checkout\Api\PaymentInformationManagementInterface;
 use Magento\Framework\Registry;
 use Magento\Quote\Api\CartRepositoryInterface;

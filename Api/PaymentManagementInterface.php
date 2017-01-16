@@ -3,9 +3,7 @@
 namespace Monext\Payline\Api;
 
 use Magento\Quote\Api\Data\AddressInterface;
-use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
-use Magento\Quote\Api\Data\TotalsInterface;
 
 /**
  * @api
