@@ -65,19 +65,21 @@ class ContractManagement
             $request = $this->requestGetMerchantSettingsFactory->create();
             $response = $this->paylineApiClient->callGetMerchantSettings($request);
             
-            $contractCollection = $this->contractCollectionFactory->create();
-            foreach($contractCollection as $contract) {
-                $contract->delete();
+            if($response->isSuccess()) {
+                $contractCollection = $this->contractCollectionFactory->create();
+                foreach($contractCollection as $contract) {
+                    $contract->delete();
+                }
+
+                foreach($response->getContractsData() as $contractData) {
+                    // TODO Create a contract repository class
+                    $contract = $this->contractFactory->create();
+                    $contract->setData($contractData);
+                    $contract->save();
+                }
+
+                $this->cache->save("1", HelperConstants::CACHE_KEY_MERCHANT_CONTRACT_IMPORT_FLAG);
             }
-                        
-            foreach($response->getContractsData() as $contractData) {
-                // TODO Create a contract repository class
-                $contract = $this->contractFactory->create();
-                $contract->setData($contractData);
-                $contract->save();
-            }
-            
-            $this->cache->save("1", HelperConstants::CACHE_KEY_MERCHANT_CONTRACT_IMPORT_FLAG);
         }
         
         return $this;
