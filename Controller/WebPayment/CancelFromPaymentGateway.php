@@ -3,16 +3,16 @@
 namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
+use Magento\Framework\Controller\Result\RedirectFactory as ResultRedirectFactory;
 use Monext\Payline\Controller\Action;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
-class NotifyFromPaymentGateway extends Action
+class CancelFromPaymentGateway extends Action
 {
     /**
-     * @var ResultRawFactory 
+     * @var ResultRedirectFactory 
      */
-    protected $resultRawFactory;
+    protected $resultRedirectFactory;
     
     /**
      * @var PaylinePaymentManagement 
@@ -21,22 +21,22 @@ class NotifyFromPaymentGateway extends Action
     
     public function __construct(
         Context $context,
-        ResultRawFactory $resultRawFactory,
+        ResultRedirectFactory $resultRedirectFactory,
         PaylinePaymentManagement $paylinePaymentManagement
     )
     {
         parent::__construct($context);
-        $this->resultRawFactory = $resultRawFactory;
+        $this->resultRedirectFactory = $resultRedirectFactory;
         $this->paylinePaymentManagement = $paylinePaymentManagement;
     }
     
     public function execute() 
     {
         // TODO handle exception
-        $this->paylinePaymentManagement->handlePaymentGatewayNotifyByToken($this->getToken());
+        $this->paylinePaymentManagement->handlePaymentGatewayCancelByToken($this->getToken());
         
-        $resultRaw = $this->resultRawFactory->create();
-        $resultRaw->setContents('');
-        return $resultRaw;
+        $resultRedirect = $this->resultRedirectFactory->create();
+        $resultRedirect->setUrl('checkout');
+        return $resultRedirect;
     }
 }

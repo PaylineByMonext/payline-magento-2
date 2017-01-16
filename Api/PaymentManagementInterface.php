@@ -18,17 +18,9 @@ interface PaymentManagementInterface
      * @param \Magento\Quote\Api\Data\AddressInterface|null $billingAddress
      * @return array
      */
-    public function savePaymentInformationFacade(
+    public function saveCheckoutPaymentInformationFacade(
         $cartId,
         PaymentInterface $paymentMethod,
         AddressInterface $billingAddress = null
-    );
-    
-    public function wrapCallPaylineApiDoWebPayment($cartId);
-        
-    public function callPaylineApiDoWebPayment(
-        CartInterface $cart,
-        TotalsInterface $totals,
-        PaymentInterface $payment
     );
 }

@@ -18,7 +18,7 @@ interface GuestPaymentManagementInterface
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      * @return array
      */
-    public function savePaymentInformationFacade(
+    public function saveCheckoutPaymentInformationFacade(
         $cartId,
         $email,
         PaymentInterface $paymentMethod,

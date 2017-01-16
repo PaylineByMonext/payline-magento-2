@@ -2,9 +2,11 @@
 
 namespace Monext\Payline\Model;
 
+use Magento\Checkout\Model\Cart as CheckoutCart;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteFactory;
+use Magento\Sales\Model\Order;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
 
 class CartManagement
@@ -29,17 +31,24 @@ class CartManagement
      */
     protected $orderIncrementIdTokenFactory;
     
+    /**
+     * @var CheckoutCart 
+     */
+    protected $checkoutCart;
+    
     public function __construct(
         CartRepositoryInterface $cartRepository,
         CartManagementInterface $cartManagement,
         OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
-        QuoteFactory $quoteFactory
+        QuoteFactory $quoteFactory,
+        CheckoutCart $checkoutCart
     )
     {
         $this->cartRepository = $cartRepository;
         $this->cartManagement = $cartManagement;
         $this->quoteFactory = $quoteFactory;
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
+        $this->checkoutCart = $checkoutCart;
     }
     
     public function reserveCartOrderId($cartId, $forceReserve = false)
@@ -64,6 +73,18 @@ class CartManagement
         // TODO Use QuoteRepository instead of quote::load
         $quote = $this->quoteFactory->create()->load($orderIncrementId, 'reserved_order_id');
         $this->cartManagement->placeOrder($quote->getId());
+        return $this;
+    }
+    
+    public function restoreCartFromOrder(Order $order)
+    {
+        foreach($order->getItemsCollection() as $orderItem) {
+            $this->checkoutCart->addOrderItem($orderItem);
+        }
+        
+        // TODO Handle couponCode
+        
+        $this->checkoutCart->save();
         return $this;
     }
 }

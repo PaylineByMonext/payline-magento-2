@@ -2,9 +2,9 @@
 
 namespace Monext\Payline\Controller\WebPayment;
 
-use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
+use Monext\Payline\Controller\Action;
 use Monext\Payline\Block\WebPayment\WidgetIframeFormFactory;
 
 class LoadWidgetIframeForm extends Action

@@ -18,9 +18,9 @@ define(
             };
 
             if (customer.isLoggedIn()) {
-                serviceUrl = urlBuilder.createUrl('/payline-carts/mine/payment-information', {});
+                serviceUrl = urlBuilder.createUrl('/payline-checkout/mine/payment-information-facade', {});
             } else {
-                serviceUrl = urlBuilder.createUrl('/payline-guest-carts/:cartId/payment-information', {
+                serviceUrl = urlBuilder.createUrl('/payline-guest-checkout/:cartId/payment-information-facade', {
                     cartId: quote.getQuoteId()
                 });
                 payload.email = quote.guestEmail;

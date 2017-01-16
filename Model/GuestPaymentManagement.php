@@ -8,9 +8,8 @@ use Magento\Quote\Api\Data\AddressInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Monext\Payline\Api\GuestPaymentManagementInterface as PaylineGuestPaymentManagementInterface;
-use Monext\Payline\Api\PaymentManagementInterface as PaylinePaymentManagementInterface;
 use Monext\Payline\Model\CartManagement as PaylineCartManagement;
-use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
+use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
 class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
 {
@@ -25,7 +24,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
     protected $guestPaymentInformationManagement;
     
     /**
-     * @var PaylinePaymentManagementInterface
+     * @var PaylinePaymentManagement
      */
     protected $paylinePaymentManagement;
     
@@ -39,29 +38,22 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
      */
     protected $paylineCartManagement;
     
-    /**
-     * @var OrderIncrementIdTokenFactory 
-     */
-    protected $orderIncrementIdTokenFactory;
-    
     public function __construct(
         CartRepositoryInterface $cartRepository, 
         GuestPaymentInformationManagementInterface $guestPaymentInformationManagement,
-        PaylinePaymentManagementInterface $paylinePaymentManagement,
+        PaylinePaymentManagement $paylinePaymentManagement,
         QuoteIdMaskFactory $quoteIdMaskFactory,
-        PaylineCartManagement $paylineCartManagement,
-        OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory
+        PaylineCartManagement $paylineCartManagement
     )
     {
         $this->guestPaymentInformationManagement = $guestPaymentInformationManagement;
         $this->paylinePaymentManagement = $paylinePaymentManagement;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->paylineCartManagement = $paylineCartManagement;
-        $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
         $this->cartRepository = $cartRepository;
     }
     
-    public function savePaymentInformationFacade(
+    public function saveCheckoutPaymentInformationFacade(
         $cartId,
         $email,
         PaymentInterface $paymentMethod,
@@ -71,11 +63,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
         $this->guestPaymentInformationManagement->savePaymentInformation($cartId, $email, $paymentMethod, $billingAddress);
         $quoteIdMask = $this->quoteIdMaskFactory->create()->load($cartId, 'masked_id');
         $this->paylineCartManagement->reserveCartOrderId($quoteIdMask->getQuoteId());
-        $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPayment($quoteIdMask->getQuoteId());
-        $this->orderIncrementIdTokenFactory->create()->associateTokenToOrderIncrementId(
-            $this->cartRepository->getActive($quoteIdMask->getQuoteId())->getReservedOrderId(), 
-            $result['token']
-        );
+        $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteIdMask->getQuoteId());
         return $result;
     }
 }

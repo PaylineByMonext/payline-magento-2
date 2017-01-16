@@ -2,6 +2,7 @@
 
 namespace Monext\Payline\PaylineApi;
 
+use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\PaylineApi\Request\DoWebPayment as RequestDoWebPayment;
@@ -55,13 +56,19 @@ class Client
      */
     protected $logger;
     
+    /**
+     * @var EncryptorInterface
+     */
+    protected $encryptor;
+    
     public function __construct(
         PaylineSDKFactory $paylineSDKFactory,
         ScopeConfigInterface $scopeConfig,
         ResponseDoWebPaymentFactory $responseDoWebPaymentFactory,
         ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory,
         ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory,
-        Logger $logger
+        Logger $logger,
+        EncryptorInterface $encryptor
     )
     {
         $this->paylineSDKFactory = $paylineSDKFactory;
@@ -70,6 +77,7 @@ class Client
         $this->responseGetMerchantSettingsFactory = $responseGetMerchantSettingsFactory;
         $this->responseGetWebPaymentDetailsFactory = $responseGetWebPaymentDetailsFactory;
         $this->logger = $logger;
+        $this->encryptor = $encryptor;
         $this->initPaylineSDK();
     }
     
@@ -84,13 +92,11 @@ class Client
             $this->paylineSDK->doWebPayment($request->getData())
         );
 
-        $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-        $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        
-        if(!$response->isSuccess()) {
-            throw new \Exception($response->getShortErrorMessage());
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_DEBUG)) {
+            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
+            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
-        
+
         return $response;
     }
     
@@ -104,11 +110,6 @@ class Client
         $response->fromData(
             $this->paylineSDK->getMerchantSettings($request->getData())
         );
-        
-        if(!$response->isSuccess()) {
-            throw new \Exception($response->getShortErrorMessage());
-        }
-        
         return $response;
     }
     
@@ -122,11 +123,6 @@ class Client
         $response->fromData(
             $this->paylineSDK->getWebPaymentDetails($request->getData())
         );
-        
-        if(!$response->isSuccess()) {
-            throw new \Exception($response->getShortErrorMessage());
-        }
-        
         return $response;
     }
     
@@ -136,15 +132,18 @@ class Client
             // TODO Handle Proxy
             $paylineSdkParams = array(
                 'merchant_id' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_MERCHANT_ID), 
-                'access_key' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_ACCESS_KEY),
+                'access_key' => $this->encryptor->decrypt($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_ACCESS_KEY)),
                 'proxy_host' => null,
                 'proxy_port' => null,
                 'proxy_login' => null,
                 'proxy_password' => null,
                 'environment' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_ENVIRONMENT),
+                'pathLog' => BP . '/var/log/payline_sdk/',
             );
             
-            $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
+            if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_DEBUG)) {
+                $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
+            }
             
             $this->paylineSDK = $this->paylineSDKFactory->create($paylineSdkParams);
         }

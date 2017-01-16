@@ -106,7 +106,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->orderFactory = $orderFactory;
     }
     
-    public function savePaymentInformationFacade(
+    public function saveCheckoutPaymentInformationFacade(
         $cartId,
         PaymentInterface $paymentMethod,
         AddressInterface $billingAddress = null
@@ -114,24 +114,36 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $this->paymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
         $this->paylineCartManagement->reserveCartOrderId($cartId);
-        $result = $this->wrapCallPaylineApiDoWebPayment($cartId);
-        $this->orderIncrementIdTokenFactory->create()->associateTokenToOrderIncrementId(
-            $this->cartRepository->getActive($cartId)->getReservedOrderId(), 
-            $result['token']
-        );
+        $result = $this->wrapCallPaylineApiDoWebPaymentFacade($cartId);
+        
         return $result;
     }
     
-    public function wrapCallPaylineApiDoWebPayment($cartId)
+    public function wrapCallPaylineApiDoWebPaymentFacade($cartId)
     {
-        return $this->callPaylineApiDoWebPayment(
+        return $this->callPaylineApiDoWebPaymentFacade(
             $this->cartRepository->getActive($cartId), 
             $this->cartTotalRepository->get($cartId),
             $this->paymentMethodManagement->get($cartId)
         );
     }
     
-    public function callPaylineApiDoWebPayment(
+    public function callPaylineApiDoWebPaymentFacade(
+        CartInterface $cart,
+        TotalsInterface $totals,
+        PaymentInterface $payment
+    )
+    {
+        $result = $this->callPaylineApiDoWebPayment($cart, $totals, $payment);
+        $this->orderIncrementIdTokenFactory->create()->associateTokenToOrderIncrementId(
+            $cart->getReservedOrderId(), 
+            $result['token']
+        );
+        
+        return $result;
+    }
+    
+    protected function callPaylineApiDoWebPayment(
         CartInterface $cart,
         TotalsInterface $totals,
         PaymentInterface $payment
@@ -155,9 +167,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         return $result;
     }
     
-    public function callPaylineApiGetWebPaymentDetails(
-        $token
-    )
+    public function callPaylineApiGetWebPaymentDetails($token)
     {
         $request = $this->requestGetWebPaymentDetailsFactory->create();
         $request
@@ -175,11 +185,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     
     public function handlePaymentGatewayNotifyByToken($token)
     {
-        try {
-            $result = $this->callPaylineApiGetWebPaymentDetails($token);
-        } catch (\Exception $e) {
-            // TODO
-        }
+        $result = $this->callPaylineApiGetWebPaymentDetails($token);
         
         $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
         $order = $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
@@ -196,5 +202,23 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
         
         $order->save();
+        
+        return $this;
+    }
+    
+    public function handlePaymentGatewayCancelByToken($token)
+    {
+        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
+        $order = $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
+        
+        if($order->canCancel()) {
+            $order->cancel();
+            $order->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_CANCELED);
+        }
+        
+        $order->save();
+        $this->paylineCartManagement->restoreCartFromOrder($order);
+        
+        return $this;
     }
 }

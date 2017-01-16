@@ -7,6 +7,10 @@
         <label data-bind="attr: {'for': getCode()}" class="label"><span data-bind="text: getTitle()"></span></label>
     </div>
     <div class="payment-method-content">
+        <div data-bind="visible: isPaymentWidgetMessageVisible()">
+            <span data-bind="i18n: 'Payline payment widget will appear when the billing address informations are filled.'"></span>             
+        </div>
+        
         <!-- ko foreach: getRegion('messages') -->
         <!-- ko template: getTemplate() --><!-- /ko -->
         <!--/ko-->
@@ -21,9 +25,7 @@
             <!--/ko-->
         </div>
         
-        widget
-        
-        <div id="test-iframe">
+        <div id="widget-iframe-form-container">
         </div>
         
     </div>

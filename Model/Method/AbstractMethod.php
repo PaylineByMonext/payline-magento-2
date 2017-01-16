@@ -14,12 +14,12 @@ use Magento\Payment\Helper\Data as PaymentHelperData;
 use Magento\Payment\Model\Method\AbstractMethod as BaseAbstractMethod;
 use Magento\Payment\Model\Method\Logger;
 use Magento\Quote\Api\Data\PaymentInterface;
-use Monext\Payline\Api\PaymentManagementInterface as PaylinePaymentManagementInterface;
+use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
 class AbstractMethod extends BaseAbstractMethod
 {
     /**
-     * @var PaylinePaymentManagementInterface 
+     * @var PaylinePaymentManagement 
      */
     protected $paylinePaymentManagement;
     
@@ -31,7 +31,7 @@ class AbstractMethod extends BaseAbstractMethod
         PaymentHelperData $paymentData,
         ScopeConfigInterface $scopeConfig,
         Logger $logger,
-        PaylinePaymentManagementInterface $paylinePaymentManagement,
+        PaylinePaymentManagement $paylinePaymentManagement,
         AbstractResource $resource = null,
         CollectionAbstractDb $resourceCollection = null,
         array $data = []

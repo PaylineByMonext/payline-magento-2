@@ -25,11 +25,10 @@ class Cpt extends AbstractMethod
     public function initialize($paymentAction, $stateObject)
     {
         $payment = $this->getInfoInstance();
-
         if($payment instanceof OrderPayment 
         && $this->getConfigData('payment_workflow') == PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT) {
             $quoteId = $payment->getOrder()->getQuoteId();
-            $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPayment($quoteId);
+            $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteId);
         
             $additionalInformation = $payment->getAdditionalInformation();
             $additionalInformation['do_web_payment_response_data'] = $result;

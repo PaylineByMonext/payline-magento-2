@@ -2,10 +2,10 @@
 
 namespace Monext\Payline\Controller\WebPayment;
 
-use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
 use Magento\Framework\View\Element\TemplateFactory;
+use Monext\Payline\Controller\Action;
 use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 
 class ReturnFromWidget extends Action
@@ -41,7 +41,7 @@ class ReturnFromWidget extends Action
     public function execute() 
     {
         // TODO CatchException
-        $this->paylineCartManagement->placeOrderByToken($this->getRequest()->getParam('paylinetoken'));
+        $this->paylineCartManagement->placeOrderByToken($this->getToken());
         
         $resultRaw = $this->resultRawFactory->create();
         

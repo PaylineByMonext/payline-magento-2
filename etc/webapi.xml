@@ -8,15 +8,15 @@
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
 
-    <route url="/V1/payline-guest-carts/:cartId/payment-information" method="POST">
-        <service class="Monext\Payline\Api\GuestPaymentManagementInterface" method="savePaymentInformationFacade"/>
+    <route url="/V1/payline-guest-checkout/:cartId/payment-information-facade" method="POST">
+        <service class="Monext\Payline\Api\GuestPaymentManagementInterface" method="saveCheckoutPaymentInformationFacade"/>
         <resources>
             <resource ref="anonymous" />
         </resources>
     </route>
 
-    <route url="/V1/payline-carts/mine/payment-information" method="POST">
-        <service class="Monext\Payline\Api\PaymentManagementInterface" method="savePaymentInformationFacade"/>
+    <route url="/V1/payline-checkout/mine/payment-information-facade" method="POST">
+        <service class="Monext\Payline\Api\PaymentManagementInterface" method="saveCheckoutPaymentInformationFacade"/>
         <resources>
             <resource ref="self" />
         </resources>

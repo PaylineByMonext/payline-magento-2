@@ -16,16 +16,19 @@ class OrderIncrementIdToken extends AbstractModel
     {
         $itemCandidate = $this->getCollection()
             ->addFieldToFilter('order_increment_id', $orderIncrementId)
-            ->addFieldToFilter('token', $token)
             ->getFirstItem();
         
         if(empty($itemCandidate) || !$itemCandidate->getId()) {
             $item = $this->getCollection()->getNewEmptyItem();
             $item
-                ->setToken($token)
-                ->setOrderIncrementId($orderIncrementId)
-                ->save();
+                ->setOrderIncrementId($orderIncrementId);
+        } else {
+            $item = $itemCandidate;
         }
+        
+        $item
+            ->setToken($token)
+            ->save();
         
         return $this;
     }

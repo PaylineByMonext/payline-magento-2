@@ -2,38 +2,29 @@
 
 namespace Monext\Payline\Model\Method\WebPayment;
 
-use Magento\Checkout\Model\ConfigProviderInterface;
+use Magento\Framework\View\Asset\Repository as AssetRepository;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Monext\Payline\Helper\Constants as HelperConstants;
+use Monext\Payline\Model\Method\AbstractMethodConfigProvider;
 
-class CptConfigProvider implements ConfigProviderInterface
+class CptConfigProvider extends AbstractMethodConfigProvider
 {
-    protected $paymentHelper;
-
     protected $method;
 
     public function __construct(
-        PaymentHelper $paymentHelper
+        PaymentHelper $paymentHelper,
+        AssetRepository $assetRepository
     ) {
-        $this->paymentHelper = $paymentHelper;
+        parent::__construct($paymentHelper, $assetRepository);
         $this->method = $this->paymentHelper->getMethodInstance(HelperConstants::WEB_PAYMENT_CPT);
     }
 
     public function getConfig()
     {
-        $config = [
-            'payment' => [
-                'paylineWebPaymentCpt' => [
-                    'paymentWorkflow' => $this->getMethodConfigData('payment_workflow')
-                ]
-            ]
-        ];
+        $config = parent::getConfig();
+        
+        $config['payment']['paylineWebPaymentCpt']['paymentWorkflow'] = $this->getMethodConfigData('payment_workflow');
 
         return $config;
-    }
-
-    protected function getMethodConfigData($fieldName)
-    {
-        return $this->method->getConfigData($fieldName);
     }
 }

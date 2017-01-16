@@ -2,9 +2,9 @@
 
 namespace Monext\Payline\Controller\WebPayment;
 
-use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\RedirectFactory as ResultRedirectFactory;
+use Monext\Payline\Controller\Action;
 
 class ReturnFromPaymentGateway extends Action
 {

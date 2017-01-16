@@ -3,10 +3,10 @@
 namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\RedirectFactory as ResultRedirectFactory;
 use Magento\Sales\Api\OrderPaymentRepositoryInterface;
+use Monext\Payline\Controller\Action;
 
 class RedirectToPaymentGateway extends Action
 {
