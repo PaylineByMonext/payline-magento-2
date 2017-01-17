@@ -63,7 +63,7 @@ class AbstractMethod extends BaseAbstractMethod
     public function isAvailable(CartInterface $quote = null)
     {
     	$parentResult = parent::isAvailable($quote);
-        $currentResult = $this->contractManagement->getUsedContracts()->getSize() > 0;
+        $currentResult = count($this->contractManagement->getUsedContracts()) > 0;
         return $parentResult && $currentResult;
     }
     

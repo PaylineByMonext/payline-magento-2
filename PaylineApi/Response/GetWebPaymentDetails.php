@@ -6,12 +6,12 @@ use Monext\Payline\PaylineApi\AbstractResponse;
 
 class GetWebPaymentDetails extends AbstractResponse
 {
-    public function getTransaction()
+    public function getTransactionData()
     {
         return $this->data['transaction'];
     }
     
-    public function getPayment()
+    public function getPaymentData()
     {
         return $this->data['payment'];
     }

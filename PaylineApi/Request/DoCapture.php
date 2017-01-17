@@ -12,9 +12,20 @@ class DoCapture extends AbstractRequest
      */
     protected $authorizationTransaction;
     
+    /**
+     * @var array 
+     */
+    protected $paymentData;
+   
     public function setAuthorizationTransaction(TransactionInterface $authorizationTransaction)
     {
         $this->authorizationTransaction = $authorizationTransaction;
+        return $this;
+    }
+    
+    public function setPaymentData(array $paymentData)
+    {
+        $this->paymentData = $paymentData;
         return $this;
     }
     
@@ -22,28 +33,14 @@ class DoCapture extends AbstractRequest
     {
         $data = array();
         
-        $paymentMethod = $this->payment->getMethod();
-        $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
-        $paymentWorkflow = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_workflow');
-        
         // PAYMENT
-        $data['payment']['amount'] = round($this->totals->getGrandTotal() * 100, 0);
-        $data['payment']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
-        $data['payment']['action'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_action');
-        $data['payment']['mode'] = $paymentAdditionalInformation['payment_mode'];
-        $data['payment']['contractNumber'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/contract');
+        $data['payment'] = $this->paymentData;
         
-        // ORDER
-        $data['order']['ref'] = $this->cart->getReservedOrderId();
-        $data['order']['amount'] = round($this->totals->getGrandTotal() * 100, 0);
-        $data['order']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
-        $data['order']['date'] = $this->formatDateTime($this->cart->getCreatedAt());
+        // TRANSACTION ID
+        $data['transactionID'] = $this->authorizationTransaction->getTxnId();
         
-        if($paymentWorkflow == PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT) {
-            $this->_prepareUrlsForPaymentWorkflowRedirect($data);
-        } elseif($paymentWorkflow == PaylineApiConstants::PAYMENT_WORKFLOW_WIDGET) {
-            $this->_prepareUrlsForPaymentWorkflowWidget($data);
-        }
+        // SEQUENCE NUMBER
+        $data['sequenceNumber'] = '';
         
         return $data;
     }

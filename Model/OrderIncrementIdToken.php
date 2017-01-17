@@ -46,5 +46,18 @@ class OrderIncrementIdToken extends AbstractModel
         
         return $itemCandidate->getOrderIncrementId();
     }
+    
+    public function getTokenByOrderIncrementId($orderIncrementId)
+    {
+        $itemCandidate = $this->getCollection()
+            ->addFieldToFilter('order_increment_id', $orderIncrementId)
+            ->getFirstItem();
+        
+        if(empty($itemCandidate) || !$itemCandidate->getId()) {
+            // TODO Throw Exception
+        }
+        
+        return $itemCandidate->getToken();
+    }
 }
 

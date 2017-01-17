@@ -25,6 +25,7 @@ class Cpt extends AbstractMethod
     public function initialize($paymentAction, $stateObject)
     {
         $payment = $this->getInfoInstance();
+        
         if($payment instanceof OrderPayment 
         && $this->getConfigData('payment_workflow') == PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT) {
             $quoteId = $payment->getOrder()->getQuoteId();
@@ -42,10 +43,8 @@ class Cpt extends AbstractMethod
     
     public function capture(InfoInterface $payment, $amount)
     {
-        parent::capture($payment, $amount);
-
-        if($payment instanceof OrderPayment) {
-            
+        if(!$this->getSkipCapture() && $payment instanceof OrderPayment) {
+            $this->paylinePaymentManagement->callPaylineApiDoCaptureFacade($payment->getOrder(), $payment, $amount);
         }
 
         return $this;
