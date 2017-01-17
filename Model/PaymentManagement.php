@@ -268,7 +268,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         
         $paymentData = $response1->getPaymentData();
         $paymentData['amount'] = round($amount * 100, 0);
-        $paymentData['action'] = PaylineApiConstants::PAYMENT_ACTION_CAPTURE;
         
         $authorizationTransaction = $this->transactionRepository->getByTransactionType(
             Transaction::TYPE_AUTH,
