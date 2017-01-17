@@ -282,6 +282,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             throw new \Exception($response2->getShortErrorMessage());
         }
         
+        $payment->setTransactionId($response2->getTransactionId());
+
         return $this;
     }
 }
