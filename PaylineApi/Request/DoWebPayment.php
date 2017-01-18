@@ -205,7 +205,7 @@ class DoWebPayment extends AbstractRequest
         }
         
         if($this->cart->getCustomer() && $this->cart->getCustomer()->getId()) {
-            $data['buyer']['accountCreateDate'] = \date('d/m/y', $this->cart->getCustomer()->getCreatedAt());
+            $data['buyer']['accountCreateDate'] = $this->formatDateTime($this->cart->getCustomer()->getCreatedAt(), 'd/m/y');
         }
     }
     
