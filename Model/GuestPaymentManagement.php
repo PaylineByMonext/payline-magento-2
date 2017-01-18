@@ -2,7 +2,7 @@
 
 namespace Monext\Payline\Model;
 
-use Magento\Checkout\Api\GuestPaymentInformationManagementInterface;
+use Magento\Checkout\Api\GuestPaymentInformationManagementInterface as CheckoutGuestPaymentInformationManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\AddressInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
@@ -19,9 +19,9 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
     protected $cartRepository;
     
     /**
-     * @var GuestPaymentInformationManagementInterface 
+     * @var CheckoutGuestPaymentInformationManagementInterface 
      */
-    protected $guestPaymentInformationManagement;
+    protected $checkoutGuestPaymentInformationManagement;
     
     /**
      * @var PaylinePaymentManagement
@@ -40,13 +40,13 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
     
     public function __construct(
         CartRepositoryInterface $cartRepository, 
-        GuestPaymentInformationManagementInterface $guestPaymentInformationManagement,
+        CheckoutGuestPaymentInformationManagementInterface $checkoutGuestPaymentInformationManagement,
         PaylinePaymentManagement $paylinePaymentManagement,
         QuoteIdMaskFactory $quoteIdMaskFactory,
         PaylineCartManagement $paylineCartManagement
     )
     {
-        $this->guestPaymentInformationManagement = $guestPaymentInformationManagement;
+        $this->checkoutGuestPaymentInformationManagement = $checkoutGuestPaymentInformationManagement;
         $this->paylinePaymentManagement = $paylinePaymentManagement;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->paylineCartManagement = $paylineCartManagement;
@@ -60,7 +60,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
         AddressInterface $billingAddress = null
     )
     {
-        $this->guestPaymentInformationManagement->savePaymentInformation($cartId, $email, $paymentMethod, $billingAddress);
+        $this->checkoutGuestPaymentInformationManagement->savePaymentInformation($cartId, $email, $paymentMethod, $billingAddress);
         $quoteIdMask = $this->quoteIdMaskFactory->create()->load($cartId, 'masked_id');
         $this->paylineCartManagement->reserveCartOrderId($quoteIdMask->getQuoteId());
         $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteIdMask->getQuoteId());

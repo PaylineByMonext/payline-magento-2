@@ -2,14 +2,16 @@
 
 namespace Monext\Payline\Model;
 
-use Magento\Checkout\Api\PaymentInformationManagementInterface;
+use Magento\Checkout\Api\PaymentInformationManagementInterface as CheckoutPaymentInformationManagementInterface;
+use Magento\Quote\Api\BillingAddressManagementInterface as QuoteBillingAddressManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\CartTotalRepositoryInterface;
 use Magento\Quote\Api\Data\AddressInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Api\Data\TotalsInterface;
-use Magento\Quote\Api\PaymentMethodManagementInterface;
+use Magento\Quote\Api\PaymentMethodManagementInterface as QuotePaymentMethodManagementInterface;
+use Magento\Quote\Model\ShippingAddressManagementInterface as QuoteShippingAddressManagementInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Api\Data\TransactionInterface;
@@ -40,14 +42,14 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected $cartTotalRepository;
     
     /**
-     * @var PaymentInformationManagementInterface 
+     * @var CheckoutPaymentInformationManagementInterface 
      */
-    protected $paymentInformationManagement;
+    protected $checkoutPaymentInformationManagement;
     
     /**
-     * @var PaymentMethodManagementInterface
+     * @var QuotePaymentMethodManagementInterface
      */
-    protected $paymentMethodManagement;
+    protected $quotePaymentMethodManagement;
     
     /**
      * @var RequestDoWebPaymentFactory
@@ -89,11 +91,21 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      */
     protected $transactionRepository;
     
+    /**
+     * @var QuoteBillingAddressManagementInterface 
+     */
+    protected $quoteBillingAddressManagement;
+    
+    /**
+     * @var QuoteShippingAddressManagementInterface 
+     */
+    protected $quoteShippingAddressManagement;
+    
     public function __construct(
         CartRepositoryInterface $cartRepository, 
         CartTotalRepositoryInterface $cartTotalRepository,
-        PaymentInformationManagementInterface $paymentInformationManagement,
-        PaymentMethodManagementInterface $paymentMethodManagement,
+        CheckoutPaymentInformationManagementInterface $checkoutPaymentInformationManagement,
+        QuotePaymentMethodManagementInterface $quotePaymentMethodManagement,
         RequestDoWebPaymentFactory $requestDoWebPaymentFactory,
         PaylineApiClient $paylineApiClient,
         PaylineCartManagement $paylineCartManagement,
@@ -101,13 +113,15 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         RequestGetWebPaymentDetailsFactory $requestGetWebPaymentDetailsFactory,
         OrderFactory $orderFactory,
         TransactionRepository $transactionRepository,
-        RequestDoCaptureFactory $requestDoCaptureFactory
+        RequestDoCaptureFactory $requestDoCaptureFactory,
+        QuoteBillingAddressManagementInterface $quoteBillingAddressManagement,
+        QuoteShippingAddressManagementInterface $quoteShippingAddressManagement
     )
     {
         $this->cartRepository = $cartRepository;
         $this->cartTotalRepository = $cartTotalRepository;
-        $this->paymentInformationManagement = $paymentInformationManagement;
-        $this->paymentMethodManagement = $paymentMethodManagement;
+        $this->checkoutPaymentInformationManagement = $checkoutPaymentInformationManagement;
+        $this->quotePaymentMethodManagement = $quotePaymentMethodManagement;
         $this->requestDoWebPaymentFactory = $requestDoWebPaymentFactory;
         $this->paylineApiClient = $paylineApiClient;
         $this->paylineCartManagement = $paylineCartManagement;
@@ -116,6 +130,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->orderFactory = $orderFactory;
         $this->transactionRepository = $transactionRepository;
         $this->requestDoCaptureFactory = $requestDoCaptureFactory;
+        $this->quoteBillingAddressManagement = $quoteBillingAddressManagement;
+        $this->quoteShippingAddressManagement = $quoteShippingAddressManagement;
     }
     
     public function saveCheckoutPaymentInformationFacade(
@@ -124,7 +140,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         AddressInterface $billingAddress = null
     )
     {
-        $this->paymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
+        $this->checkoutPaymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
         $this->paylineCartManagement->reserveCartOrderId($cartId);
         $result = $this->wrapCallPaylineApiDoWebPaymentFacade($cartId);
         
@@ -136,7 +152,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response = $this->callPaylineApiDoWebPaymentFacade(
             $this->cartRepository->getActive($cartId), 
             $this->cartTotalRepository->get($cartId),
-            $this->paymentMethodManagement->get($cartId)
+            $this->quotePaymentMethodManagement->get($cartId),
+            $this->quoteBillingAddressManagement->get($cartId),
+            $this->quoteShippingAddressManagement->get($cartId)
         );
         
         return [
@@ -148,10 +166,16 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function callPaylineApiDoWebPaymentFacade(
         CartInterface $cart,
         TotalsInterface $totals,
-        PaymentInterface $payment
+        PaymentInterface $payment,
+        AddressInterface $billingAddress,
+        AddressInterface $shippingAddress = null
     )
     {
-        $response = $this->callPaylineApiDoWebPayment($cart, $totals, $payment);
+        if($cart->getIsVirtual()) {
+            $shippingAddress = null;
+        }
+        
+        $response = $this->callPaylineApiDoWebPayment($cart, $totals, $payment, $billingAddress, $shippingAddress);
         
         if(!$response->isSuccess()) {
             // TODO log
@@ -169,12 +193,16 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function callPaylineApiDoWebPayment(
         CartInterface $cart,
         TotalsInterface $totals,
-        PaymentInterface $payment
+        PaymentInterface $payment,
+        AddressInterface $billingAddress,
+        AddressInterface $shippingAddress = null
     )
     {
         $request = $this->requestDoWebPaymentFactory->create();
         $request
             ->setCart($cart)
+            ->setBillingAddress($billingAddress)
+            ->setShippingAddress($shippingAddress)
             ->setTotals($totals)
             ->setPayment($payment);
         
