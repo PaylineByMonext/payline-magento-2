@@ -78,6 +78,41 @@ class UpgradeData implements UpgradeDataInterface
             );
         }
         
+        if (version_compare($context->getVersion(), '1.0.7', '<')) {
+            $data = [];
+            $statuses = [
+                HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED => __('Payline Abandoned'),
+                HelperConstants::ORDER_STATUS_PAYLINE_REFUSED => __('Payline Refused'),
+                HelperConstants::ORDER_STATUS_PAYLINE_FRAUD => __('Payline Fraud'),
+                HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE => __('Payline Waiting Acceptance'),
+            ];
+            foreach ($statuses as $code => $info) {
+                $data[] = ['status' => $code, 'label' => $info];
+            }
+            
+            $setup->getConnection()->insertArray(
+                $setup->getTable('sales_order_status'), 
+                ['status', 'label'], 
+                $data
+            );
+            
+            $data = [];
+            foreach ($statuses as $code => $info) {
+                $data[] = [
+                    'status' => $code, 
+                    'state' => $code == HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE ? Order::STATE_PROCESSING : Order::STATE_CANCELED, 
+                    'default' => 0, 
+                    'visible_on_front' => $code == HelperConstants::ORDER_STATUS_PAYLINE_FRAUD ? 0 : 1
+                ];
+            }
+            
+            $setup->getConnection()->insertArray(
+                $setup->getTable('sales_order_status_state'),
+                ['status', 'state', 'is_default', 'visible_on_front'],
+                $data
+            );
+        }
+        
         $setup->endSetup();
     }
 }

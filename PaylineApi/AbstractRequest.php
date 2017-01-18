@@ -13,9 +13,9 @@ abstract class AbstractRequest
      * @param string $dateTime
      * @return string
      */
-    protected function formatDateTime($dateTime)
+    protected function formatDateTime($dateTime, $format = 'd/m/Y H:i')
     {
         $date = new \DateTime($dateTime);
-        return $date->format('d/m/Y H:i');
+        return $date->format($format);
     }
 }

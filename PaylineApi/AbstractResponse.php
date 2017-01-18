@@ -20,7 +20,7 @@ abstract class AbstractResponse
     
     public function isSuccess()
     {
-        return $this->data['result']['code'] == PaylineApiConstants::PAYMENT_BACK_CODE_RETURN_OK;
+        return $this->getResultCode() == PaylineApiConstants::PAYMENT_BACK_CODE_RETURN_OK;
     }
     
     public function getShortErrorMessage()
@@ -31,6 +31,11 @@ abstract class AbstractResponse
     public function getLongErrorMessage()
     {
         return $this->data['result']['longMessage'];
+    }
+    
+    public function getResultCode()
+    {
+        return $this->data['result']['code'];
     }
 }
 

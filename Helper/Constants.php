@@ -18,4 +18,8 @@ class Constants
     const ORDER_STATUS_PAYLINE_WAITING_CAPTURE = 'payline_waiting_capture';
     const ORDER_STATUS_PAYLINE_CAPTURED = 'payline_captured';
     const ORDER_STATUS_PAYLINE_CANCELED = 'payline_canceled';
+    const ORDER_STATUS_PAYLINE_ABANDONED = 'payline_abandoned';
+    const ORDER_STATUS_PAYLINE_REFUSED = 'payline_refused';
+    const ORDER_STATUS_PAYLINE_FRAUD = 'payline_fraud';
+    const ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE = 'payline_waiting_acceptance';
 }

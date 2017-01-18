@@ -15,6 +15,7 @@ use Magento\Quote\Model\ShippingAddressManagementInterface as QuoteShippingAddre
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Api\Data\TransactionInterface;
+use Magento\Sales\Model\Order as Order;
 use Magento\Sales\Model\OrderFactory as OrderFactory;
 use Magento\Sales\Model\Order\Payment\Transaction;
 //use Magento\Sales\Api\TransactionRepositoryInterface; Cannot use TransactionRepositoryInterface because needed methods are not exposed in
@@ -23,11 +24,13 @@ use Monext\Payline\Api\PaymentManagementInterface as PaylinePaymentManagementInt
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
+use Monext\Payline\Model\OrderManagement as PaylineOrderManagement;
 use Monext\Payline\PaylineApi\Client as PaylineApiClient;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 use Monext\Payline\PaylineApi\Request\DoCaptureFactory as RequestDoCaptureFactory;
 use Monext\Payline\PaylineApi\Request\DoWebPaymentFactory as RequestDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetailsFactory as RequestGetWebPaymentDetailsFactory;
+use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetailsFactory;
 
 class PaymentManagement implements PaylinePaymentManagementInterface
 {
@@ -101,6 +104,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      */
     protected $quoteShippingAddressManagement;
     
+    /**
+     * @var PaylineOrderManagement 
+     */
+    protected $paylineOrderManagement;
+    
     public function __construct(
         CartRepositoryInterface $cartRepository, 
         CartTotalRepositoryInterface $cartTotalRepository,
@@ -115,7 +123,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         TransactionRepository $transactionRepository,
         RequestDoCaptureFactory $requestDoCaptureFactory,
         QuoteBillingAddressManagementInterface $quoteBillingAddressManagement,
-        QuoteShippingAddressManagementInterface $quoteShippingAddressManagement
+        QuoteShippingAddressManagementInterface $quoteShippingAddressManagement,
+        PaylineOrderManagement $paylineOrderManagement
     )
     {
         $this->cartRepository = $cartRepository;
@@ -132,6 +141,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->requestDoCaptureFactory = $requestDoCaptureFactory;
         $this->quoteBillingAddressManagement = $quoteBillingAddressManagement;
         $this->quoteShippingAddressManagement = $quoteShippingAddressManagement;
+        $this->paylineOrderManagement = $paylineOrderManagement;
     }
     
     public function saveCheckoutPaymentInformationFacade(
@@ -235,16 +245,40 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $response = $this->callPaylineApiGetWebPaymentDetails($token);
         
-        if(!$response->isSuccess()) {
-            // TODO log
-            throw new \Exception($response->getShortErrorMessage());
+        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
+        $order = $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
+        
+        if($response->isSuccess()) {
+            $this->handlePaymentGatewayNotifySuccess($response, $order);
+        } else {
+            $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
+            
+            if($response->isWaitingAcceptance()) {
+                $this->handlePaymentGatewayNotifyWaitingAcceptance($order, $message);
+            } elseif($response->isCanceled()) {
+                $this->handlePaymentGatewayNotifyCanceled($order, $message);
+            } elseif($response->isAbandoned()) {
+                $this->handlePaymentGatewayNotifyAbandoned($order, $message);
+            } elseif($response->isFraud()) {
+                $this->handlePaymentGatewayNotifyFraud($order, $message);
+            } else {
+                $this->handlePaymentGatewayNotifyRefused($order, $message);
+            }
         }
         
+        $order->save();
+        
+        return $this;
+    }
+    
+    protected function handlePaymentGatewayNotifySuccess(
+        ResponseGetWebPaymentDetailsFactory $response, 
+        Order $order
+    )
+    {
         $transactionData = $response->getTransactionData();
         $paymentData = $response->getPaymentData();
         
-        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
-        $order = $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
         $orderPayment = $order->getPayment();
         $orderPayment->setTransactionId($transactionData['id']);
         
@@ -258,10 +292,51 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $orderPayment->capture();
             $order->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED);
         }
+    }
+    
+    protected function handlePaymentGatewayNotifyFraud(Order $order, $message = null)
+    {
+        $order->setState(Order::STATE_PROCESSING)->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_FRAUD);
         
-        $order->save();
+        if($message) {
+            $order->addStatusHistoryComment($message);
+        }
+    }
+    
+    protected function handlePaymentGatewayNotifyWaitingAcceptance(Order $order, $message = null)
+    {
+        $order->setState(Order::STATE_PROCESSING)->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE);
         
-        return $this;
+        if($message) {
+            $order->addStatusHistoryComment($message);
+        }
+    }
+    
+    protected function handlePaymentGatewayNotifyAbandoned(Order $order, $message = null)
+    {
+        $this->paylineOrderManagement->handleOrderCancellation($order, HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED);
+
+        if($message) {
+            $order->addStatusHistoryComment($message);
+        }
+    }
+    
+    protected function handlePaymentGatewayNotifyRefused(Order $order, $message = null)
+    {
+        $this->paylineOrderManagement->handleOrderCancellation($order, HelperConstants::ORDER_STATUS_PAYLINE_REFUSED);
+
+        if($message) {
+            $order->addStatusHistoryComment($message);
+        }
+    }
+    
+    protected function handlePaymentGatewayNotifyCanceled(Order $order, $message = null)
+    {
+        $this->paylineOrderManagement->handleOrderCancellation($order, HelperConstants::ORDER_STATUS_PAYLINE_CANCELED);
+
+        if($message) {
+            $order->addStatusHistoryComment($message);
+        }
     }
     
     public function handlePaymentGatewayCancelByToken($token)
@@ -269,10 +344,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
         $order = $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
         
-        if($order->canCancel()) {
-            $order->cancel();
-            $order->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_CANCELED);
-        }
+        $this->handlePaymentGatewayNotifyCanceled($order);
         
         $order->save();
         $this->paylineCartManagement->restoreCartFromOrder($order);
