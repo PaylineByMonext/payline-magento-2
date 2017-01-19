@@ -3,9 +3,9 @@ define(
         'Magento_Checkout/js/model/quote',
         'Magento_Checkout/js/model/url-builder',
         'Magento_Customer/js/model/customer',
-        'Monext_Payline/js/model/save-payment-information-facade',
+        'Monext_Payline/js/model/save-checkout-payment-information-facade',
     ],
-    function (quote, urlBuilder, customer, savePaymentInformationFacadeService) {
+    function (quote, urlBuilder, customer, saveCheckoutPaymentInformationFacadeService) {
         'use strict';
 
         return function (paymentData, messageContainer) {
@@ -26,7 +26,7 @@ define(
                 payload.email = quote.guestEmail;
             }
 
-            return savePaymentInformationFacadeService(serviceUrl, payload, messageContainer);
+            return saveCheckoutPaymentInformationFacadeService(serviceUrl, payload, messageContainer);
         };
     }
 );

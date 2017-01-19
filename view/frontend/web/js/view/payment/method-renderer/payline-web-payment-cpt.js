@@ -7,10 +7,6 @@ define(
         'use strict';
         
         return Component.extend({
-            getConfigKey: function () {
-                return 'paylineWebPaymentCpt';
-            },
-            
             getData: function () {
                 var parent = this._super(),
                     additionalData = null;

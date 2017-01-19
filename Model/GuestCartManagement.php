@@ -3,9 +3,8 @@
 namespace Monext\Payline\Model;
 
 use Magento\Quote\Api\GuestCartManagementInterface;
-use Magento\Quote\Model\QuoteFactory;
 use Magento\Quote\Model\QuoteIdMaskFactory;
-use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
+use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 
 class GuestCartManagement
 {
@@ -15,38 +14,29 @@ class GuestCartManagement
     protected $guestCartManagement;
     
     /**
-     * @var QuoteFactory 
-     */
-    protected $quoteFactory;
-    
-    /**
      * @var QuoteIdMaskFactory
      */
     protected $quoteIdMaskFactory;
     
     /**
-     * @var OrderIncrementIdTokenFactory
+     * @var PaylineCartManagement
      */
-    protected $orderIncrementIdTokenFactory;
+    protected $paylineCartManagement;
     
     public function __construct(
         GuestCartManagementInterface $guestCartManagement,
-        QuoteFactory $quoteFactory,
-        OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
-        QuoteIdMaskFactory $quoteIdMaskFactory
+        QuoteIdMaskFactory $quoteIdMaskFactory,
+        PaylineCartManagement $paylineCartManagement
     )
     {
         $this->guestCartManagement = $guestCartManagement;
-        $this->quoteFactory = $quoteFactory;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
-        $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
+        $this->paylineCartManagement = $paylineCartManagement;
     }
     
     public function placeOrderByToken($token)
     {
-        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
-        // TODO Use QuoteRepository instead of quote::load
-        $quote = $this->quoteFactory->create()->load($orderIncrementId, 'reserved_order_id');
+        $quote = $this->paylineCartManagement->getCartByToken($token);
         $quoteIdMask = $this->quoteIdMaskFactory->create()->load($quote->getId(), 'quote_id');
         $this->guestCartManagement->placeOrder($quoteIdMask->getMaskedId());
         return $this;

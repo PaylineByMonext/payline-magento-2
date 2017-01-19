@@ -69,9 +69,7 @@ class CartManagement
     
     public function placeOrderByToken($token)
     {
-        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
-        // TODO Use QuoteRepository instead of quote::load
-        $quote = $this->quoteFactory->create()->load($orderIncrementId, 'reserved_order_id');
+        $quote = $this->getCartByToken($token);
         $this->cartManagement->placeOrder($quote->getId());
         return $this;
     }
@@ -86,6 +84,13 @@ class CartManagement
         
         $this->checkoutCart->save();
         return $this;
+    }
+
+    public function getCartByToken($token)
+    {
+        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
+        // TODO Use QuoteRepository instead of quote::load
+        return $this->quoteFactory->create()->load($orderIncrementId, 'reserved_order_id');
     }
 }
 

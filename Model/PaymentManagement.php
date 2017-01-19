@@ -16,7 +16,6 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Api\Data\TransactionInterface;
 use Magento\Sales\Model\Order as Order;
-use Magento\Sales\Model\OrderFactory as OrderFactory;
 use Magento\Sales\Model\Order\Payment\Transaction;
 //use Magento\Sales\Api\TransactionRepositoryInterface; Cannot use TransactionRepositoryInterface because needed methods are not exposed in
 use Magento\Sales\Model\Order\Payment\Transaction\Repository as TransactionRepository;
@@ -85,11 +84,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected $orderIncrementIdTokenFactory;
     
     /**
-     * @var OrderFactory 
-     */
-    protected $orderFactory;
-    
-    /**
      * @var TransactionRepository 
      */
     protected $transactionRepository;
@@ -119,7 +113,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         PaylineCartManagement $paylineCartManagement,
         OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
         RequestGetWebPaymentDetailsFactory $requestGetWebPaymentDetailsFactory,
-        OrderFactory $orderFactory,
         TransactionRepository $transactionRepository,
         RequestDoCaptureFactory $requestDoCaptureFactory,
         QuoteBillingAddressManagementInterface $quoteBillingAddressManagement,
@@ -136,7 +129,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->paylineCartManagement = $paylineCartManagement;
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
         $this->requestGetWebPaymentDetailsFactory = $requestGetWebPaymentDetailsFactory;
-        $this->orderFactory = $orderFactory;
         $this->transactionRepository = $transactionRepository;
         $this->requestDoCaptureFactory = $requestDoCaptureFactory;
         $this->quoteBillingAddressManagement = $quoteBillingAddressManagement;
@@ -245,8 +237,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $response = $this->callPaylineApiGetWebPaymentDetails($token);
         
-        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
-        $order = $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
+        $order = $this->paylineOrderManagement->getOrderByToken($token);
         
         if($response->isSuccess()) {
             $this->handlePaymentGatewayNotifySuccess($response, $order);
@@ -341,8 +332,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     
     public function handlePaymentGatewayCancelByToken($token)
     {
-        $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
-        $order = $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
+        $order = $order = $this->paylineOrderManagement->getOrderByToken($token);
         
         $this->handlePaymentGatewayNotifyCanceled($order);
         

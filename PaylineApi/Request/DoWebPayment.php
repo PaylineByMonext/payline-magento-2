@@ -181,7 +181,6 @@ class DoWebPayment extends AbstractRequest
     
     protected function prepareBuyerData(&$data)
     {
-        // BUYER
         foreach(['lastName' => 'getLastname', 'firstName' => 'getFirstname', 'email' => 'getEmail'] as $dataIdx => $getter) {
             $tmpData = null;
             
@@ -211,7 +210,6 @@ class DoWebPayment extends AbstractRequest
     
     protected function prepareBillingAddressData(&$data)
     {
-        $data['billingAddress']['name'] = $this->helperData->encodeString(substr($this->billingAddress->getName(), 0, 100));
         $data['billingAddress']['title'] = $this->helperData->encodeString($this->billingAddress->getPrefix());
         $data['billingAddress']['firstName'] = $this->helperData->encodeString(substr($this->billingAddress->getFirstname(), 0, 100));
         $data['billingAddress']['lastName'] = $this->helperData->encodeString(substr($this->billingAddress->getLastname(), 0, 100));

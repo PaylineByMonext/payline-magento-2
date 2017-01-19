@@ -210,7 +210,7 @@ class Currency
 
     /**
      * Returns the numeric currency code of the chosen currency
-     * @param string $currencyCode
+     * @param string $alphaCurrencyCode
      * @return string
      */
     public function getNumericCurrencyCode($alphaCurrencyCode)
