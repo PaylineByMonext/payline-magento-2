@@ -20,53 +20,53 @@
                     <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
                     <field id="merchant_id" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Merchant ID</label>
-                        <config_path>payment/payline/merchant_id</config_path>
+                        <config_path>payline/general/merchant_id</config_path>
                     </field>
                     <field id="access_key" translate="label" type="obscure" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Access key</label>
                         <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
-                        <config_path>payment/payline/access_key</config_path>
+                        <config_path>payline/general/access_key</config_path>
                     </field>
                     <field id="environment" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Environment</label>
                         <source_model>Monext\Payline\Model\System\Config\Source\Environment</source_model>
-                        <config_path>payment/payline/environment</config_path>
+                        <config_path>payline/general/environment</config_path>
                     </field>
                     <field id="debug" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Debug</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/payline/debug</config_path>
+                        <config_path>payline/general/debug</config_path>
                     </field>
                     <field id="proxy_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Proxy Enabled</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/payline/proxy_enabled</config_path>
+                        <config_path>payline/general/proxy_enabled</config_path>
                     </field>
                     <field id="proxy_host" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Proxy Host</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/payline/proxy_host</config_path>
+                        <config_path>payline/general/proxy_host</config_path>
                         <depends>
                             <field id="proxy_enabled">1</field>
                         </depends>
                     </field>
                     <field id="proxy_port" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Proxy Port</label>
-                        <config_path>payment/payline/proxy_port</config_path>
+                        <config_path>ppayline/general/proxy_port</config_path>
                         <depends>
                             <field id="proxy_enabled">1</field>
                         </depends>
                     </field>
                     <field id="proxy_login" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Proxy Login</label>
-                        <config_path>payment/payline/proxy_login</config_path>
+                        <config_path>payline/general/proxy_login</config_path>
                         <depends>
                             <field id="proxy_enabled">1</field>
                         </depends>
                     </field>
                     <field id="proxy_password" translate="label" type="obscure" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
                         <label>Proxy Password</label>
-                        <config_path>payment/payline/proxy_password</config_path>
+                        <config_path>payline/general/proxy_password</config_path>
                         <depends>
                             <field id="proxy_enabled">1</field>
                         </depends>
@@ -79,7 +79,7 @@
                         <label>Contracts</label>
                         <frontend_model>Monext\Payline\Block\Adminhtml\System\Config\Form\Field\Contract</frontend_model>
                         <source_model>Monext\Payline\Model\System\Config\Source\Contract</source_model>
-                        <config_path>payment/payline_contracts/contracts</config_path>
+                        <config_path>payline/general/contracts</config_path>
                     </field>
                 </group>
                 <group id="payline_solutions" translate="label" showInDefault="1" showInWebsite="1" sortOrder="30">

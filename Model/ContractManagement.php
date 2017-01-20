@@ -111,7 +111,7 @@ class ContractManagement
     {
         if(!isset($this->usedContracts)) {
             $this->usedContracts = $this->contractCollectionFactory->create()
-                ->addFieldToFilter('id', ['in' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_CONTRACTS_CONTRACTS)]);
+                ->addFieldToFilter('id', ['in' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_CONTRACTS)]);
         }
         
         return $this->usedContracts;

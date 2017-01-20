@@ -43,7 +43,7 @@ class WidgetIframeForm extends Template
     
     public function getWidgetJsUrl()
     {
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_ENVIRONMENT) == PaylineSDK::ENV_PROD) {
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_ENVIRONMENT) == PaylineSDK::ENV_PROD) {
             return 'https://payment.payline.com/scripts/widget-min.js';
         } else {
             return 'https://homologation-payment.payline.com/scripts/widget-min.js';
@@ -52,7 +52,7 @@ class WidgetIframeForm extends Template
     
     public function getWidgetCssUrl()
     {
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_ENVIRONMENT) == PaylineSDK::ENV_PROD) {
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_ENVIRONMENT) == PaylineSDK::ENV_PROD) {
             return 'https://payment.payline.com/styles/widget-min.css';
         } else {
             return 'https://homologation-payment.payline.com/styles/widget-min.css';

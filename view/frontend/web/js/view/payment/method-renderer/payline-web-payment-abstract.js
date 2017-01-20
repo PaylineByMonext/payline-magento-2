@@ -95,7 +95,7 @@ define(
             },
             
             getContracts: function() {
-                return window.checkoutConfig['payment']['paylineContracts']['contracts'];
+                return window.checkoutConfig['payline']['general']['contracts'];
             },
             
             validate: function() {

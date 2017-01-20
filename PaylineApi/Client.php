@@ -88,7 +88,6 @@ class Client
         $this->responseGetWebPaymentDetailsFactory = $responseGetWebPaymentDetailsFactory;
         $this->logger = $logger;
         $this->encryptor = $encryptor;
-        $this->initPaylineSDK();
     }
     
     /**
@@ -97,12 +96,14 @@ class Client
      */
     public function callDoWebPayment(RequestDoWebPayment $request)
     {
+        $this->initPaylineSDK();
+
         $response = $this->responseDoWebPaymentFactory->create();
         $response->fromData(
             $this->paylineSDK->doWebPayment($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_DEBUG)) {
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
             $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
@@ -116,12 +117,14 @@ class Client
      */
     public function callDoCapture(RequestDoCapture $request)
     {
+        $this->initPaylineSDK();
+
         $response = $this->responseDoCaptureFactory->create();
         $response->fromData(
             $this->paylineSDK->doCapture($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_DEBUG)) {
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
             $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
@@ -135,10 +138,13 @@ class Client
      */
     public function callGetMerchantSettings(RequestGetMerchantSettings $request)
     {
+        $this->initPaylineSDK();
+
         $response = $this->responseGetMerchantSettingsFactory->create();
         $response->fromData(
             $this->paylineSDK->getMerchantSettings($request->getData())
         );
+
         return $response;
     }
     
@@ -148,10 +154,13 @@ class Client
      */
     public function callGetWebPaymentDetails(RequestGetWebPaymentDetails $request)
     {
+        $this->initPaylineSDK();
+
         $response = $this->responseGetWebPaymentDetailsFactory->create();
         $response->fromData(
             $this->paylineSDK->getWebPaymentDetails($request->getData())
         );
+
         return $response;
     }
     
@@ -160,17 +169,17 @@ class Client
         if(!isset($this->paylineSDK)) {
             // TODO Handle Proxy
             $paylineSdkParams = array(
-                'merchant_id' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_MERCHANT_ID), 
-                'access_key' => $this->encryptor->decrypt($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_ACCESS_KEY)),
+                'merchant_id' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_MERCHANT_ID),
+                'access_key' => $this->encryptor->decrypt($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_ACCESS_KEY)),
                 'proxy_host' => null,
                 'proxy_port' => null,
                 'proxy_login' => null,
                 'proxy_password' => null,
-                'environment' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_ENVIRONMENT),
+                'environment' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_ENVIRONMENT),
                 'pathLog' => BP . '/var/log/payline_sdk/',
             );
             
-            if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYMENT_PAYLINE_DEBUG)) {
+            if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
                 $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
             }
             

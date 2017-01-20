@@ -51,12 +51,12 @@ abstract class AbstractMethodConfigProvider implements ConfigProviderInterface
     public function getConfig()
     {
         $config = [];
-        $config['payment']['paylineContracts']['contracts'] = [];
+        $config['payline']['general']['contracts'] = [];
         
         $contractCollection = $this->contractManagement->getUsedContracts();
                 
         foreach($contractCollection as $contract) {
-            $config['payment']['paylineContracts']['contracts'][] = [
+            $config['payline']['general']['contracts'][] = [
                 'id' => $contract->getId(),
                 'cardType' => $contract->getCardType(),
                 'logo' => $this->getCardTypeLogoUrl($contract->getCardType()),

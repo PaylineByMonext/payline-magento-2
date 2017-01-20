@@ -2,7 +2,9 @@
 
 namespace Monext\Payline\Model;
 
-use Mage\Sales\Model\Order;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory;
+use Monext\Payline\model\OrderIncrementIdTokenFactory;
 
 class OrderManagement
 {

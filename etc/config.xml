@@ -7,8 +7,15 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
+        <payline>
+            <general>
+                <merchant_id>MERCHANT_ID</merchant_id>
+                <environment>HOMO</environment>
+            </general>
+        </payline>
         <payment>
             <payline_web_payment_cpt>
+                <active>0</active>
                 <model>Monext\Payline\Model\Method\WebPayment\Cpt</model>
             </payline_web_payment_cpt>
         </payment>
