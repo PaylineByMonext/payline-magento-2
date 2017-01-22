@@ -51,7 +51,7 @@ class CartManagement
         $this->checkoutCart = $checkoutCart;
     }
     
-    public function reserveCartOrderId($cartId, $forceReserve = false)
+    public function handleReserveCartOrderId($cartId, $forceReserve = false)
     {
         $cart = $this->cartRepository->getActive($cartId);
         

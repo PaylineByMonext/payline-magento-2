@@ -143,7 +143,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     )
     {
         $this->checkoutPaymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
-        $this->paylineCartManagement->reserveCartOrderId($cartId);
         $result = $this->wrapCallPaylineApiDoWebPaymentFacade($cartId);
         
         return $result;
@@ -173,6 +172,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         AddressInterface $shippingAddress = null
     )
     {
+        $this->paylineCartManagement->handleReserveCartOrderId($cart->getId());
+
         if($cart->getIsVirtual()) {
             $shippingAddress = null;
         }

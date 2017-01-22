@@ -62,7 +62,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
     {
         $this->checkoutGuestPaymentInformationManagement->savePaymentInformation($cartId, $email, $paymentMethod, $billingAddress);
         $quoteIdMask = $this->quoteIdMaskFactory->create()->load($cartId, 'masked_id');
-        $this->paylineCartManagement->reserveCartOrderId($quoteIdMask->getQuoteId());
+        $this->paylineCartManagement->handleReserveCartOrderId($quoteIdMask->getQuoteId());
         $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteIdMask->getQuoteId());
         return $result;
     }
