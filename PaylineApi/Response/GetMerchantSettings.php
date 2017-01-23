@@ -30,7 +30,7 @@ class GetMerchantSettings extends AbstractResponse
                     'label' => $contract['label'],
                     'number' => $contract['contractNumber'],
                     'card_type' => $contract['cardType'],
-                    'currency' => $contract['currency'],
+                    'currency' => isset($contract['currency']) ? $contract['currency'] : null,
                     'point_of_sell_label' => $pointOfSellLabel,
                 ];
             }
