@@ -278,62 +278,56 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         if($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION) {
             $orderPayment->setIsTransactionClosed(false);
             $orderPayment->authorize(false, $paymentData['amount'] / 100);
-            $order->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_WAITING_CAPTURE);
+            $this->paylineOrderManagement->handleSetOrderStateStatus(
+                $order, null, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_CAPTURE
+            );
         } elseif($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION_CAPTURE) {
             $orderPayment->getMethodInstance()->setSkipCapture(true);
             $orderPayment->capture();
-            $order->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED);
+            $this->paylineOrderManagement->handleSetOrderStateStatus(
+                $order, null, HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED
+            );
         }
     }
     
     protected function handlePaymentGatewayNotifyFraud(Order $order, $message = null)
     {
-        $order->setState(Order::STATE_PROCESSING)->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_FRAUD);
-        
-        if($message) {
-            $order->addStatusHistoryComment($message);
-        }
+        $this->paylineOrderManagement->handleSetOrderStateStatus(
+            $order, Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_FRAUD, $message
+        );
     }
     
     protected function handlePaymentGatewayNotifyWaitingAcceptance(Order $order, $message = null)
     {
-        $order->setState(Order::STATE_PROCESSING)->setStatus(HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE);
-        
-        if($message) {
-            $order->addStatusHistoryComment($message);
-        }
+        $this->paylineOrderManagement->handleSetOrderStateStatus(
+            $order, Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE, $message
+        );
     }
     
     protected function handlePaymentGatewayNotifyAbandoned(Order $order, $message = null)
     {
-        $this->paylineOrderManagement->handleOrderCancellation($order, HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED);
-
-        if($message) {
-            $order->addStatusHistoryComment($message);
-        }
+        $this->paylineOrderManagement->handleSetOrderStateStatus(
+            $order, Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED, $message
+        );
     }
     
     protected function handlePaymentGatewayNotifyRefused(Order $order, $message = null)
     {
-        $this->paylineOrderManagement->handleOrderCancellation($order, HelperConstants::ORDER_STATUS_PAYLINE_REFUSED);
-
-        if($message) {
-            $order->addStatusHistoryComment($message);
-        }
+        $this->paylineOrderManagement->handleSetOrderStateStatus(
+            $order, Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_REFUSED, $message
+        );
     }
     
     protected function handlePaymentGatewayNotifyCanceled(Order $order, $message = null)
     {
-        $this->paylineOrderManagement->handleOrderCancellation($order, HelperConstants::ORDER_STATUS_PAYLINE_CANCELED);
-
-        if($message) {
-            $order->addStatusHistoryComment($message);
-        }
+        $this->paylineOrderManagement->handleSetOrderStateStatus(
+            $order, Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_CANCELED, $message
+        );
     }
     
     public function handlePaymentGatewayCancelByToken($token)
     {
-        $order = $order = $this->paylineOrderManagement->getOrderByToken($token);
+        $order = $this->paylineOrderManagement->getOrderByToken($token);
         
         $this->handlePaymentGatewayNotifyCanceled($order);
         

@@ -27,7 +27,26 @@ class OrderManagement
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
     }
 
-    public function handleOrderCancellation(Order $order, $status)
+    public function handleSetOrderStateStatus(Order $order, $state, $status, $message = null)
+    {
+        if($state == Order::STATE_CANCELED) {
+            $this->handleOrderCancellation($order, $status);
+        } else {
+            if(!empty($state)) {
+                $order->setState($state);
+            }
+
+            if(!empty($status)) {
+                $order->setStatus($status);
+            }
+        }
+
+        if(!empty($message)) {
+            $order->addStatusHistoryComment($message);
+        }
+    }
+
+    protected function handleOrderCancellation(Order $order, $status)
     {
         if($order->canCancel()) {
             $order->cancel();
