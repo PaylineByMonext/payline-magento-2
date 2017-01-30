@@ -5,6 +5,7 @@ namespace Monext\Payline\PaylineApi;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
+use Monext\Payline\PaylineApi\PaylineSDKFactory;
 use Monext\Payline\PaylineApi\Request\DoCapture as RequestDoCapture;
 use Monext\Payline\PaylineApi\Request\DoWebPayment as RequestDoWebPayment;
 use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantSettings;
@@ -19,7 +20,6 @@ use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPay
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetailsFactory as ResponseGetWebPaymentDetailsFactory;
 use Monolog\Logger as LoggerConstants;
 use Payline\PaylineSDK;
-use Payline\PaylineSDKFactory;
 use Psr\Log\LoggerInterface as Logger;
 
 class Client
@@ -177,6 +177,7 @@ class Client
                 'proxy_password' => null,
                 'environment' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_ENVIRONMENT),
                 'pathLog' => BP . '/var/log/payline_sdk/',
+                'logLevel' => LoggerConstants::INFO,
             );
             
             if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {

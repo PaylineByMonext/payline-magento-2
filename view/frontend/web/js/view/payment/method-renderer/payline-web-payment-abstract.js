@@ -37,6 +37,7 @@ define(
                     this.widgetIframeFormId = 'widget-iframe-form';
                     this.widgetIframeFormContainerId = 'widget-iframe-form-container';
                     this.isPaymentWidgetMessageVisible = ko.observable(false);
+                    this.isRetryCallPaymentWidgetButtonVisible = ko.observable(false);
                     this.isContractChecked = ko.observable(-1);
                     
                     destroyWidgetIframeFormAction(this.widgetIframeFormId);
@@ -67,11 +68,12 @@ define(
             
             saveCheckoutPaymentInformationFacade: function() {
                 var self = this;
-                
+
                 if(this.getMethodConfigData('paymentWorkflow') === 'widget' 
                 && !self.flagSaveCheckoutPaymentInformationFacade
                 && self.validate() && additionalValidators.validate()) {
                     self.flagSaveCheckoutPaymentInformationFacade = true;
+                    self.isRetryCallPaymentWidgetButtonVisible(false);
                     $.when(
                         saveCheckoutPaymentInformationFacadeAction(self.getData(), self.messageContainer)
                     ).done(function(response) {
@@ -81,6 +83,9 @@ define(
                             self.widgetIframeFormContainerId
                         );
                         self.isPaymentWidgetMessageVisible(false);
+                        self.flagSaveCheckoutPaymentInformationFacade = false;
+                    }).fail(function(response) {
+                        self.isRetryCallPaymentWidgetButtonVisible(true);
                         self.flagSaveCheckoutPaymentInformationFacade = false;
                     });
                 }

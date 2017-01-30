@@ -29,6 +29,19 @@
         <div id="widget-iframe-form-container">
         </div>
         
+        <div class="actions-toolbar">
+            <div class="primary">
+                <button class="action primary checkout"
+                        type="button"
+                        data-bind="
+                        click: saveCheckoutPaymentInformationFacade,
+                        visible: isRetryCallPaymentWidgetButtonVisible,
+                        attr: {title: $t('Retry call payment widget')},
+                        ">
+                    <span data-bind="i18n: 'Retry call payment widget'"></span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
         
