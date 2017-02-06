@@ -9,6 +9,7 @@ use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Monext\Payline\Api\GuestPaymentManagementInterface as PaylineGuestPaymentManagementInterface;
 use Monext\Payline\Model\CartManagement as PaylineCartManagement;
+use Monext\Payline\Model\GuestCartManagement as PaylineGuestCartManagement;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
 class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
@@ -17,7 +18,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
      * @var CartRepositoryInterface
      */
     protected $cartRepository;
-    
+
     /**
      * @var CheckoutGuestPaymentInformationManagementInterface 
      */
@@ -27,23 +28,29 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
      * @var PaylinePaymentManagement
      */
     protected $paylinePaymentManagement;
-    
+
     /**
      * @var QuoteIdMaskFactory
      */
     protected $quoteIdMaskFactory;
-    
+
     /**
      * @var PaylineCartManagement 
      */
     protected $paylineCartManagement;
-    
+
+    /**
+     * @var PaylineGuestCartManagement 
+     */
+    protected $paylineGuestCartManagement;
+
     public function __construct(
         CartRepositoryInterface $cartRepository, 
         CheckoutGuestPaymentInformationManagementInterface $checkoutGuestPaymentInformationManagement,
         PaylinePaymentManagement $paylinePaymentManagement,
         QuoteIdMaskFactory $quoteIdMaskFactory,
-        PaylineCartManagement $paylineCartManagement
+        PaylineCartManagement $paylineCartManagement,
+        PaylineGuestCartManagement $paylineGuestCartManagement
     )
     {
         $this->checkoutGuestPaymentInformationManagement = $checkoutGuestPaymentInformationManagement;
@@ -51,8 +58,9 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->paylineCartManagement = $paylineCartManagement;
         $this->cartRepository = $cartRepository;
+        $this->paylineGuestCartManagement = $paylineGuestCartManagement;
     }
-    
+
     public function saveCheckoutPaymentInformationFacade(
         $cartId,
         $email,
@@ -65,5 +73,22 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
         $this->paylineCartManagement->handleReserveCartOrderId($quoteIdMask->getQuoteId());
         $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteIdMask->getQuoteId());
         return $result;
+    }
+
+    public function applyPaymentReturnStrategyFromToken($token)
+    {
+        $responseData = $this->paylinePaymentManagement->wrapCallPaylineApiGetWebPaymentDetails($token);
+
+        if($responseData['is_success']) {
+            $this->paylineGuestCartManagement->placeOrderByToken($token);
+        } else {
+            $this->paylineCartManagement->handleReserveCartOrderId(
+                $this->paylineCartManagement->getCartByToken($token)->getId(), 
+                true
+            );
+            throw new \Exception('Payment has been in error.');
+        }
+
+        return $this;
     }
 }

@@ -24,33 +24,39 @@ define(
         destroyWidgetIframeFormAction
     ) {
         'use strict';
-        
+
         return Component.extend({
             redirectAfterPlaceOrder: false,
             flagSaveCheckoutPaymentInformationFacade: false,
 
             initialize: function () {
                 this._super();
-                
-                if(this.getMethodConfigData('paymentWorkflow') === 'widget') {
+
+                if(this.getMethodConfigData('integrationType') === 'widget') {
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
                     this.widgetIframeFormId = 'widget-iframe-form';
                     this.widgetIframeFormContainerId = 'widget-iframe-form-container';
                     this.isPaymentWidgetMessageVisible = ko.observable(false);
                     this.isRetryCallPaymentWidgetButtonVisible = ko.observable(false);
                     this.isContractChecked = ko.observable(-1);
-                    
+
                     destroyWidgetIframeFormAction(this.widgetIframeFormId);
-                    
-                    quote.billingAddress.subscribe(function(address) {
-                        if(address !== null && this.isCurrentMethodSelected()) {
-                            this.saveCheckoutPaymentInformationFacade();
-                        } else if(address === null) {
-                            destroyWidgetIframeFormAction(this.widgetIframeFormId);
-                            this.isPaymentWidgetMessageVisible(true);
-                        }
-                    }, this);
-                    
+
+                    // PREVENT TO SUSBCRIBE MULTIPLE TIMES AS THIS PAYMENT JS COMPONENTS CAN BE INITIALIZED SEVERAL 
+                    // TIMES IF CUSTOMER GOES TO REVIEW => SHIPPING => REVIEW ... AND SO ON
+                    if(!window.hasQuoteBillingAddressSubscribedToPaylineWidget) {
+                        quote.billingAddress.subscribe(function(address) {
+                            if(address !== null && this.isCurrentMethodSelected()) {
+                                this.saveCheckoutPaymentInformationFacade();
+                            } else if(address === null) {
+                                destroyWidgetIframeFormAction(this.widgetIframeFormId);
+                                this.isPaymentWidgetMessageVisible(true);
+                            }
+                        }, this);
+
+                        window.hasQuoteBillingAddressSubscribedToPaylineWidget = true;
+                    }
+
                     if(this.isCurrentMethodSelected()) {
                         this.selectPaymentMethod();
                     }
@@ -59,21 +65,23 @@ define(
                     this.isContractChecked = ko.observable(null);
                 }
             },
-            
+
             afterPlaceOrder: function () {
                 if(this.getMethodConfigData('paymentWorkflow') === 'redirect') {
                     redirect('payline/webpayment/redirecttopaymentgateway');
                 }
             },
-            
+
             saveCheckoutPaymentInformationFacade: function() {
                 var self = this;
 
-                if(this.getMethodConfigData('paymentWorkflow') === 'widget' 
+                if(self.getMethodConfigData('integrationType') === 'widget' 
                 && !self.flagSaveCheckoutPaymentInformationFacade
                 && self.validate() && additionalValidators.validate()) {
+                    destroyWidgetIframeFormAction(self.widgetIframeFormId);
                     self.flagSaveCheckoutPaymentInformationFacade = true;
                     self.isRetryCallPaymentWidgetButtonVisible(false);
+
                     $.when(
                         saveCheckoutPaymentInformationFacadeAction(self.getData(), self.messageContainer)
                     ).done(function(response) {
@@ -90,23 +98,23 @@ define(
                     });
                 }
             },
-            
+
             getMethodConfigData: function(field) {
                 throw new Error();
             },
-            
+
             isCurrentMethodSelected: function() {
                 return quote.paymentMethod() && quote.paymentMethod().method === this.getCode();
             },
-            
+
             getContracts: function() {
                 return window.checkoutConfig['payline']['general']['contracts'];
             },
-            
+
             validate: function() {
                 var parentValidate = this._super();
                 var currentValidate = true;
-                
+
                 if(!this.isContractChecked()) {
                     this.messageContainer.addErrorMessage({'message' : $t('You must choose a card type.')});
                     currentValidate = false;

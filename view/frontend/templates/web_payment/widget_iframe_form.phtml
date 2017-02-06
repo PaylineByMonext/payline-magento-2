@@ -5,7 +5,7 @@
         <link href="<?php echo $block->escapeHtml($block->getWidgetCssUrl()) ?>" rel="stylesheet" />
     </head>
     <body>
-        <?php if($dataTemplate == \Monext\Payline\PaylineApi\Constants::PAYMENT_WIDGET_DISPLAY_LIGHTBOX) : ?>
+        <?php if($dataTemplate == \Monext\Payline\PaylineApi\Constants::WIDGET_DISPLAY_LIGHTBOX) : ?>
         <div id="PaylineWidget" data-token="<?php echo $block->escapeHtml($block->getToken()) ?>"/>
         <?php else : ?>
         <div id="PaylineWidget" data-token="<?php echo $block->escapeHtml($block->getToken()) ?>" data-template="<?php echo $block->escapeHtml($dataTemplate) ?>"/>

@@ -13,17 +13,17 @@ class Environment implements ArrayInterface
     public function toOptionArray()
     {
         return [
-            [
+            /*[
                 'value' => PaylineSDK::ENV_DEV,
                 'label' => __(PaylineSDK::ENV_DEV),
-            ],
+            ],*/
             [
                 'value' => PaylineSDK::ENV_HOMO,
-                'label' => __(PaylineSDK::ENV_HOMO),
+                'label' => __('payline_test'),
             ],
             [
                 'value' => PaylineSDK::ENV_PROD,
-                'label' => __(PaylineSDK::ENV_PROD),
+                'label' => __('payline_production'),
             ]
         ];
     }

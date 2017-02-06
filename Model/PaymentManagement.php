@@ -144,7 +144,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $this->checkoutPaymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
         $result = $this->wrapCallPaylineApiDoWebPaymentFacade($cartId);
-        
+
         return $result;
     }
     
@@ -157,7 +157,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $this->quoteBillingAddressManagement->get($cartId),
             $this->quoteShippingAddressManagement->get($cartId)
         );
-        
+
         return [
             'token' => $response->getToken(), 
             'redirect_url' => $response->getRedirectUrl(),
@@ -177,14 +177,14 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         if($cart->getIsVirtual()) {
             $shippingAddress = null;
         }
-        
+
         $response = $this->callPaylineApiDoWebPayment($cart, $totals, $payment, $billingAddress, $shippingAddress);
-        
+
         if(!$response->isSuccess()) {
             // TODO log
             throw new \Exception($response->getShortErrorMessage());
         }
-        
+
         $this->orderIncrementIdTokenFactory->create()->associateTokenToOrderIncrementId(
             $cart->getReservedOrderId(), 
             $response->getToken()
@@ -208,16 +208,27 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             ->setShippingAddress($shippingAddress)
             ->setTotals($totals)
             ->setPayment($payment);
-        
+
         return $this->paylineApiClient->callDoWebPayment($request);
     }
-    
+
+    public function wrapCallPaylineApiGetWebPaymentDetails($token)
+    {
+        $response = $this->callPaylineApiGetWebPaymentDetails($token);
+
+        return [
+            'is_success' => $response->isSuccess(), 
+            'payment_data' => $response->isSuccess() ? $response->getPaymentData() : false,
+            'transaction_data' => $response->isSuccess() ? $response->getTransactionData() : false,
+        ];
+    }
+
     protected function callPaylineApiGetWebPaymentDetails($token)
     {
         $request = $this->requestGetWebPaymentDetailsFactory->create();
         $request
             ->setToken($token);
-        
+
         return $this->paylineApiClient->callGetWebPaymentDetails($request);
     }
     
@@ -345,29 +356,46 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $token = $this->orderIncrementIdTokenFactory->create()->getTokenByOrderIncrementId($order->getIncrementId());
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
-        
+
         if(!$response1->isSuccess()) {
             // TODO log
             throw new \Exception($response1->getShortErrorMessage());
         }
-        
+
         $paymentData = $response1->getPaymentData();
         $paymentData['amount'] = round($amount * 100, 0);
-        
+
         $authorizationTransaction = $this->transactionRepository->getByTransactionType(
             Transaction::TYPE_AUTH,
             $payment->getId(),
             $payment->getParentId()
         );
-        
+
         $response2 = $this->callPaylineApiDoCapture($authorizationTransaction, $paymentData);
-        
+
         if(!$response2->isSuccess()) {
             // TODO log
             throw new \Exception($response2->getShortErrorMessage());
         }
-        
+
         $payment->setTransactionId($response2->getTransactionId());
+
+        return $this;
+    }
+
+    public function applyPaymentReturnStrategyFromToken($token)
+    {
+        $response = $this->callPaylineApiGetWebPaymentDetails($token);
+
+        if($response->isSuccess()) {
+            $this->paylineCartManagement->placeOrderByToken($token);
+        } else {
+            $this->paylineCartManagement->handleReserveCartOrderId(
+                $this->paylineCartManagement->getCartByToken($token)->getId(), 
+                true
+            );
+            throw new \Exception('Payment has been in error.');
+        }
 
         return $this;
     }

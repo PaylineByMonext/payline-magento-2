@@ -17,22 +17,27 @@ define(
             .on('load', function() {
                 // this below part of code is from http://stackoverflow.com/a/21438822
                 var self = this;
-                var target = $(self)[0].contentDocument.body;
+                try {
+                    var target = $(self).contents()[0].body;
 
-                var observer = new MutationObserver(function(mutations) {
-                    $(self).height('auto');
-                    var newHeight = $('html', $(self)[0].contentDocument).height();
-                    $(self).height(newHeight);
-                });
-                
-                var config = {
-                    attributes: true,
-                    childList: true,
-                    characterData: true,
-                    subtree: true
-                };
+                    var observer = new MutationObserver(function(mutations) {
+                        $(self).height('auto');
+                        var newHeight = $('html', $(self).contents()[0]).height();
+                        $(self).height(newHeight);
+                    });
 
-                observer.observe(target, config);
+                    var config = {
+                        attributes: true,
+                        childList: true,
+                        characterData: true,
+                        subtree: true
+                    };
+
+                    observer.observe(target, config);
+                } catch(err) {
+                    //console.log(err);
+                    $(self).height(680);
+                }
             });
         };
     }

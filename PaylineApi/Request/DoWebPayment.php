@@ -123,17 +123,17 @@ class DoWebPayment extends AbstractRequest
         
         $paymentMethod = $this->payment->getMethod();
         $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
-        $paymentWorkflow = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_workflow');
+        $integrationType = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/integration_type');
         
-        if($paymentWorkflow == PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT) {
+        if($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
             $data['payment']['contractNumber'] = $paymentAdditionalInformation['contract_number'];
             $data['contracts'] = [$paymentAdditionalInformation['contract_number']];
-            $this->prepareUrlsForPaymentWorkflowRedirect($data);
-        } elseif($paymentWorkflow == PaylineApiConstants::PAYMENT_WORKFLOW_WIDGET) {
+            $this->prepareUrlsForIntegrationTypeRedirect($data);
+        } elseif($integrationType == PaylineApiConstants::INTEGRATION_TYPE_WIDGET) {
             $usedContracts = $this->contractManagement->getUsedContracts();
             $data['payment']['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
             $data['contracts'] = $usedContracts->getColumnValues('number');
-            $this->prepareUrlsForPaymentWorkflowWidget($data);
+            $this->prepareUrlsForIntegrationTypeWidget($data);
         }
         
         return $data;
@@ -158,14 +158,14 @@ class DoWebPayment extends AbstractRequest
         $data['order']['date'] = $this->formatDateTime($this->cart->getCreatedAt());
     }
     
-    protected function prepareUrlsForPaymentWorkflowRedirect(&$data)
+    protected function prepareUrlsForIntegrationTypeRedirect(&$data)
     {
         $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
         $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/cancelfrompaymentgateway');
         $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
     }
     
-    protected function prepareUrlsForPaymentWorkflowWidget(&$data)
+    protected function prepareUrlsForIntegrationTypeWidget(&$data)
     {
         if($this->cart->getCustomer() && $this->cart->getCustomer()->getId()) {
             $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');

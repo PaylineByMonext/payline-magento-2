@@ -98,17 +98,17 @@
                             <label>Title</label>
                             <config_path>payment/payline_web_payment_cpt/title</config_path>
                         </field>
-                        <field id="payment_workflow" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Payment Workflow</label>
-                            <source_model>Monext\Payline\Model\System\Config\Source\PaymentWorkflow</source_model>
-                            <config_path>payment/payline_web_payment_cpt/payment_workflow</config_path>
+                        <field id="integration_type" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Type of Integration</label>
+                            <source_model>Monext\Payline\Model\System\Config\Source\IntegrationType</source_model>
+                            <config_path>payment/payline_web_payment_cpt/integration_type</config_path>
                         </field>
                         <field id="widget_display" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-                            <label>Widget Display</label>
+                            <label>payline_widget_display</label>
                             <source_model>Monext\Payline\Model\System\Config\Source\WidgetDisplay</source_model>
                             <config_path>payment/payline_web_payment_cpt/widget_display</config_path>
                             <depends>
-                                <field id="payment_workflow">widget</field>
+                                <field id="integration_type">widget</field>
                             </depends>
                         </field>
                         <field id="payment_action" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">

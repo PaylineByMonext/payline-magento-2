@@ -11,9 +11,9 @@ use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 class Cpt extends AbstractMethod
 {
     protected $_code = HelperConstants::WEB_PAYMENT_CPT;
-    
+
     protected $_isInitializeNeeded = true;
-    
+
     protected $_isGateway = true;
 
     protected $_canCapture = true;
@@ -21,13 +21,13 @@ class Cpt extends AbstractMethod
     protected $_canRefund = true;
 
     protected $_canVoid = true;
-    
+
     public function initialize($paymentAction, $stateObject)
     {
         $payment = $this->getInfoInstance();
         
         if($payment instanceof OrderPayment 
-        && $this->getConfigData('payment_workflow') == PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT) {
+        && $this->getConfigData('integration_type') == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
             $quoteId = $payment->getOrder()->getQuoteId();
             $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteId);
         

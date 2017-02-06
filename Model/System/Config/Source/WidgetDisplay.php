@@ -14,16 +14,16 @@ class WidgetDisplay implements ArrayInterface
     {
         return [
             [
-                'value' => PaylineApiConstants::PAYMENT_WIDGET_DISPLAY_COLUMN,
-                'label' => __(PaylineApiConstants::PAYMENT_WIDGET_DISPLAY_COLUMN),
+                'value' => PaylineApiConstants::WIDGET_DISPLAY_COLUMN,
+                'label' => __(PaylineApiConstants::WIDGET_DISPLAY_COLUMN),
             ],
             [
-                'value' => PaylineApiConstants::PAYMENT_WIDGET_DISPLAY_TAB,
-                'label' => __(PaylineApiConstants::PAYMENT_WIDGET_DISPLAY_TAB),
+                'value' => PaylineApiConstants::WIDGET_DISPLAY_TAB,
+                'label' => __(PaylineApiConstants::WIDGET_DISPLAY_TAB),
             ],
             /*[
-                'value' => PaylineSDK::PAYMENT_WIDGET_DISPLAY_LIGHTBOX,
-                'label' => __(PaylineSDK::PAYMENT_WIDGET_DISPLAY_LIGHTBOX),
+                'value' => PaylineSDK::WIDGET_DISPLAY_LIGHTBOX,
+                'label' => __(PaylineSDK::WIDGET_DISPLAY_LIGHTBOX),
             ]*/
         ];
     }

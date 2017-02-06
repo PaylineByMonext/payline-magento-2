@@ -37,7 +37,7 @@ class CptConfigProvider extends AbstractMethodConfigProvider
     {
         $config = parent::getConfig();
         
-        $config['payment']['paylineWebPaymentCpt']['paymentWorkflow'] = $this->getMethodConfigData('payment_workflow');
+        $config['payment']['paylineWebPaymentCpt']['integrationType'] = $this->getMethodConfigData('integration_type');
 
         return $config;
     }
@@ -48,6 +48,7 @@ class CptConfigProvider extends AbstractMethodConfigProvider
             PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_CB => 'cb.png',
             PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_CB_3DS => 'cb.png',
             PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_PAYPAL => 'paypal.png',
+            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_AMEX => 'amex.gif',
         ];
     }
 }

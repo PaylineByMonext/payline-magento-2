@@ -5,7 +5,7 @@ namespace Monext\Payline\Model\System\Config\Source;
 use Magento\Framework\Option\ArrayInterface;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
-class PaymentWorkflow implements ArrayInterface
+class IntegrationType implements ArrayInterface
 {
     /**
      * @return array
@@ -14,13 +14,13 @@ class PaymentWorkflow implements ArrayInterface
     {
         return [
             [
-                'value' => PaylineApiConstants::PAYMENT_WORKFLOW_REDIRECT,
-                'label' => __('Redirect'),
+                'value' => PaylineApiConstants::INTEGRATION_TYPE_REDIRECT,
+                'label' => __('payline_redirect'),
             ],
             [
-                'value' => PaylineApiConstants::PAYMENT_WORKFLOW_WIDGET,
-                'label' => __('Widget'),
-            ]
+                'value' => PaylineApiConstants::INTEGRATION_TYPE_WIDGET,
+                'label' => __('payline_widget'),
+            ],
         ];
     }
 }
