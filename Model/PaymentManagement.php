@@ -390,8 +390,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         if($response->isSuccess()) {
             $this->paylineCartManagement->placeOrderByToken($token);
         } else {
-            $this->paylineCartManagement->handleReserveCartOrderId(
-                $this->paylineCartManagement->getCartByToken($token)->getId(), 
+            $this->paylineCartManagement->handleReserveCartOrderIdFacade(
+                $this->paylineCartManagement->getCartByToken($token)->getId(),
+                $token,
                 true
             );
             throw new \Exception('Payment has been in error.');

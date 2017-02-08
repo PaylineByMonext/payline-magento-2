@@ -66,7 +66,16 @@ class CartManagement
         
         return $this;
     }
-    
+
+    public function handleReserveCartOrderIdFacade($cartId, $token, $forceReserve = false)
+    {
+        $this->handleReserveCartOrderId($cartId, $forceReserve);
+        $this->orderIncrementIdTokenFactory->create()->associateOrderIncrementIdToToken(
+            $token, $this->cartRepository->getActive($cartId)->getReservedOrderId()
+        );
+        return $this;
+    }
+
     public function placeOrderByToken($token)
     {
         $quote = $this->getCartByToken($token);

@@ -10,7 +10,7 @@ class OrderIncrementIdToken extends AbstractModel
     {
         $this->_init('Monext\Payline\Model\ResourceModel\OrderIncrementIdToken');
     }
-    
+
     // TODO Put this in a dedicated repository
     public function associateTokenToOrderIncrementId($orderIncrementId, $token)
     {
@@ -32,7 +32,29 @@ class OrderIncrementIdToken extends AbstractModel
         
         return $this;
     }
-    
+
+    // TODO Put this in a dedicated repository
+    public function associateOrderIncrementIdToToken($token, $orderIncrementId)
+    {
+        $itemCandidate = $this->getCollection()
+            ->addFieldToFilter('token', $token)
+            ->getFirstItem();
+
+        if(empty($itemCandidate) || !$itemCandidate->getId()) {
+            $item = $this->getCollection()->getNewEmptyItem();
+            $item
+                ->setToken($token);
+        } else {
+            $item = $itemCandidate;
+        }
+
+        $item
+            ->setOrderIncrementId($orderIncrementId)
+            ->save();
+
+        return $this;
+    }
+
     // TODO Put this in a dedicated repository
     public function getOrderIncrementIdByToken($token)
     {
