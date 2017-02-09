@@ -3,22 +3,16 @@
 namespace Monext\Payline\Model;
 
 use Magento\Checkout\Api\GuestPaymentInformationManagementInterface as CheckoutGuestPaymentInformationManagementInterface;
-use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\AddressInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Monext\Payline\Api\GuestPaymentManagementInterface as PaylineGuestPaymentManagementInterface;
-use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 use Monext\Payline\Model\GuestCartManagement as PaylineGuestCartManagement;
+use Monext\Payline\Model\OrderManagement as PaylineOrderManagement;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
 class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
 {
-    /**
-     * @var CartRepositoryInterface
-     */
-    protected $cartRepository;
-
     /**
      * @var CheckoutGuestPaymentInformationManagementInterface 
      */
@@ -35,30 +29,28 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
     protected $quoteIdMaskFactory;
 
     /**
-     * @var PaylineCartManagement 
-     */
-    protected $paylineCartManagement;
-
-    /**
      * @var PaylineGuestCartManagement 
      */
     protected $paylineGuestCartManagement;
-
+    
+    /**
+     * @var PaylineOrderManagement
+     */
+    protected $paylineOrderManagement;
+    
     public function __construct(
-        CartRepositoryInterface $cartRepository, 
         CheckoutGuestPaymentInformationManagementInterface $checkoutGuestPaymentInformationManagement,
         PaylinePaymentManagement $paylinePaymentManagement,
         QuoteIdMaskFactory $quoteIdMaskFactory,
-        PaylineCartManagement $paylineCartManagement,
-        PaylineGuestCartManagement $paylineGuestCartManagement
+        PaylineGuestCartManagement $paylineGuestCartManagement,
+        PaylineOrderManagement $paylineOrderManagement
     )
     {
         $this->checkoutGuestPaymentInformationManagement = $checkoutGuestPaymentInformationManagement;
         $this->paylinePaymentManagement = $paylinePaymentManagement;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
-        $this->paylineCartManagement = $paylineCartManagement;
-        $this->cartRepository = $cartRepository;
         $this->paylineGuestCartManagement = $paylineGuestCartManagement;
+        $this->paylineOrderManagement = $paylineOrderManagement;
     }
 
     public function saveCheckoutPaymentInformationFacade(
@@ -70,26 +62,20 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
     {
         $this->checkoutGuestPaymentInformationManagement->savePaymentInformation($cartId, $email, $paymentMethod, $billingAddress);
         $quoteIdMask = $this->quoteIdMaskFactory->create()->load($cartId, 'masked_id');
-        $this->paylineCartManagement->handleReserveCartOrderId($quoteIdMask->getQuoteId());
+        $this->paylineGuestCartManagement->handleReserveCartOrderId($quoteIdMask->getQuoteId());
         $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteIdMask->getQuoteId());
         return $result;
     }
 
-    public function applyPaymentReturnStrategyFromToken($token)
+    public function synchronizePaymentWithPaymentGatewayFacade($token, $restoreCartOnError = false)
     {
-        $responseData = $this->paylinePaymentManagement->wrapCallPaylineApiGetWebPaymentDetails($token);
+        $order = $this->paylineOrderManagement->getOrderByToken($token);
 
-        if($responseData['is_success']) {
+        if(!$order->getId()) {
             $this->paylineGuestCartManagement->placeOrderByToken($token);
-        } else {
-            $this->paylineCartManagement->handleReserveCartOrderIdFacade(
-                $this->paylineCartManagement->getCartByToken($token)->getId(),
-                $token,
-                true
-            );
-            throw new \Exception('Payment has been in error.');
         }
 
+        $this->paylinePaymentManagement->synchronizePaymentWithPaymentGatewayFacade($token, $restoreCartOnError);
         return $this;
     }
 }

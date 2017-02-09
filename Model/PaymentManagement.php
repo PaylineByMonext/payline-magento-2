@@ -16,6 +16,7 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Api\Data\TransactionInterface;
 use Magento\Sales\Model\Order as Order;
+use Magento\Sales\Model\Order\Payment as OrderPayment;
 use Magento\Sales\Model\Order\Payment\Transaction;
 //use Magento\Sales\Api\TransactionRepositoryInterface; Cannot use TransactionRepositoryInterface because needed methods are not exposed in
 use Magento\Sales\Model\Order\Payment\Transaction\Repository as TransactionRepository;
@@ -212,17 +213,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         return $this->paylineApiClient->callDoWebPayment($request);
     }
 
-    public function wrapCallPaylineApiGetWebPaymentDetails($token)
-    {
-        $response = $this->callPaylineApiGetWebPaymentDetails($token);
-
-        return [
-            'is_success' => $response->isSuccess(), 
-            'payment_data' => $response->isSuccess() ? $response->getPaymentData() : false,
-            'transaction_data' => $response->isSuccess() ? $response->getTransactionData() : false,
-        ];
-    }
-
     protected function callPaylineApiGetWebPaymentDetails($token)
     {
         $request = $this->requestGetWebPaymentDetailsFactory->create();
@@ -244,110 +234,116 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         
         return $this->paylineApiClient->callDoCapture($request);
     }
-    
-    public function handlePaymentGatewayNotifyByToken($token)
+
+    public function synchronizePaymentWithPaymentGatewayFacade($token, $restoreCartOnError = false)
     {
-        $response = $this->callPaylineApiGetWebPaymentDetails($token);
-        
         $order = $this->paylineOrderManagement->getOrderByToken($token);
-        
-        if($response->isSuccess()) {
-            $this->handlePaymentGatewayNotifySuccess($response, $order);
-        } else {
-            $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
-            
-            if($response->isWaitingAcceptance()) {
-                $this->handlePaymentGatewayNotifyWaitingAcceptance($order, $message);
-            } elseif($response->isCanceled()) {
-                $this->handlePaymentGatewayNotifyCanceled($order, $message);
-            } elseif($response->isAbandoned()) {
-                $this->handlePaymentGatewayNotifyAbandoned($order, $message);
-            } elseif($response->isFraud()) {
-                $this->handlePaymentGatewayNotifyFraud($order, $message);
-            } else {
-                $this->handlePaymentGatewayNotifyRefused($order, $message);
-            }
+
+        if(!$order->getId()) {
+            $this->paylineCartManagement->placeOrderByToken($token);
         }
-        
-        $order->save();
-        
+
+        $this->synchronizePaymentWithPaymentGateway($order->getPayment(), $token);
+
+        if($order->getPayment()->getData('is_in_error')) {
+            if($restoreCartOnError) {
+                $this->paylineCartManagement->restoreCartFromOrder($order);
+            }
+
+            throw new \Exception(__('Payment is in error.'));
+        }
+
         return $this;
     }
-    
-    protected function handlePaymentGatewayNotifySuccess(
+
+    protected function synchronizePaymentWithPaymentGateway(OrderPayment $payment, $token)
+    {
+        $response = $this->callPaylineApiGetWebPaymentDetails($token);
+
+        if($response->isSuccess()) {
+            $this->handlePaymentSuccess($response, $payment);
+        } else {
+            $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
+
+            if($response->isWaitingAcceptance()) {
+                $this->handlePaymentWaitingAcceptance($payment, $message);
+            } elseif($response->isCanceled()) {
+                $this->handlePaymentCanceled($payment->setData('is_in_error', true), $message);
+            } elseif($response->isAbandoned()) {
+                $this->handlePaymentAbandoned($payment->setData('is_in_error', true), $message);
+            } elseif($response->isFraud()) {
+                $this->handlePaymentFraud($payment->setData('is_in_error', true), $message);
+            } else {
+                $this->handlePaymentRefused($payment->setData('is_in_error', true), $message);
+            }
+        }
+
+        $payment->getOrder()->save();
+
+        return $this;
+    }
+
+    protected function handlePaymentSuccess(
         ResponseGetWebPaymentDetailsFactory $response, 
-        Order $order
+        OrderPayment $payment
     )
     {
         $transactionData = $response->getTransactionData();
         $paymentData = $response->getPaymentData();
-        
-        $orderPayment = $order->getPayment();
-        $orderPayment->setTransactionId($transactionData['id']);
-        
+
+        $payment->setTransactionId($transactionData['id']);
+
         // TODO Add controls to avoid double authorization/capture
         if($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION) {
-            $orderPayment->setIsTransactionClosed(false);
-            $orderPayment->authorize(false, $paymentData['amount'] / 100);
+            $payment->setIsTransactionClosed(false);
+            $payment->authorize(false, $paymentData['amount'] / 100);
             $this->paylineOrderManagement->handleSetOrderStateStatus(
-                $order, null, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_CAPTURE
+                $payment->getOrder(), null, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_CAPTURE
             );
         } elseif($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION_CAPTURE) {
-            $orderPayment->getMethodInstance()->setSkipCapture(true);
-            $orderPayment->capture();
+            $payment->getMethodInstance()->setSkipCapture(true);
+            $payment->capture();
             $this->paylineOrderManagement->handleSetOrderStateStatus(
-                $order, null, HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED
+                $payment->getOrder(), null, HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED
             );
         }
     }
     
-    protected function handlePaymentGatewayNotifyFraud(Order $order, $message = null)
+    protected function handlePaymentFraud(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $order, Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_FRAUD, $message
+            $payment->getOrder(), Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_FRAUD, $message
         );
     }
     
-    protected function handlePaymentGatewayNotifyWaitingAcceptance(Order $order, $message = null)
+    protected function handlePaymentWaitingAcceptance(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $order, Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE, $message
+            $payment->getOrder(), Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE, $message
         );
     }
     
-    protected function handlePaymentGatewayNotifyAbandoned(Order $order, $message = null)
+    protected function handlePaymentAbandoned(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $order, Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED, $message
+            $payment->getOrder(), Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED, $message
         );
     }
     
-    protected function handlePaymentGatewayNotifyRefused(Order $order, $message = null)
+    protected function handlePaymentRefused(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $order, Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_REFUSED, $message
+            $payment->getOrder(), Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_REFUSED, $message
         );
     }
     
-    protected function handlePaymentGatewayNotifyCanceled(Order $order, $message = null)
+    protected function handlePaymentCanceled(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $order, Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_CANCELED, $message
+            $payment->getOrder(), Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_CANCELED, $message
         );
     }
-    
-    public function handlePaymentGatewayCancelByToken($token)
-    {
-        $order = $this->paylineOrderManagement->getOrderByToken($token);
-        
-        $this->handlePaymentGatewayNotifyCanceled($order);
-        
-        $order->save();
-        $this->paylineCartManagement->restoreCartFromOrder($order);
-        
-        return $this;
-    }
-    
+
     public function callPaylineApiDoCaptureFacade(
         OrderInterface $order,
         OrderPaymentInterface $payment, 
@@ -379,24 +375,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         $payment->setTransactionId($response2->getTransactionId());
-
-        return $this;
-    }
-
-    public function applyPaymentReturnStrategyFromToken($token)
-    {
-        $response = $this->callPaylineApiGetWebPaymentDetails($token);
-
-        if($response->isSuccess()) {
-            $this->paylineCartManagement->placeOrderByToken($token);
-        } else {
-            $this->paylineCartManagement->handleReserveCartOrderIdFacade(
-                $this->paylineCartManagement->getCartByToken($token)->getId(),
-                $token,
-                true
-            );
-            throw new \Exception('Payment has been in error.');
-        }
 
         return $this;
     }

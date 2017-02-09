@@ -50,29 +50,20 @@ class CartManagement
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
         $this->checkoutCart = $checkoutCart;
     }
-    
+
     public function handleReserveCartOrderId($cartId, $forceReserve = false)
     {
         $cart = $this->cartRepository->getActive($cartId);
-        
+
         if($forceReserve) {
             $cart->setReservedOrderId(null);
         }
-        
+
         if(!$cart->getReservedOrderId()) {
             $cart->reserveOrderId();
             $this->cartRepository->save($cart);
         }
-        
-        return $this;
-    }
 
-    public function handleReserveCartOrderIdFacade($cartId, $token, $forceReserve = false)
-    {
-        $this->handleReserveCartOrderId($cartId, $forceReserve);
-        $this->orderIncrementIdTokenFactory->create()->associateOrderIncrementIdToToken(
-            $token, $this->cartRepository->getActive($cartId)->getReservedOrderId()
-        );
         return $this;
     }
 
@@ -82,15 +73,15 @@ class CartManagement
         $this->cartManagement->placeOrder($quote->getId());
         return $this;
     }
-    
+
     public function restoreCartFromOrder(Order $order)
     {
         foreach($order->getItemsCollection() as $orderItem) {
             $this->checkoutCart->addOrderItem($orderItem);
         }
-        
+
         // TODO Handle couponCode
-        
+
         $this->checkoutCart->save();
         return $this;
     }

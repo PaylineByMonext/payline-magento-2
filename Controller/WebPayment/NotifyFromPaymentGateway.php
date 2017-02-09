@@ -32,9 +32,14 @@ class NotifyFromPaymentGateway extends Action
     
     public function execute() 
     {
-        // TODO handle exception
-        $this->paylinePaymentManagement->handlePaymentGatewayNotifyByToken($this->getToken());
-        
+        $isSuccess = true;
+
+        try {
+            $this->paylinePaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), false);
+        } catch (\Exception $e) {
+            $isSuccess = false;
+        }
+
         $resultRaw = $this->resultRawFactory->create();
         $resultRaw->setContents('');
         return $resultRaw;

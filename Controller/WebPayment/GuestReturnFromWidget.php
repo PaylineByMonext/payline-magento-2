@@ -43,7 +43,7 @@ class GuestReturnFromWidget extends Action
         $isSuccess = true;
 
         try {
-            $this->paylineGuestPaymentManagement->applyPaymentReturnStrategyFromToken($this->getToken());
+            $this->paylineGuestPaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), true);
         } catch(\Exception $e) {
             $isSuccess = false;
         }
