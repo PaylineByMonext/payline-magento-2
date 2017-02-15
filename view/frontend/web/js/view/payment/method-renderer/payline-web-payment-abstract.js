@@ -67,7 +67,7 @@ define(
             },
 
             afterPlaceOrder: function () {
-                if(this.getMethodConfigData('paymentWorkflow') === 'redirect') {
+                if(this.getMethodConfigData('integrationType') === 'redirect') {
                     redirect('payline/webpayment/redirecttopaymentgateway');
                 }
             },
