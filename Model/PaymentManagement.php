@@ -241,6 +241,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         if(!$order->getId()) {
             $this->paylineCartManagement->placeOrderByToken($token);
+            $order = $this->paylineOrderManagement->getOrderByToken($token);
         }
 
         $this->synchronizePaymentWithPaymentGateway($order->getPayment(), $token);
@@ -366,6 +367,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $payment->getId(),
             $payment->getParentId()
         );
+
+        if(!$authorizationTransaction) {
+            // TODO log
+            throw new \Exception(__('No authorization transaction found for this order.'));
+        }
 
         $response2 = $this->callPaylineApiDoCapture($authorizationTransaction, $paymentData);
 

@@ -15,27 +15,27 @@ class CartManagement
      * @var CartRepositoryInterface 
      */
     protected $cartRepository;
-    
+
     /**
      * @var CartManagementInterface 
      */
     protected $cartManagement;
-    
+
     /**
      * @var QuoteFactory 
      */
     protected $quoteFactory;
-    
+
     /**
      * @var OrderIncrementIdTokenFactory
      */
     protected $orderIncrementIdTokenFactory;
-    
+
     /**
      * @var CheckoutCart 
      */
     protected $checkoutCart;
-    
+
     public function __construct(
         CartRepositoryInterface $cartRepository,
         CartManagementInterface $cartManagement,

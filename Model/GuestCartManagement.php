@@ -17,12 +17,12 @@ class GuestCartManagement
      * @var QuoteIdMaskFactory
      */
     protected $quoteIdMaskFactory;
-    
+
     /**
      * @var PaylineCartManagement
      */
     protected $paylineCartManagement;
-    
+
     public function __construct(
         GuestCartManagementInterface $guestCartManagement,
         QuoteIdMaskFactory $quoteIdMaskFactory,
@@ -33,7 +33,7 @@ class GuestCartManagement
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->paylineCartManagement = $paylineCartManagement;
     }
-    
+
     public function placeOrderByToken($token)
     {
         $quote = $this->paylineCartManagement->getCartByToken($token);
