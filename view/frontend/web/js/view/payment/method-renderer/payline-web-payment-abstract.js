@@ -8,39 +8,43 @@ define(
         'Magento_Checkout/js/model/payment/additional-validators',
         'Monext_Payline/js/action/redirect',
         'Monext_Payline/js/action/save-checkout-payment-information-facade',
-        'Monext_Payline/js/action/load-widget-iframe-form',
-        'Monext_Payline/js/action/destroy-widget-iframe-form',
+        'Monext_Payline/js/action/load-widget',
+        'Monext_Payline/js/action/destroy-widget',
+        'Monext_Payline/js/lib/Uri',
     ],
     function (
-        $, 
+        $,
         ko,
-        Component, 
+        Component,
         $t,
-        quote, 
+        quote,
         additionalValidators,
-        redirect, 
-        saveCheckoutPaymentInformationFacadeAction, 
-        loadWidgetIframeFormAction, 
-        destroyWidgetIframeFormAction
+        redirect,
+        saveCheckoutPaymentInformationFacadeAction,
+        loadWidgetAction,
+        destroyWidgetAction,
+        Uri
     ) {
         'use strict';
 
         return Component.extend({
             redirectAfterPlaceOrder: false,
-            flagSaveCheckoutPaymentInformationFacade: false,
+            flagPreventSaveCheckoutPaymentInformationFacade: false,
 
             initialize: function () {
-                this._super();
+                this._super().initChildren();
 
                 if(this.getMethodConfigData('integrationType') === 'widget') {
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
-                    this.widgetIframeFormId = 'widget-iframe-form';
-                    this.widgetIframeFormContainerId = 'widget-iframe-form-container';
+                    this.widgetContainerId = 'payline-widget-container';
+                    this.widgetJsApiId = 'payline-widget-js-api';
                     this.isPaymentWidgetMessageVisible = ko.observable(false);
                     this.isRetryCallPaymentWidgetButtonVisible = ko.observable(false);
                     this.isContractChecked = ko.observable(-1);
+                    this.flagPreventSaveCheckoutPaymentInformationFacade = this.getPaylinetokenQueryParam() ? true : false;
+                    this.areMagentoInputsVisible = ko.observable(this.getPaylinetokenQueryParam() ? false : true);
 
-                    destroyWidgetIframeFormAction(this.widgetIframeFormId);
+                    destroyWidgetAction(this.widgetContainerId, this.widgetJsApiId);
 
                     // PREVENT TO SUSBCRIBE MULTIPLE TIMES AS THIS PAYMENT JS COMPONENTS CAN BE INITIALIZED SEVERAL 
                     // TIMES IF CUSTOMER GOES TO REVIEW => SHIPPING => REVIEW ... AND SO ON
@@ -49,7 +53,7 @@ define(
                             if(address !== null && this.isCurrentMethodSelected()) {
                                 this.saveCheckoutPaymentInformationFacade();
                             } else if(address === null) {
-                                destroyWidgetIframeFormAction(this.widgetIframeFormId);
+                                destroyWidgetAction(this.widgetContainerId, this.widgetJsApiId);
                                 this.isPaymentWidgetMessageVisible(true);
                             }
                         }, this);
@@ -66,6 +70,26 @@ define(
                 }
             },
 
+            tryReloadWidget: function() {
+                var self = this;
+
+                if(this.getPaylinetokenQueryParam()) {
+                    loadWidgetAction(
+                        self.widgetContainerId,
+                        self.getMethodConfigData('widgetDisplay'),
+                        this.getPaylinetokenQueryParam(),
+                        function() {
+                            if(!window.isPaylineWidgetCssApiLoaded) {
+                                self.initWidgetCssApi();
+                                window.isPaylineWidgetCssApiLoaded = true;
+                            }
+
+                            self.initWidgetJsApi();
+                        }
+                    );
+                }
+            },
+
             afterPlaceOrder: function () {
                 if(this.getMethodConfigData('integrationType') === 'redirect') {
                     redirect('payline/webpayment/redirecttopaymentgateway');
@@ -76,25 +100,33 @@ define(
                 var self = this;
 
                 if(self.getMethodConfigData('integrationType') === 'widget' 
-                && !self.flagSaveCheckoutPaymentInformationFacade
+                && !self.flagPreventSaveCheckoutPaymentInformationFacade
                 && self.validate() && additionalValidators.validate()) {
-                    destroyWidgetIframeFormAction(self.widgetIframeFormId);
-                    self.flagSaveCheckoutPaymentInformationFacade = true;
+                    destroyWidgetAction(self.widgetContainerId, self.widgetJsApiId);
+                    self.flagPreventSaveCheckoutPaymentInformationFacade = true;
                     self.isRetryCallPaymentWidgetButtonVisible(false);
 
                     $.when(
                         saveCheckoutPaymentInformationFacadeAction(self.getData(), self.messageContainer)
                     ).done(function(response) {
-                        loadWidgetIframeFormAction(
-                            'payline/webpayment/loadwidgetiframeform/token/'+response[0], 
-                            self.widgetIframeFormId, 
-                            self.widgetIframeFormContainerId
+                        loadWidgetAction(
+                            self.widgetContainerId,
+                            self.getMethodConfigData('widgetDisplay'),
+                            response[0],
+                            function() {
+                                if(!window.isPaylineWidgetCssApiLoaded) {
+                                    self.initWidgetCssApi();
+                                    window.isPaylineWidgetCssApiLoaded = true;
+                                }
+
+                                self.initWidgetJsApi();
+                            }
                         );
                         self.isPaymentWidgetMessageVisible(false);
-                        self.flagSaveCheckoutPaymentInformationFacade = false;
+                        self.flagPreventSaveCheckoutPaymentInformationFacade = false;
                     }).fail(function(response) {
                         self.isRetryCallPaymentWidgetButtonVisible(true);
-                        self.flagSaveCheckoutPaymentInformationFacade = false;
+                        self.flagPreventSaveCheckoutPaymentInformationFacade = false;
                     });
                 }
             },
@@ -111,6 +143,10 @@ define(
                 return window.checkoutConfig['payline']['general']['contracts'];
             },
 
+            getEnvironment: function() {
+                return window.checkoutConfig['payline']['general']['environment'];
+            },
+
             validate: function() {
                 var parentValidate = this._super();
                 var currentValidate = true;
@@ -121,6 +157,27 @@ define(
                 }
 
                 return parentValidate && currentValidate;
+            },
+
+            initWidgetJsApi: function() {
+                if(this.getEnvironment() === 'PROD') {
+                    $('head').append('<script id="payline-widget-api-js" type="text/javascript" src="https://payment.payline.com/scripts/widget-min.js"></script>');
+                } else {
+                    $('head').append('<script id="payline-widget-api-js" type="text/javascript" src="https://homologation-payment.payline.com/scripts/widget-min.js"></script>');
+                }
+            },
+
+            initWidgetCssApi: function() {
+                if(this.getEnvironment() === 'PROD') {
+                    $('head').append('<link rel="stylesheet" type="text/css" href="https://payment.payline.com/styles/widget-min.css">');
+                } else {
+                    $('head').append('<link rel="stylesheet" type="text/css" href="https://homologation-payment.payline.com/styles/widget-min.css">');
+                }
+            },
+
+            getPaylinetokenQueryParam: function() {
+                var uri = new Uri(window.location.href);
+                return uri.getQueryParamValue('paylinetoken');
             }
         });
     }

@@ -41,11 +41,5 @@ class GuestCartManagement
         $this->guestCartManagement->placeOrder($quoteIdMask->getMaskedId());
         return $this;
     }
-
-    public function handleReserveCartOrderId($cartId, $forceReserve = false)
-    {
-        $this->paylineCartManagement->handleReserveCartOrderId($cartId, $forceReserve);
-        return $this;
-    }
 }
 

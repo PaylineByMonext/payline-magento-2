@@ -15,18 +15,18 @@
             <span data-bind="i18n: 'Payline payment widget will appear when the billing address informations are filled.'"></span>             
         </div>
         
-        <div class="payment-method-billing-address">
+        <div class="payment-method-billing-address" data-bind="visible: areMagentoInputsVisible()">
             <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-        <div class="checkout-agreements-block">
+        <div class="checkout-agreements-block" data-bind="visible: areMagentoInputsVisible()">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
                 <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
         
-        <div id="widget-iframe-form-container">
+        <div id="payline-widget-container" data-bind="afterRender: tryReloadWidget">
         </div>
         
         <div class="actions-toolbar">

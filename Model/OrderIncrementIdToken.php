@@ -63,7 +63,7 @@ class OrderIncrementIdToken extends AbstractModel
             ->getFirstItem();
         
         if(empty($itemCandidate) || !$itemCandidate->getId()) {
-            // TODO Throw Exception
+            return null;
         }
         
         return $itemCandidate->getOrderIncrementId();
@@ -76,7 +76,7 @@ class OrderIncrementIdToken extends AbstractModel
             ->getFirstItem();
         
         if(empty($itemCandidate) || !$itemCandidate->getId()) {
-            // TODO Throw Exception
+            return null;
         }
         
         return $itemCandidate->getToken();

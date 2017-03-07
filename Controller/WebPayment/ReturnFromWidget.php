@@ -3,8 +3,6 @@
 namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
-use Magento\Framework\View\Element\TemplateFactory;
 use Monext\Payline\Controller\Action;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
@@ -15,27 +13,13 @@ class ReturnFromWidget extends Action
      */
     protected $paylinePaymentManagement;
 
-    /**
-     * @var ResultRawFactory 
-     */
-    protected $resultRawFactory;
-
-    /**
-     * @var TemplateFactory 
-     */
-    protected $templateFactory;
-
     public function __construct(
         Context $context,
-        PaylinePaymentManagement $paylinePaymentManagement,
-        ResultRawFactory $resultRawFactory,
-        TemplateFactory $templateFactory
+        PaylinePaymentManagement $paylinePaymentManagement
     )
     {
         parent::__construct($context);
-        $this->resultRawFactory = $resultRawFactory;
         $this->paylinePaymentManagement = $paylinePaymentManagement;
-        $this->templateFactory = $templateFactory;
     }
 
     public function execute() 
@@ -48,13 +32,9 @@ class ReturnFromWidget extends Action
             $isSuccess = false;
         }
 
-        $resultRaw = $this->resultRawFactory->create();
-
-        $block = $this->templateFactory->create();
-        $block->setTemplate($isSuccess ? 'Monext_Payline::web_payment/widget_iframe_success.phtml' : 'Monext_Payline::web_payment/widget_iframe_failure.phtml');
-        $resultRaw->setContents($block->toHtml());
-
-        return $resultRaw;
+        $resultRedirect = $this->resultRedirectFactory->create();
+        $resultRedirect->setPath($isSuccess ? 'checkout/onepage/success' : 'checkout');
+        return $resultRedirect;
     }
 }
 

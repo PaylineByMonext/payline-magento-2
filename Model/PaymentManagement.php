@@ -30,7 +30,7 @@ use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 use Monext\Payline\PaylineApi\Request\DoCaptureFactory as RequestDoCaptureFactory;
 use Monext\Payline\PaylineApi\Request\DoWebPaymentFactory as RequestDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetailsFactory as RequestGetWebPaymentDetailsFactory;
-use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetailsFactory;
+use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetails;
 
 class PaymentManagement implements PaylinePaymentManagementInterface
 {
@@ -285,7 +285,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     }
 
     protected function handlePaymentSuccess(
-        ResponseGetWebPaymentDetailsFactory $response, 
+        ResponseGetWebPaymentDetails $response,
         OrderPayment $payment
     )
     {

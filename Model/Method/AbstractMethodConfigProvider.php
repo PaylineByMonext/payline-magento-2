@@ -3,10 +3,12 @@
 namespace Monext\Payline\Model\Method;
 
 use Magento\Checkout\Model\ConfigProviderInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository as AssetRepository;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Payment\Model\MethodInterface;
+use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\Model\ContractManagement;
 
 abstract class AbstractMethodConfigProvider implements ConfigProviderInterface
@@ -36,21 +38,29 @@ abstract class AbstractMethodConfigProvider implements ConfigProviderInterface
      */
     protected $urlBuilder;
     
+    /**
+     * @var ScopeConfigInterface
+     */
+    protected $scopeConfig;
+
     public function __construct(
         PaymentHelper $paymentHelper,
         AssetRepository $assetRepository,
         ContractManagement $contractManagement,
-        UrlInterface $urlBuilder
+        UrlInterface $urlBuilder,
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->paymentHelper = $paymentHelper;
         $this->assetRepository = $assetRepository;
         $this->contractManagement = $contractManagement;
         $this->urlBuilder = $urlBuilder;
+        $this->scopeConfig = $scopeConfig;
     }
 
     public function getConfig()
     {
         $config = [];
+        $config['payline']['general']['environment'] = $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_ENVIRONMENT);
         $config['payline']['general']['contracts'] = [];
         
         $contractCollection = $this->contractManagement->getUsedContracts();

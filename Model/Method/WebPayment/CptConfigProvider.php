@@ -2,6 +2,7 @@
 
 namespace Monext\Payline\Model\Method\WebPayment;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository as AssetRepository;
 use Magento\Payment\Helper\Data as PaymentHelper;
@@ -27,9 +28,10 @@ class CptConfigProvider extends AbstractMethodConfigProvider
         PaymentHelper $paymentHelper,
         AssetRepository $assetRepository,
         ContractManagement $contractManagement,
-        UrlInterface $urlBuilder
+        UrlInterface $urlBuilder,
+        ScopeConfigInterface $scopeConfig
     ) {
-        parent::__construct($paymentHelper, $assetRepository, $contractManagement, $urlBuilder);
+        parent::__construct($paymentHelper, $assetRepository, $contractManagement, $urlBuilder, $scopeConfig);
         $this->method = $this->paymentHelper->getMethodInstance(HelperConstants::WEB_PAYMENT_CPT);
     }
 
@@ -38,6 +40,7 @@ class CptConfigProvider extends AbstractMethodConfigProvider
         $config = parent::getConfig();
         
         $config['payment']['paylineWebPaymentCpt']['integrationType'] = $this->getMethodConfigData('integration_type');
+        $config['payment']['paylineWebPaymentCpt']['widgetDisplay'] = $this->getMethodConfigData('widget_display');
 
         return $config;
     }

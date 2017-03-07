@@ -3,8 +3,6 @@
 namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
-use Magento\Framework\View\Element\TemplateFactory;
 use Monext\Payline\Controller\Action;
 use Monext\Payline\Model\GuestPaymentManagement as PaylineGuestPaymentManagement;
 
@@ -27,15 +25,11 @@ class GuestReturnFromWidget extends Action
     
     public function __construct(
         Context $context,
-        PaylineGuestPaymentManagement $paylineGuestPaymentManagement,
-        ResultRawFactory $resultRawFactory,
-        TemplateFactory $templateFactory
+        PaylineGuestPaymentManagement $paylineGuestPaymentManagement
     )
     {
         parent::__construct($context);
-        $this->resultRawFactory = $resultRawFactory;
         $this->paylineGuestPaymentManagement = $paylineGuestPaymentManagement;
-        $this->templateFactory = $templateFactory;
     }
     
     public function execute() 
@@ -48,13 +42,9 @@ class GuestReturnFromWidget extends Action
             $isSuccess = false;
         }
 
-        $resultRaw = $this->resultRawFactory->create();
-
-        $block = $this->templateFactory->create();
-        $block->setTemplate($isSuccess ? 'Monext_Payline::web_payment/widget_iframe_success.phtml' : 'Monext_Payline::web_payment/widget_iframe_failure.phtml');
-        $resultRaw->setContents($block->toHtml());
-
-        return $resultRaw;
+        $resultRedirect = $this->resultRedirectFactory->create();
+        $resultRedirect->setPath($isSuccess ? 'checkout/onepage/success' : 'checkout');
+        return $resultRedirect;
     }
 }
 

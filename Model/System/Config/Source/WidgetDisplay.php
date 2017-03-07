@@ -21,10 +21,10 @@ class WidgetDisplay implements ArrayInterface
                 'value' => PaylineApiConstants::WIDGET_DISPLAY_TAB,
                 'label' => __(PaylineApiConstants::WIDGET_DISPLAY_TAB),
             ],
-            /*[
-                'value' => PaylineSDK::WIDGET_DISPLAY_LIGHTBOX,
-                'label' => __(PaylineSDK::WIDGET_DISPLAY_LIGHTBOX),
-            ]*/
+            [
+                'value' => PaylineApiConstants::WIDGET_DISPLAY_LIGHTBOX,
+                'label' => __(PaylineApiConstants::WIDGET_DISPLAY_LIGHTBOX),
+            ]
         ];
     }
 }
