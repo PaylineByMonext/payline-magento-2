@@ -298,15 +298,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         if($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION) {
             $payment->setIsTransactionClosed(false);
             $payment->authorize(false, $paymentData['amount'] / 100);
-            $this->paylineOrderManagement->handleSetOrderStateStatus(
-                $payment->getOrder(), null, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_CAPTURE
-            );
         } elseif($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION_CAPTURE) {
             $payment->getMethodInstance()->setSkipCapture(true);
             $payment->capture();
-            $this->paylineOrderManagement->handleSetOrderStateStatus(
-                $payment->getOrder(), null, HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED
-            );
         }
     }
     

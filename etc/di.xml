@@ -21,4 +21,12 @@
             </argument>
         </arguments>
     </virtualType>
+    <type name="Magento\Sales\Model\Order\Payment\State\AuthorizeCommand">
+        <plugin name="set_payline_status_after_authorize"
+                type="Monext\Payline\Plugin\Model\Order\Payment\State\AuthorizeCommandPlugin"/>
+    </type>
+    <type name="Magento\Sales\Model\Order\Payment\State\CaptureCommand">
+        <plugin name="set_payline_status_after_capture"
+                type="Monext\Payline\Plugin\Model\Order\Payment\State\CaptureCommandPlugin"/>
+    </type>
 </config>
