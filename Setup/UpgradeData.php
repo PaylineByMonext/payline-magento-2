@@ -138,7 +138,7 @@ class UpgradeData implements UpgradeDataInterface
             $attribute->setData(array(
                 'entity_type_id' => \Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER,
                 'attribute_code' => 'wallet_id',
-                'type' => 'text',
+                'type' => 'static',
                 'frontend_label' => 'Wallet Id',
                 'frontend_input' => 'text',
                 'sort_order' => 200,
