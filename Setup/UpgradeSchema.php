@@ -119,6 +119,19 @@ class UpgradeSchema implements UpgradeSchemaInterface
             );
         }
 
+        if (version_compare($context->getVersion(), '1.2.0') < 0) {
+            $table = $setup->getConnection()->addColumn(
+                $setup->getTable('customer_entity'),
+                'wallet_id',
+                [
+                    'type' => Table::TYPE_TEXT,
+                    'length' => 255,
+                    'comment' => 'Wallet Id',
+                    'nullable' => true,
+                ]
+            );
+        }
+
         $setup->endSetup();
     }
 }
