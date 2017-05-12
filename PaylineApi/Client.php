@@ -131,7 +131,7 @@ class Client
 
         return $response;
     }
-    
+
     /**
      * @param RequestGetMerchantSettings $request
      * @return ResponseGetMerchantSettings
@@ -161,12 +161,18 @@ class Client
             $this->paylineSDK->getWebPaymentDetails($request->getData())
         );
 
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
+            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
+        }
+
         return $response;
     }
     
     protected function initPaylineSDK()
     {
-        if(!isset($this->paylineSDK)) {
+        // RESET Singleton on this because sdk::privateData are not resetable
+        //if(!isset($this->paylineSDK)) {
             // TODO Handle Proxy
             $paylineSdkParams = array(
                 'merchant_id' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_MERCHANT_ID),
@@ -185,8 +191,17 @@ class Client
             }
             
             $this->paylineSDK = $this->paylineSDKFactory->create($paylineSdkParams);
-        }
+        //}
         
+        return $this;
+    }
+
+    protected function addPrivateDataToPaylineSDK(array $privateData)
+    {
+        foreach($privateData as $privateDataItem) {
+            $this->paylineSDK->addPrivateData($privateDataItem);
+        }
+
         return $this;
     }
 }

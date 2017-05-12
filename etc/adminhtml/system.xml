@@ -14,7 +14,7 @@
                 <frontend_model>Monext\Payline\Block\Adminhtml\System\Config\Form\Fieldset</frontend_model>
                 <comment><![CDATA[Access your <a href="%1">Monext Administrative Center</a> in order to manage your Payline account, check follow transactions or check technical issues.]]></comment>
                 <help_url>https://homologation-admin.payline.com/userManager.do?reqCode=prepareLogin</help_url>
-                <group id="payline_common" translate="label" showInDefault="1" showInWebsite="1" sortOrder="10">
+                <group id="payline_common" translate="label" showInDefault="1" sortOrder="10">
                     <label>Common settings</label>
                     <attribute type="expanded">1</attribute>
                     <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
@@ -72,7 +72,7 @@
                         </depends>
                     </field>
                 </group>
-                <group id="payline_contracts" translate="label" showInDefault="1" showInWebsite="1" sortOrder="20">
+                <group id="payline_contracts" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="20">
                     <label>Payline Contracts</label>
                     <attribute type="expanded">0</attribute>
                     <field id="contracts" translate="label" type="multiselect" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -82,14 +82,14 @@
                         <config_path>payline/general/contracts</config_path>
                     </field>
                 </group>
-                <group id="payline_solutions" translate="label" showInDefault="1" showInWebsite="1" sortOrder="30">
+                <group id="payline_solutions" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="30">
                     <label>Payment solutions</label>
                     <attribute type="expanded">0</attribute>
-                    <group id="payline_cpt" translate="label" showInDefault="1" showInWebsite="1" sortOrder="10">
+                    <group id="payline_cpt" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
                         <label>Payline - Web Payment Cpt</label>
                         <comment><![CDATA[Select payments in your shopping cart. Payline will process your card payments through the Payline Gateway or the widget.]]></comment>
                         <attribute type="expanded">0</attribute>
-                        <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                             <label>Enabled</label>
                             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                             <config_path>payment/payline_web_payment_cpt/active</config_path>
@@ -115,6 +115,11 @@
                             <label>Payment Action</label>
                             <source_model>Monext\Payline\Model\System\Config\Source\PaymentAction</source_model>
                             <config_path>payment/payline_web_payment_cpt/payment_action</config_path>
+                        </field>
+                        <field id="wallet_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                            <label>Enable Wallet</label>
+                            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                            <config_path>payment/payline_web_payment_cpt/wallet_enabled</config_path>
                         </field>
                     </group>
                 </group>

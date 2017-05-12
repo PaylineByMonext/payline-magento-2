@@ -11,12 +11,17 @@ class GetWebPaymentDetails extends AbstractResponse
     {
         return $this->data['transaction'];
     }
-    
+
     public function getPaymentData()
     {
         return $this->data['payment'];
     }
-    
+
+    public function getWalletData()
+    {
+        return isset($this->data['wallet']) ? $this->data['wallet'] : null;
+    }
+
     public function isSuccess()
     {
         return in_array($this->getResultCode(), PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_APPROVED);

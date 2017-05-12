@@ -3,6 +3,7 @@
 namespace Monext\Payline\PaylineApi\Request;
 
 use Monext\Payline\PaylineApi\AbstractRequest;
+use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
 class GetWebPaymentDetails extends AbstractRequest
 {
@@ -22,6 +23,7 @@ class GetWebPaymentDetails extends AbstractRequest
         $data = array();
         
         $data['token'] = $this->token;
+        $data['version'] = PaylineApiConstants::LASTEST_API_VERSION;
                 
         return $data;
     }

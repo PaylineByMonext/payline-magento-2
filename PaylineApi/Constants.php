@@ -4,6 +4,9 @@ namespace Monext\Payline\PaylineApi;
 
 class Constants
 {
+    // @see : https://payline.atlassian.net/wiki/display/DT/Historique+de+version+de+l%27API
+    const LASTEST_API_VERSION = 16;
+
     // @see : https://payline.atlassian.net/wiki/display/DT/Codes+Mode#suk=
     const PAYMENT_MODE_CPT = 'CPT';
     const PAYMENT_MODE_DIF = 'DIF';

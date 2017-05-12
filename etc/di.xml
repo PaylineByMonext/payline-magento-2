@@ -29,4 +29,12 @@
         <plugin name="set_payline_status_after_capture"
                 type="Monext\Payline\Plugin\Model\Order\Payment\State\CaptureCommandPlugin"/>
     </type>
+    <type name="Magento\Sales\Api\OrderRepositoryInterface">
+        <plugin name="handle_save_wallet"
+                type="Monext\Payline\Plugin\Model\OrderRepositoryPlugin"/>
+    </type>
+    <type name="Magento\Sales\Model\Order">
+        <plugin name="handle_save_wallet"
+                type="Monext\Payline\Plugin\Model\OrderPlugin"/>
+    </type>
 </config>
