@@ -3,3 +3,6 @@
 "payline_widget","Inshop"
 "payline_test","Test"
 "payline_production","Production"
+"No transaction found for this order.","Aucune transaction trouvée pour cette commande."
+"Transaction %s canceled for order %s from Magento Back-Office","Annulation de la transaction %s de la commande %s depuis le back office Magento"
+"Transaction %s refunded for order %s from Magento Back-Office","Remboursement de la transaction %s de la commande %s depuis le back office Magento"

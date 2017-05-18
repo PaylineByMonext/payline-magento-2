@@ -28,6 +28,8 @@ use Monext\Payline\Model\OrderManagement as PaylineOrderManagement;
 use Monext\Payline\PaylineApi\Client as PaylineApiClient;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 use Monext\Payline\PaylineApi\Request\DoCaptureFactory as RequestDoCaptureFactory;
+use Monext\Payline\PaylineApi\Request\DoVoidFactory as RequestDoVoidFactory;
+use Monext\Payline\PaylineApi\Request\DoRefundFactory as RequestDoRefundFactory;
 use Monext\Payline\PaylineApi\Request\DoWebPaymentFactory as RequestDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetailsFactory as RequestGetWebPaymentDetailsFactory;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetails;
@@ -68,6 +70,16 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      * @var RequestDoCaptureFactory
      */
     protected $requestDoCaptureFactory;
+    
+    /**
+     * @var RequestDoVoidFactory
+     */
+    protected $requestDoVoidFactory;
+    
+    /**
+     * @var RequestDoRefundFactory
+     */
+    protected $requestDoRefundFactory;
     
     /**
      * @var PaylineApiClient 
@@ -116,6 +128,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         RequestGetWebPaymentDetailsFactory $requestGetWebPaymentDetailsFactory,
         TransactionRepository $transactionRepository,
         RequestDoCaptureFactory $requestDoCaptureFactory,
+        RequestDoVoidFactory $requestDoVoidFactory,
+        RequestDoRefundFactory $requestDoRefundFactory,
         QuoteBillingAddressManagementInterface $quoteBillingAddressManagement,
         QuoteShippingAddressManagementInterface $quoteShippingAddressManagement,
         PaylineOrderManagement $paylineOrderManagement
@@ -132,6 +146,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->requestGetWebPaymentDetailsFactory = $requestGetWebPaymentDetailsFactory;
         $this->transactionRepository = $transactionRepository;
         $this->requestDoCaptureFactory = $requestDoCaptureFactory;
+        $this->requestDoVoidFactory = $requestDoVoidFactory;
+        $this->requestDoRefundFactory = $requestDoRefundFactory;
         $this->quoteBillingAddressManagement = $quoteBillingAddressManagement;
         $this->quoteShippingAddressManagement = $quoteShippingAddressManagement;
         $this->paylineOrderManagement = $paylineOrderManagement;
@@ -235,6 +251,31 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         return $this->paylineApiClient->callDoCapture($request);
     }
 
+    protected function callPaylineApiDoVoid(
+        array $paymentData        
+    )
+    {
+        $request = $this->requestDoVoidFactory->create();
+        $request->setPaymentData($paymentData);
+        
+        return $this->paylineApiClient->callDoVoid($request);
+    }
+    
+    protected function callPaylineApiDoRefund(
+        OrderInterface $order,
+        OrderPaymentInterface $payment,
+        array $paymentData        
+    )
+    {
+        $request = $this->requestDoRefundFactory->create();
+        $request
+            ->setOrder($order)
+            ->setPayment($payment)
+            ->setPaymentData($paymentData);
+        
+        return $this->paylineApiClient->callDoRefund($request);
+    }
+    
     public function synchronizePaymentWithPaymentGatewayFacade($token, $restoreCartOnError = false)
     {
         $order = $this->paylineOrderManagement->getOrderByToken($token);
@@ -375,6 +416,93 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         $payment->setTransactionId($response2->getTransactionId());
+
+        return $this;
+    }
+    
+    public function callPaylineApiDoVoidFacade(
+        OrderInterface $order,
+        OrderPaymentInterface $payment
+    )
+    {
+        // Check existing transaction - else void impossible
+        if(!$payment->getTransactionId()) {
+            // TODO log
+            throw new \Exception(__('No transaction found for this order.'));
+        }
+
+        // Get API token
+        $token = $this->orderIncrementIdTokenFactory->create()->getTokenByOrderIncrementId($order->getIncrementId());
+        $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
+
+        if(!$response1->isSuccess()) {
+            // TODO log
+            throw new \Exception($response1->getShortErrorMessage());
+        }
+
+        $paymentData = $response1->getPaymentData();
+        $paymentData['transactionID'] = $payment->getTransactionId();
+        $paymentData['comment'] = __('Transaction %s canceled for order %s from Magento Back-Office',
+            $payment->getTransactionId(),
+            $order->getRealOrderId());
+
+        // Call API
+        $response2 = $this->callPaylineApiDoVoid($paymentData);
+
+        if(!$response2->isSuccess()) {
+            // TODO log
+            throw new \Exception($response2->getShortErrorMessage());
+        }
+
+        return $this;    
+    }
+    
+    public function callPaylineApiDoRefundFacade(
+        OrderInterface $order,
+        OrderPaymentInterface $payment, 
+        $amount
+    )
+    {
+        $transactionId = $payment->getTransactionId();
+        
+        // Check creditMemo exists and invoiced
+        $creditMemo = $payment->getCreditmemo();
+        if ($creditMemo) {
+            $invoice = $creditMemo->getInvoice();
+            if ($invoice && $invoice->getTransactionId()) {
+                $transactionId = $invoice->getTransactionId();
+            }
+        }
+                    
+        // Check existing transaction - else refund impossible
+        if(!trim($transactionId)) {
+            // TODO log
+            throw new \Exception(__('No transaction found for this order.'));
+        }
+
+        // Get API token
+        $token = $this->orderIncrementIdTokenFactory->create()->getTokenByOrderIncrementId($order->getIncrementId());
+        $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
+
+        if(!$response1->isSuccess()) {
+            // TODO log
+            throw new \Exception($response1->getShortErrorMessage());
+        }
+
+        $paymentData = $response1->getPaymentData();
+        $paymentData['amount'] = round($amount * 100, 0);
+        $paymentData['transactionID'] = $transactionId;
+        $paymentData['comment'] = __('Transaction %s refunded for order %s from Magento Back-Office',
+            $payment->getTransactionId(),
+            $order->getRealOrderId());
+
+        // Call API
+        $response2 = $this->callPaylineApiDoRefund($order, $payment, $paymentData);
+
+        if(!$response2->isSuccess()) {
+            // TODO log
+            throw new \Exception($response2->getShortErrorMessage());
+        }
 
         return $this;
     }

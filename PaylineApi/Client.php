@@ -12,6 +12,8 @@ use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantS
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetails as RequestGetWebPaymentDetails;
 use Monext\Payline\PaylineApi\Response\DoCapture as ResponseDoCapture;
 use Monext\Payline\PaylineApi\Response\DoCaptureFactory as ResponseDoCaptureFactory;
+use Monext\Payline\PaylineApi\Response\DoVoidFactory as ResponseDoVoidFactory;
+use Monext\Payline\PaylineApi\Response\DoRefundFactory as ResponseDoRefundFactory;
 use Monext\Payline\PaylineApi\Response\DoWebPayment as ResponseDoWebPayment;
 use Monext\Payline\PaylineApi\Response\DoWebPaymentFactory as ResponseDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Response\GetMerchantSettings as ResponseGetMerchantSettings;
@@ -50,6 +52,16 @@ class Client
     protected $responseDoCaptureFactory;
     
     /**
+     * @var ResponseDoVoidFactory
+     */
+    protected $responseDoVoidFactory;
+    
+    /**
+     * @var ResponseDoRefundFactory
+     */
+    protected $responseDoRefundFactory;
+    
+    /**
      * @var ResponseGetMerchantSettingsFactory 
      */
     protected $responseGetMerchantSettingsFactory;
@@ -74,6 +86,8 @@ class Client
         ScopeConfigInterface $scopeConfig,
         ResponseDoWebPaymentFactory $responseDoWebPaymentFactory,
         ResponseDoCaptureFactory $responseDoCaptureFactory,
+        ResponseDoVoidFactory $responseDoVoidFactory,
+        ResponseDoRefundFactory $responseDoRefundFactory,
         ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory,
         ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory,
         Logger $logger,
@@ -84,6 +98,8 @@ class Client
         $this->scopeConfig = $scopeConfig;
         $this->responseDoWebPaymentFactory = $responseDoWebPaymentFactory;
         $this->responseDoCaptureFactory = $responseDoCaptureFactory;
+        $this->responseDoVoidFactory= $responseDoVoidFactory;
+        $this->responseDoRefundFactory= $responseDoRefundFactory;
         $this->responseGetMerchantSettingsFactory = $responseGetMerchantSettingsFactory;
         $this->responseGetWebPaymentDetailsFactory = $responseGetWebPaymentDetailsFactory;
         $this->logger = $logger;
@@ -122,6 +138,48 @@ class Client
         $response = $this->responseDoCaptureFactory->create();
         $response->fromData(
             $this->paylineSDK->doCapture($request->getData())
+        );
+
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
+            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
+        }
+
+        return $response;
+    }
+    
+    /**
+     * @param RequestDoVoid $request
+     * @return ResponseDoVoid
+     */
+    public function callDoVoid(RequestDoVoid $request)
+    {
+        $this->initPaylineSDK();
+
+        $response = $this->responseDoVoidFactory->create();
+        $response->fromData(
+            $this->paylineSDK->doVoid($request->getData())
+        );
+
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
+            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
+        }
+
+        return $response;
+    }
+    
+    /**
+     * @param RequestDoRefund $request
+     * @return ResponseDoRefund
+     */
+    public function callDoRefund(RequestDoRefund $request)
+    {
+        $this->initPaylineSDK();
+
+        $response = $this->responseDoRefundFactory->create();
+        $response->fromData(
+            $this->paylineSDK->doRefund($request->getData())
         );
 
         if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
