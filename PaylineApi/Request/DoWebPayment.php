@@ -114,7 +114,7 @@ class DoWebPayment extends AbstractRequest
     public function getData()
     {
         if(!isset($this->data)) {
-            $data = array();
+            $data = parent::getData();
 
             $this->preparePaymentData($data);
             $this->prepareOrderData($data);

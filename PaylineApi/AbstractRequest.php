@@ -2,6 +2,8 @@
 
 namespace Monext\Payline\PaylineApi;
 
+use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
+
 abstract class AbstractRequest
 {
     /**
@@ -17,7 +19,10 @@ abstract class AbstractRequest
     /**
      * @return array
      */
-    abstract public function getData();
+    public function getData()
+    {
+        return array('version' => PaylineApiConstants::LASTEST_API_VERSION);
+    }
 
     /**
      * @return array

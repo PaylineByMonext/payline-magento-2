@@ -22,10 +22,10 @@ use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\Repository as TransactionRepository;
 use Monext\Payline\Api\PaymentManagementInterface as PaylinePaymentManagementInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
-use Monext\Payline\Helper\Data as HelperData;
 use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
 use Monext\Payline\Model\OrderManagement as PaylineOrderManagement;
+use Monext\Payline\Model\WalletManagement;
 use Monext\Payline\PaylineApi\Client as PaylineApiClient;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 use Monext\Payline\PaylineApi\Request\DoCaptureFactory as RequestDoCaptureFactory;
@@ -106,9 +106,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected $paylineOrderManagement;
 
     /**
-     * @var HelperData
+     * @var WalletManagement
      */
-    protected $helperData;
+    protected $walletManagement;
 
     public function __construct(
         CartRepositoryInterface $cartRepository, 
@@ -125,7 +125,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         QuoteBillingAddressManagementInterface $quoteBillingAddressManagement,
         QuoteShippingAddressManagementInterface $quoteShippingAddressManagement,
         PaylineOrderManagement $paylineOrderManagement,
-        HelperData $helperData
+        WalletManagement $walletManagement
     )
     {
         $this->cartRepository = $cartRepository;
@@ -142,7 +142,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->quoteBillingAddressManagement = $quoteBillingAddressManagement;
         $this->quoteShippingAddressManagement = $quoteShippingAddressManagement;
         $this->paylineOrderManagement = $paylineOrderManagement;
-        $this->helperData = $helperData;
+        $this->walletManagement = $walletManagement;
     }
     
     public function saveCheckoutPaymentInformationFacade(
@@ -271,7 +271,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         if($response->isSuccess()) {
             $this->handlePaymentSuccess($response, $payment);
-            $this->handleWalletReturn($response, $payment);
+            $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
         } else {
             $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
 
@@ -313,19 +313,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
     }
 
-    protected function handleWalletReturn(
-        ResponseGetWebPaymentDetails $response,
-        OrderPayment $payment
-    )
-    {
-        $paymentMethod = $payment->getMethod();
-        $walletData = $response->getWalletData();
-
-        if($this->helperData->isWalletEnabled($paymentMethod) && $walletData && isset($walletData['walletId'])) {
-            $payment->setAdditionalInformation('wallet_id', $walletData['walletId']);
-        }
-    }
-    
     protected function handlePaymentFraud(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(

@@ -1,0 +1,62 @@
+<?php
+
+namespace Monext\Payline\PaylineApi\Request;
+
+use Magento\Customer\Api\Data\CustomerInterface;
+use Magento\Framework\UrlInterface;
+use Monext\Payline\Model\ContractManagement;
+use Monext\Payline\PaylineApi\AbstractRequest;
+
+class ManageWebWallet extends AbstractRequest
+{
+    /**
+     * @var ContractManagement
+     */
+    protected $contractManagement;
+
+    /**
+     * @var CustomerInterface 
+     */
+    protected $customer;
+
+    /**
+     * @var UrlInterface
+     */
+    protected $urlBuilder;
+
+    public function __construct(
+        ContractManagement $contractManagement,
+        UrlInterface $urlBuilder
+    )
+    {
+        $this->contractManagement = $contractManagement;
+        $this->urlBuilder = $urlBuilder;
+    }
+
+    public function setCustomer(CustomerInterface $customer)
+    {
+        $this->customer = $customer;
+        return $this;
+    }
+
+    public function getData() 
+    {
+        $data = parent::getData();
+
+        $usedContracts = $this->contractManagement->getUsedContracts();
+        $data['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
+        $data['contracts'] = $usedContracts->getColumnValues('number');
+
+        $data['buyer']['walletId'] = $this->customer->getCustomAttribute('wallet_id')->getValue();
+        $data['buyer']['lastName'] = $this->customer->getLastname();
+        $data['buyer']['firstName'] = $this->customer->getFirstname();
+
+        $data['updatePersonalDetails'] = 1;
+
+        $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
+        $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
+        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
+
+        return $data;
+    }
+}
