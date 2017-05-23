@@ -53,9 +53,9 @@ class ManageWebWallet extends AbstractRequest
 
         $data['updatePersonalDetails'] = 1;
 
-        $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
-        $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
-        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
+        $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwalletgateway');
+        $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwalletgateway');
+        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwalletgateway');
 
         return $data;
     }
