@@ -77,4 +77,14 @@ class Data extends AbstractHelper
     {
         return $this->scopeConfig->getValue('payment/'.$paymentMethod.'/wallet_enabled');
     }
+
+    public function mapMagentoAmountToPaylineAmount($magentoAmount)
+    {
+        return round($magentoAmount * 100, 0);
+    }
+
+    public function mapPaylineAmountToMagentoAmount($paylineAmount)
+    {
+        return $paylineAmount / 100;
+    }
 }
