@@ -2,7 +2,6 @@
 
 namespace Monext\Payline\Model\ResourceModel;
 
-use Magento\Customer\Model\CustomerFactory;
 use Magento\Customer\Model\ResourceModel\Customer as ResourceCustomer;
 
 class Helper
@@ -12,15 +11,9 @@ class Helper
      */
     protected $resourceCustomer;
 
-    /**
-     * @var CustomerFactory 
-     */
-    protected $customerFactory;
-
-    public function __construct(ResourceCustomer $resourceCustomer, CustomerFactory $customerFactory)
+    public function __construct(ResourceCustomer $resourceCustomer)
     {
         $this->resourceCustomer = $resourceCustomer;
-        $this->customerFactory = $customerFactory;
     }
 
     public function saveCustomerWalletId($customerId, $walletId)
