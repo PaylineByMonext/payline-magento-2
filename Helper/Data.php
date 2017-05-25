@@ -48,4 +48,14 @@ class Data extends AbstractHelper
 
         return $name;
     }
+
+    public function mapMagentoAmountToPaylineAmount($magentoAmount)
+    {
+        return round($magentoAmount * 100, 0);
+    }
+
+    public function mapPaylineAmountToMagentoAmount($paylineAmount)
+    {
+        return $paylineAmount / 100;
+    }
 }
