@@ -485,7 +485,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
                     
         // Check existing transaction - else refund impossible
         if(!trim($transactionId)) {
-            // TODO log
+            $this->logger->log(LoggerConstants::DEBUG, 'No transaction found for this order : '.$order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
 
@@ -494,7 +494,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
         if(!$response1->isSuccess()) {
-            // TODO log
+            $this->logger->log(LoggerConstants::DEBUG, 'No payment details found : '.$response1->getLongErrorMessage());
             throw new \Exception($response1->getShortErrorMessage());
         }
 
@@ -509,7 +509,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response2 = $this->callPaylineApiDoRefund($order, $payment, $paymentData);
 
         if(!$response2->isSuccess()) {
-            // TODO log
+            $this->logger->log(LoggerConstants::DEBUG, 'DoRefund error : '.$response2->getLongErrorMessage());
             throw new \Exception($response2->getShortErrorMessage());
         }
 
