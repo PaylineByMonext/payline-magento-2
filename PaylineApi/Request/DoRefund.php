@@ -4,11 +4,12 @@ namespace Monext\Payline\PaylineApi\Request;
 
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Currency as HelperCurrency;
 use Monext\Payline\PaylineApi\AbstractRequest;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
-class DoCapture extends AbstractRequest
+class DoRefund extends AbstractRequest
 {
     /**
      * @var HelperCurrency 
@@ -51,7 +52,7 @@ class DoCapture extends AbstractRequest
         return $this;
     }
     
-    public function setPayment(PaymentInterface $payment)
+    public function setPayment($payment)
     {
         $this->payment = $payment;
         return $this;
@@ -77,6 +78,13 @@ class DoCapture extends AbstractRequest
         $data['payment']['mode'] = $paymentAdditionalInformation['payment_mode'];
         // currency
         $data['payment']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->order->getOrderCurrencyCode());
+        
+        // Transaction ID
+        $data['transactionID'] = $data['payment']['transactionID'];
+        unset($data['payment']['transactionID']);
+        // Same for comment
+        $data['comment'] = $data['payment']['comment'];
+        unset($data['payment']['comment']);
         
         // PRIVATE DATA LIST
         $data['privateDataList'] = array();

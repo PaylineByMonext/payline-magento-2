@@ -22,6 +22,19 @@ class DoVoid extends AbstractRequest
     public function getData() 
     {
         $data = array();
+
+        // PAYMENT
+        $data['payment'] = $this->paymentData;
+
+        // Transaction ID
+        // Remove -void part added by Magento to keep original transactionID
+        // @see Magento\Sales\Model\Order\Payment\Transaction generateTransactionId
+        $data['transactionID'] = str_replace('-void','',$data['payment']['transactionID']);
+        
+        // Same for comment
+        $data['comment'] = $data['payment']['comment'];
+        
+        unset($data['payment']);
         
         // MEDIA
         $data['media'] = '';

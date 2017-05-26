@@ -7,6 +7,8 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\PaylineApi\PaylineSDKFactory;
 use Monext\Payline\PaylineApi\Request\DoCapture as RequestDoCapture;
+use Monext\Payline\PaylineApi\Request\DoVoid as RequestDoVoid;
+use Monext\Payline\PaylineApi\Request\DoRefund as RequestDoRefund;
 use Monext\Payline\PaylineApi\Request\DoWebPayment as RequestDoWebPayment;
 use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantSettings;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetails as RequestGetWebPaymentDetails;
@@ -158,7 +160,7 @@ class Client
 
         $response = $this->responseDoVoidFactory->create();
         $response->fromData(
-            $this->paylineSDK->doVoid($request->getData())
+            $this->paylineSDK->doReset($request->getData())
         );
 
         if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {

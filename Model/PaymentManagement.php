@@ -33,6 +33,8 @@ use Monext\Payline\PaylineApi\Request\DoRefundFactory as RequestDoRefundFactory;
 use Monext\Payline\PaylineApi\Request\DoWebPaymentFactory as RequestDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetailsFactory as RequestGetWebPaymentDetailsFactory;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetails;
+use Monolog\Logger as LoggerConstants;
+use Psr\Log\LoggerInterface as Logger;
 
 class PaymentManagement implements PaylinePaymentManagementInterface
 {
@@ -115,6 +117,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      * @var PaylineOrderManagement 
      */
     protected $paylineOrderManagement;
+
+    /**
+     * @var Logger
+     */
+    public $logger;
     
     public function __construct(
         CartRepositoryInterface $cartRepository, 
@@ -132,7 +139,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         RequestDoRefundFactory $requestDoRefundFactory,
         QuoteBillingAddressManagementInterface $quoteBillingAddressManagement,
         QuoteShippingAddressManagementInterface $quoteShippingAddressManagement,
-        PaylineOrderManagement $paylineOrderManagement
+        PaylineOrderManagement $paylineOrderManagement,
+        Logger $logger
     )
     {
         $this->cartRepository = $cartRepository;
@@ -151,6 +159,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->quoteBillingAddressManagement = $quoteBillingAddressManagement;
         $this->quoteShippingAddressManagement = $quoteShippingAddressManagement;
         $this->paylineOrderManagement = $paylineOrderManagement;
+        $this->logger = $logger;
     }
     
     public function saveCheckoutPaymentInformationFacade(
@@ -422,12 +431,12 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     
     public function callPaylineApiDoVoidFacade(
         OrderInterface $order,
-        OrderPaymentInterface $payment
+        $payment
     )
-    {
+    {        
         // Check existing transaction - else void impossible
         if(!$payment->getTransactionId()) {
-            // TODO log
+            $this->logger->log(LoggerConstants::DEBUG, 'No transaction found for this order : '.$order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
 
@@ -436,7 +445,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
         if(!$response1->isSuccess()) {
-            // TODO log
+            $this->logger->log(LoggerConstants::DEBUG, 'No payment details found : '.$response1->getLongErrorMessage());
             throw new \Exception($response1->getShortErrorMessage());
         }
 
@@ -450,7 +459,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response2 = $this->callPaylineApiDoVoid($paymentData);
 
         if(!$response2->isSuccess()) {
-            // TODO log
+            $this->logger->log(LoggerConstants::DEBUG, 'DoVoid error : '.$response2->getLongErrorMessage());
             throw new \Exception($response2->getShortErrorMessage());
         }
 
@@ -459,7 +468,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     
     public function callPaylineApiDoRefundFacade(
         OrderInterface $order,
-        OrderPaymentInterface $payment, 
+        $payment, 
         $amount
     )
     {
