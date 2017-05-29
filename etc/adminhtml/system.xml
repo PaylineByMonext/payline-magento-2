@@ -121,6 +121,50 @@
                             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                             <config_path>payment/payline_web_payment_cpt/wallet_enabled</config_path>
                         </field>
+                        <group id="payline_cpt_status" translate="label" showInDefault="1" showInWebsite="1" sortOrder="100">
+                            <label>Payline order status</label>
+                            <attribute type="expanded">0</attribute>
+                            <field id="payline_status_captured" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Default status captured</label>
+                                <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
+                                <config_path>payment/payline_web_payment_cpt/order_status_payline_captured</config_path>
+                            </field>
+                            <field id="payline_status_waiting_capture" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Default status waiting capture</label>
+                                <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
+                                <config_path>payment/payline_web_payment_cpt/order_status_payline_waiting_capture</config_path>
+                            </field>
+                            <field id="payline_status_waiting_acceptance" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Default status waiting acceptance</label>
+                                <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
+                                <config_path>payment/payline_web_payment_cpt/order_status_payline_waiting_acceptance</config_path>
+                            </field>
+                            <field id="payline_status_pending" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Default status pending</label>
+                                <source_model>Magento\Sales\Model\Config\Source\Order\Status\NewStatus</source_model>
+                                <config_path>payment/payline_web_payment_cpt/order_status_payline_pending</config_path>
+                            </field>
+                            <field id="payline_status_cancel" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Default status cancel</label>
+                                <source_model>Monext\Payline\Model\System\Config\Source\Order\StatusCanceled</source_model>
+                                <config_path>payment/payline_web_payment_cpt/order_status_payline_canceled</config_path>
+                            </field>
+                            <field id="payline_status_refused" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Default status refused</label>
+                                <source_model>Monext\Payline\Model\System\Config\Source\Order\StatusCanceled</source_model>
+                                <config_path>payment/payline_web_payment_cpt/order_status_payline_refused</config_path>
+                            </field>
+                            <field id="payline_status_fraud" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Default status fraud</label>
+                                <source_model>Monext\Payline\Model\System\Config\Source\Order\StatusCanceled</source_model>
+                                <config_path>payment/payline_web_payment_cpt/order_status_payline_fraud</config_path>
+                            </field>
+                            <field id="payline_status_abandoned" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                                <label>Default status abandoned</label>
+                                <source_model>Monext\Payline\Model\System\Config\Source\Order\StatusCanceled</source_model>
+                                <config_path>payment/payline_web_payment_cpt/order_status_payline_abandoned</config_path>
+                            </field>
+                        </group>
                     </group>
                 </group>
             </group>
