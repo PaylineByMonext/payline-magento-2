@@ -2,13 +2,36 @@
 
 namespace Monext\Payline\PaylineApi;
 
+use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
+
 abstract class AbstractRequest
 {
     /**
+     * @var array
+     */
+    protected $data;
+
+    /**
+     * @var array
+     */
+    protected $privateData;
+
+    /**
      * @return array
      */
-    abstract public function getData();
-    
+    public function getData()
+    {
+        return array('version' => PaylineApiConstants::LASTEST_API_VERSION);
+    }
+
+    /**
+     * @return array
+     */
+    public function getPrivateData()
+    {
+        return array();
+    }
+
     /**
      * @param string $dateTime
      * @return string

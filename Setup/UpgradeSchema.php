@@ -104,7 +104,7 @@ class UpgradeSchema implements UpgradeSchemaInterface
                 ]
             );
         }
-        
+
         if (version_compare($context->getVersion(), '1.0.8') < 0) {
             $table = $setup->getConnection()->changeColumn(
                 $setup->getTable('payline_contract'),

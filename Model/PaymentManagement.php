@@ -22,9 +22,11 @@ use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\Repository as TransactionRepository;
 use Monext\Payline\Api\PaymentManagementInterface as PaylinePaymentManagementInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
+use Monext\Payline\Helper\Data as HelperData;
 use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
 use Monext\Payline\Model\OrderManagement as PaylineOrderManagement;
+use Monext\Payline\Model\WalletManagement;
 use Monext\Payline\PaylineApi\Client as PaylineApiClient;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 use Monext\Payline\PaylineApi\Request\DoCaptureFactory as RequestDoCaptureFactory;
@@ -123,6 +125,16 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      */
     public $logger;
     
+    /**
+     * @var WalletManagement
+     */
+    protected $walletManagement;
+
+    /**
+     * @var HelperData
+     */
+    protected $helperData;
+
     public function __construct(
         CartRepositoryInterface $cartRepository, 
         CartTotalRepositoryInterface $cartTotalRepository,
@@ -140,7 +152,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         QuoteBillingAddressManagementInterface $quoteBillingAddressManagement,
         QuoteShippingAddressManagementInterface $quoteShippingAddressManagement,
         PaylineOrderManagement $paylineOrderManagement,
-        Logger $logger
+        Logger $logger,
+        WalletManagement $walletManagement,
+        HelperData $helperData
     )
     {
         $this->cartRepository = $cartRepository;
@@ -160,8 +174,10 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->quoteShippingAddressManagement = $quoteShippingAddressManagement;
         $this->paylineOrderManagement = $paylineOrderManagement;
         $this->logger = $logger;
+        $this->walletManagement = $walletManagement;
+        $this->helperData = $helperData;
     }
-    
+
     public function saveCheckoutPaymentInformationFacade(
         $cartId,
         PaymentInterface $paymentMethod,
@@ -173,7 +189,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         return $result;
     }
-    
+
     public function wrapCallPaylineApiDoWebPaymentFacade($cartId)
     {
         $response = $this->callPaylineApiDoWebPaymentFacade(
@@ -215,7 +231,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $cart->getReservedOrderId(), 
             $response->getToken()
         );
-        
+
         return $response;
     }
     
@@ -256,7 +272,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $request
             ->setAuthorizationTransaction($authorizationTransaction)
             ->setPaymentData($paymentData);
-        
+
         return $this->paylineApiClient->callDoCapture($request);
     }
 
@@ -311,8 +327,17 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $response = $this->callPaylineApiGetWebPaymentDetails($token);
 
-        if($response->isSuccess()) {
+        if(!$this->isPaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
+            $message = __(
+                'ERROR for order ; payment gateway amount %1 does not match order amount %2.',
+                $response->getAmount(),
+                $this->helperData->mapMagentoAmountToPaylineAmount($payment->getOrder()->getGrandTotal())
+            );
+            $payment->setAmountToCancel($response->getAmount());
+            $this->handlePaymentCanceled($payment->setData('is_in_error', true), $message);
+        } elseif($response->isSuccess()) {
             $this->handlePaymentSuccess($response, $payment);
+            $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
         } else {
             $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
 
@@ -347,20 +372,20 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         // TODO Add controls to avoid double authorization/capture
         if($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION) {
             $payment->setIsTransactionClosed(false);
-            $payment->authorize(false, $paymentData['amount'] / 100);
+            $payment->authorize(false, $this->helperData->mapPaylineAmountToMagentoAmount($paymentData['amount']));
         } elseif($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION_CAPTURE) {
             $payment->getMethodInstance()->setSkipCapture(true);
             $payment->capture();
         }
     }
-    
+
     protected function handlePaymentFraud(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
             $payment->getOrder(), Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_FRAUD, $message
         );
     }
-    
+
     protected function handlePaymentWaitingAcceptance(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
@@ -428,7 +453,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         return $this;
     }
-    
+
     public function callPaylineApiDoVoidFacade(
         OrderInterface $order,
         $payment
@@ -514,5 +539,16 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         return $this;
+    }
+
+    protected function isPaymentGatewayAmountSameAsOrderAmount(
+        ResponseGetWebPaymentDetails $response,
+        OrderPayment $payment
+    )
+    {
+        $orderAmount = $this->helperData->mapMagentoAmountToPaylineAmount($payment->getOrder()->getGrandTotal());
+        $responseAmount = $response->getAmount();
+
+        return $responseAmount == $orderAmount;
     }
 }

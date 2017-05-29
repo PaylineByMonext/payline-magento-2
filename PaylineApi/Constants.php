@@ -4,6 +4,9 @@ namespace Monext\Payline\PaylineApi;
 
 class Constants
 {
+    // @see : https://payline.atlassian.net/wiki/display/DT/Historique+de+version+de+l%27API
+    const LASTEST_API_VERSION = 16;
+
     // @see : https://payline.atlassian.net/wiki/display/DT/Codes+Mode#suk=
     const PAYMENT_MODE_CPT = 'CPT';
     const PAYMENT_MODE_DIF = 'DIF';
@@ -32,6 +35,7 @@ class Constants
     const PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_ABANDONED = ['02304', '02324', '02534'];
     const PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_CANCELED = ['02319'];
     const PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_FRAUD = ['04003'];
+    const PAYMENT_BACK_CODES_RETURN_MANAGE_WEB_WALLET_OK = ['02500'];
     
     //
     const PAYMENT_CONTRACT_CARD_TYPE_CB = 'CB';

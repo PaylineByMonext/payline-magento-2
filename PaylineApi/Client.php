@@ -12,6 +12,7 @@ use Monext\Payline\PaylineApi\Request\DoRefund as RequestDoRefund;
 use Monext\Payline\PaylineApi\Request\DoWebPayment as RequestDoWebPayment;
 use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantSettings;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetails as RequestGetWebPaymentDetails;
+use Monext\Payline\PaylineApi\Request\ManageWebWallet as RequestManageWebWallet;
 use Monext\Payline\PaylineApi\Response\DoCapture as ResponseDoCapture;
 use Monext\Payline\PaylineApi\Response\DoCaptureFactory as ResponseDoCaptureFactory;
 use Monext\Payline\PaylineApi\Response\DoVoidFactory as ResponseDoVoidFactory;
@@ -22,6 +23,8 @@ use Monext\Payline\PaylineApi\Response\GetMerchantSettings as ResponseGetMerchan
 use Monext\Payline\PaylineApi\Response\GetMerchantSettingsFactory as ResponseGetMerchantSettingsFactory;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetails;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetailsFactory as ResponseGetWebPaymentDetailsFactory;
+use Monext\Payline\PaylineApi\Response\ManageWebWallet as ResponseManageWebWallet;
+use Monext\Payline\PaylineApi\Response\ManageWebWalletFactory as ResponseManageWebWalletFactory;
 use Monolog\Logger as LoggerConstants;
 use Payline\PaylineSDK;
 use Psr\Log\LoggerInterface as Logger;
@@ -32,27 +35,27 @@ class Client
      * @var PaylineSDKFactory
      */
     protected $paylineSDKFactory;
-    
+
     /**
      * @var PaylineSDK 
      */
     protected $paylineSDK;    
-    
+
     /**
      * @var ScopeConfigInterface
      */
     protected $scopeConfig;
-    
+
     /**
      * @var ResponseDoWebPaymentFactory
      */
     protected $responseDoWebPaymentFactory;
-    
+
     /**
      * @var ResponseDoCaptureFactory
      */
     protected $responseDoCaptureFactory;
-    
+
     /**
      * @var ResponseDoVoidFactory
      */
@@ -67,12 +70,17 @@ class Client
      * @var ResponseGetMerchantSettingsFactory 
      */
     protected $responseGetMerchantSettingsFactory;
-    
+
     /**
      * @var ResponseGetWebPaymentDetailsFactory 
      */
     protected $responseGetWebPaymentDetailsFactory;
-    
+
+    /**
+     * @var ResponseManageWebWalletFactory
+     */
+    protected $responseManageWebWalletFactory;
+
     /**
      * @var Logger
      */
@@ -92,6 +100,7 @@ class Client
         ResponseDoRefundFactory $responseDoRefundFactory,
         ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory,
         ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory,
+        ResponseManageWebWalletFactory $responseManageWebWalletFactory,
         Logger $logger,
         EncryptorInterface $encryptor
     )
@@ -104,6 +113,7 @@ class Client
         $this->responseDoRefundFactory= $responseDoRefundFactory;
         $this->responseGetMerchantSettingsFactory = $responseGetMerchantSettingsFactory;
         $this->responseGetWebPaymentDetailsFactory = $responseGetWebPaymentDetailsFactory;
+        $this->responseManageWebWalletFactory = $responseManageWebWalletFactory;
         $this->logger = $logger;
         $this->encryptor = $encryptor;
     }
@@ -149,7 +159,7 @@ class Client
 
         return $response;
     }
-    
+
     /**
      * @param RequestDoVoid $request
      * @return ResponseDoVoid
@@ -221,12 +231,39 @@ class Client
             $this->paylineSDK->getWebPaymentDetails($request->getData())
         );
 
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
+            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
+        }
+
         return $response;
     }
-    
+
+    /**
+     * @param RequestManageWebWallet $request
+     * @return ResponseManageWebWallet
+     */
+    public function callManageWebWallet(RequestManageWebWallet $request)
+    {
+        $this->initPaylineSDK();
+
+        $response = $this->responseManageWebWalletFactory->create();
+        $response->fromData(
+            $this->paylineSDK->manageWebWallet($request->getData())
+        );
+
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
+            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
+        }
+
+        return $response;
+    }
+
     protected function initPaylineSDK()
     {
-        if(!isset($this->paylineSDK)) {
+        // RESET Singleton on this because sdk::privateData are not resetable
+        //if(!isset($this->paylineSDK)) {
             // TODO Handle Proxy
             $paylineSdkParams = array(
                 'merchant_id' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_MERCHANT_ID),
@@ -245,8 +282,17 @@ class Client
             }
             
             $this->paylineSDK = $this->paylineSDKFactory->create($paylineSdkParams);
-        }
+        //}
         
+        return $this;
+    }
+
+    protected function addPrivateDataToPaylineSDK(array $privateData)
+    {
+        foreach($privateData as $privateDataItem) {
+            $this->paylineSDK->addPrivateData($privateDataItem);
+        }
+
         return $this;
     }
 }
