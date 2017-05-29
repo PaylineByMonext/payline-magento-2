@@ -43,10 +43,24 @@ class Cpt extends AbstractMethod
     
     public function capture(InfoInterface $payment, $amount)
     {
-        if(!$this->getSkipCapture() && $payment instanceof OrderPayment) {
+        if($this->canCapture() && !$this->getSkipCapture() && $payment instanceof OrderPayment) {
             $this->paylinePaymentManagement->callPaylineApiDoCaptureFacade($payment->getOrder(), $payment, $amount);
         }
 
         return $this;
+    }
+    
+    public function void(InfoInterface $payment)
+    {
+        if($this->canVoid() && !$this->getSkipVoid() && $payment instanceof OrderPayment) {
+            $this->paylinePaymentManagement->callPaylineApiDoVoidFacade($payment->getOrder(), $payment);
+        }
+    }
+    
+    public function refund(InfoInterface $payment, $amount)
+    {
+        if($this->canRefund() && !$this->getSkipRefund() && $payment instanceof OrderPayment) {
+            $this->paylinePaymentManagement->callPaylineApiDoRefundFacade($payment->getOrder(), $payment, $amount);
+        }
     }
 }
