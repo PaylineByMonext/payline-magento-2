@@ -25,18 +25,22 @@ class Cpt extends AbstractMethod
     public function initialize($paymentAction, $stateObject)
     {
         $payment = $this->getInfoInstance();
-        
-        if($payment instanceof OrderPayment 
-        && $this->getConfigData('integration_type') == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
-            $quoteId = $payment->getOrder()->getQuoteId();
-            $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteId);
-        
-            $additionalInformation = $payment->getAdditionalInformation();
-            $additionalInformation['do_web_payment_response_data'] = $result;
-            $payment->setAdditionalInformation($additionalInformation);
+        $status = HelperConstants::ORDER_STATUS_PAYLINE_PENDING;
+        if($payment instanceof OrderPayment) {
+            $order = $payment->getOrder();
+            $status = $this->helperData->getMatchingConfigurableStatus($order, $status);
+
+            if( $this->getConfigData('integration_type') == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
+                $quoteId = $order->getQuoteId();
+                $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteId);
+
+                $additionalInformation = $payment->getAdditionalInformation();
+                $additionalInformation['do_web_payment_response_data'] = $result;
+                $payment->setAdditionalInformation($additionalInformation);
+            }
         }
 
-        $stateObject->setData('status', HelperConstants::ORDER_STATUS_PAYLINE_PENDING);
+        $stateObject->setData('status', $status);
         
         return $this;
     }

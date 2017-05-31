@@ -5,9 +5,7 @@ namespace Monext\Payline\Model;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Psr\Log\LoggerInterface as Logger;
-
+use Monext\Payline\Helper\Data as HelperData;
 
 class OrderManagement
 {
@@ -22,24 +20,24 @@ class OrderManagement
     protected $orderFactory;
 
     /**
-     * @var ScopeConfigInterface
+     * @var HelperData
      */
-    protected $scopeConfig;
+    protected $helperData;
 
     public function __construct(
         OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
         OrderFactory $orderFactory,
-        ScopeConfigInterface $scopeConfig
+        HelperData $helperData
     )
     {
         $this->orderFactory = $orderFactory;
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
-        $this->scopeConfig = $scopeConfig;
+        $this->helperData = $helperData;
     }
 
     public function handleSetOrderStateStatus(Order $order, $state, $status, $message = null)
     {
-        $status = $this->getMatchingConfigurableStatus($order, $status);
+        $status = $this->helperData->getMatchingConfigurableStatus($order, $status);
         if($state == Order::STATE_CANCELED) {
             $this->handleOrderCancellation($order, $status);
         } else {
@@ -72,14 +70,5 @@ class OrderManagement
     {
         $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
         return $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
-    }
-
-    protected function getMatchingConfigurableStatus(Order $order, $status)
-    {
-        $path = 'payment/' . $order->getPayment()->getMethod() . '/order_status_' . $status;
-        if($configurableStatus = $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE)) {
-            $status = $configurableStatus;
-        }
-        return $status;
     }
 }
