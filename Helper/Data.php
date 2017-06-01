@@ -5,7 +5,6 @@ namespace Monext\Payline\Helper;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Math\Random as MathRandom;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class Data extends AbstractHelper
 {
@@ -15,22 +14,15 @@ class Data extends AbstractHelper
     protected $mathRandom;
 
     /**
-     * @var ScopeConfigInterface
-     */
-        protected $scopeConfig;
-
-    /**
      * @param Context $context
      */
     public function __construct(
         Context $context,
-        MathRandom $mathRandom,
-        ScopeConfigInterface $scopeConfig
+        MathRandom $mathRandom
     )
     {
         parent::__construct($context);
         $this->mathRandom = $mathRandom;
-        $this->scopeConfig = $scopeConfig;
     }
 
     public function encodeString($string)
@@ -98,6 +90,10 @@ class Data extends AbstractHelper
 
     public function getMatchingConfigurableStatus( \Magento\Sales\Model\Order $order, $status)
     {
+        if(empty($status)) {
+            return null;
+        }
+
         $path = 'payment/' . $order->getPayment()->getMethod() . '/order_status_' . $status;
         if($configurableStatus = $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE)) {
             $status = $configurableStatus;

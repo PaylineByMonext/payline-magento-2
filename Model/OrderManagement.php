@@ -59,10 +59,13 @@ class OrderManagement
     {
         if($order->canCancel()) {
             $order->cancel();
-            $order->setStatus($status);
         } else {
-            $order->setState(Order::STATE_CANCELED)->setStatus($status);
+            $order->setState(Order::STATE_CANCELED);
             // TODO check stock
+        }
+
+        if(!empty($status)) {
+            $order->setStatus($status);
         }
     }
 
