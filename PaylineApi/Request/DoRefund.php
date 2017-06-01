@@ -6,6 +6,7 @@ use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Currency as HelperCurrency;
+use Monext\Payline\Model\ContractManagement;
 use Monext\Payline\PaylineApi\AbstractRequest;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
@@ -30,14 +31,21 @@ class DoRefund extends AbstractRequest
      * @var array 
      */
     protected $paymentData;
-   
+
+    /**
+     * @var ContractManagement
+     */
+    protected $contractManagement;
+
     public function __construct(
         ScopeConfigInterface $scopeConfig,
-        HelperCurrency $helperCurrency
+        HelperCurrency $helperCurrency,
+        ContractManagement $contractManagement
     )
     {
         $this->scopeConfig = $scopeConfig;
         $this->helperCurrency = $helperCurrency;
+        $this->contractManagement = $contractManagement;
     }
 
     public function setPaymentData(array $paymentData)
