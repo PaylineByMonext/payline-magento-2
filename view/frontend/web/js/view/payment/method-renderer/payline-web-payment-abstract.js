@@ -10,6 +10,7 @@ define(
         'Monext_Payline/js/action/save-checkout-payment-information-facade',
         'Monext_Payline/js/lib/Uri',
         'Monext_Payline/js/widget-api',
+        'Monext_Payline/js/checkout-agreements-helper',
     ],
     function (
         $,
@@ -21,7 +22,8 @@ define(
         redirect,
         saveCheckoutPaymentInformationFacadeAction,
         Uri,
-        WidgetApi
+        WidgetApi,
+        CheckoutAgreementsHelper
     ) {
         'use strict';
 
@@ -35,6 +37,7 @@ define(
                 if(this.getMethodConfigData('integrationType') === 'widget') {
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
                     this.widgetContainerId = 'payline-widget-container';
+                    this.checkoutAgreementsSelector = '.payline-payment-block .checkout-agreements-block';
                     this.isPaymentWidgetMessageVisible = ko.observable(false);
                     this.isRetryCallPaymentWidgetButtonVisible = ko.observable(false);
                     this.isContractChecked = ko.observable(-1);
@@ -48,7 +51,7 @@ define(
                     if(!window.hasQuoteBillingAddressSubscribedToPaylineWidget) {
                         quote.billingAddress.subscribe(function(address) {
                             if(address !== null && this.isCurrentMethodSelected()) {
-                                this.saveCheckoutPaymentInformationFacade();
+                                this.wrapSaveCheckoutPaymentInformationFacade();
                             } else if(address === null) {
                                 WidgetApi.destroyWidget(this.widgetContainerId);
                                 this.isPaymentWidgetMessageVisible(true);
@@ -83,6 +86,32 @@ define(
             afterPlaceOrder: function () {
                 if(this.getMethodConfigData('integrationType') === 'redirect') {
                     redirect('payline/webpayment/redirecttopaymentgateway');
+                }
+            },
+
+            wrapSaveCheckoutPaymentInformationFacade: function() {
+                var self = this;
+
+                if(!self.flagPreventSaveCheckoutPaymentInformationFacade) {
+                    self.flagPreventSaveCheckoutPaymentInformationFacade = true;
+                    CheckoutAgreementsHelper.getCheckoutAgreementsLoadedDeferredObject(self.checkoutAgreementsSelector).done(function() {
+                        CheckoutAgreementsHelper.getCheckoutAgreementsVisibleDeferredObject(self.checkoutAgreementsSelector).done(function() {
+                            self.flagPreventSaveCheckoutPaymentInformationFacade = false;
+                            if($(self.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').is(':checked')) {
+                                self.saveCheckoutPaymentInformationFacade();
+                            }
+
+                            var handler = function(event) {
+                                if($(self.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').is(':checked')) {
+                                    self.saveCheckoutPaymentInformationFacade();
+                                } else {
+                                    WidgetApi.destroyWidget(self.widgetContainerId);
+                                }
+                            };
+
+                            $(self.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').unbind('click', handler).bind('click', handler);
+                        })
+                    });
                 }
             },
 
@@ -145,8 +174,12 @@ define(
             getPaylinetokenQueryParam: function() {
                 var uri = new Uri(window.location.href);
                 return uri.getQueryParamValue('paylinetoken');
+            },
+
+            afterRenderWidgetCallback: function() {
+                this.deferredInitialize();
+                this.tryReloadWidget();
             }
         });
     }
 );
-
