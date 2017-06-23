@@ -10,7 +10,6 @@ define(
         'Monext_Payline/js/action/save-checkout-payment-information-facade',
         'Monext_Payline/js/lib/Uri',
         'Monext_Payline/js/widget-api',
-        'Monext_Payline/js/checkout-agreements-helper',
     ],
     function (
         $,
@@ -22,8 +21,7 @@ define(
         redirect,
         saveCheckoutPaymentInformationFacadeAction,
         Uri,
-        WidgetApi,
-        CheckoutAgreementsHelper
+        WidgetApi
     ) {
         'use strict';
 
@@ -33,11 +31,11 @@ define(
 
             initialize: function () {
                 this._super().initChildren();
+                $(document).trigger('payline.web.payment.beforeInitialize', [this]);
 
                 if(this.getMethodConfigData('integrationType') === 'widget') {
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
                     this.widgetContainerId = 'payline-widget-container';
-                    this.checkoutAgreementsSelector = '.payline-payment-block .checkout-agreements-block';
                     this.isPaymentWidgetMessageVisible = ko.observable(false);
                     this.isRetryCallPaymentWidgetButtonVisible = ko.observable(false);
                     this.isContractChecked = ko.observable(-1);
@@ -51,7 +49,7 @@ define(
                     if(!window.hasQuoteBillingAddressSubscribedToPaylineWidget) {
                         quote.billingAddress.subscribe(function(address) {
                             if(address !== null && this.isCurrentMethodSelected()) {
-                                this.wrapSaveCheckoutPaymentInformationFacade();
+                                this.saveCheckoutPaymentInformationFacade();
                             } else if(address === null) {
                                 WidgetApi.destroyWidget(this.widgetContainerId);
                                 this.isPaymentWidgetMessageVisible(true);
@@ -74,7 +72,7 @@ define(
                 var self = this;
 
                 if(this.getPaylinetokenQueryParam()) {
-                    WidgetApi.showWidget(
+                    self.showWidget(
                         self.getEnvironment(),
                         self.getPaylinetokenQueryParam(),
                         self.getMethodConfigData('widgetDisplay'),
@@ -89,46 +87,20 @@ define(
                 }
             },
 
-            wrapSaveCheckoutPaymentInformationFacade: function() {
-                var self = this;
-
-                if(!self.flagPreventSaveCheckoutPaymentInformationFacade) {
-                    self.flagPreventSaveCheckoutPaymentInformationFacade = true;
-                    CheckoutAgreementsHelper.getCheckoutAgreementsLoadedDeferredObject(self.checkoutAgreementsSelector).done(function() {
-                        CheckoutAgreementsHelper.getCheckoutAgreementsVisibleDeferredObject(self.checkoutAgreementsSelector).done(function() {
-                            self.flagPreventSaveCheckoutPaymentInformationFacade = false;
-                            if($(self.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').is(':checked')) {
-                                self.saveCheckoutPaymentInformationFacade();
-                            }
-
-                            var handler = function(event) {
-                                if($(self.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').is(':checked')) {
-                                    self.saveCheckoutPaymentInformationFacade();
-                                } else {
-                                    WidgetApi.destroyWidget(self.widgetContainerId);
-                                }
-                            };
-
-                            $(self.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').unbind('click', handler).bind('click', handler);
-                        })
-                    });
-                }
-            },
-
             saveCheckoutPaymentInformationFacade: function() {
                 var self = this;
 
                 if(self.getMethodConfigData('integrationType') === 'widget' 
                 && !self.flagPreventSaveCheckoutPaymentInformationFacade
                 && self.validate() && additionalValidators.validate()) {
-                    WidgetApi.destroyWidget(self.widgetContainerId);
+                    self.destroyWidget();
                     self.flagPreventSaveCheckoutPaymentInformationFacade = true;
                     self.isRetryCallPaymentWidgetButtonVisible(false);
 
                     $.when(
                         saveCheckoutPaymentInformationFacadeAction(self.getData(), self.messageContainer)
                     ).done(function(response) {
-                        WidgetApi.showWidget(
+                        self.showWidget(
                             self.getEnvironment(),
                             response[0],
                             self.getMethodConfigData('widgetDisplay'),
@@ -177,8 +149,20 @@ define(
             },
 
             afterRenderWidgetCallback: function() {
-                this.deferredInitialize();
                 this.tryReloadWidget();
+            },
+
+            destroyWidget: function() {
+                WidgetApi.destroyWidget(this.widgetContainerId);
+            },
+
+            showWidget: function(environment, dataToken, dataColumn, widgetContainerId) {
+                WidgetApi.showWidget(
+                    environment,
+                    dataToken,
+                    dataColumn,
+                    widgetContainerId
+                );
             }
         });
     }

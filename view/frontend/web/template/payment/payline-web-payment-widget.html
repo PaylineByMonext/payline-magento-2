@@ -26,7 +26,7 @@
             <!--/ko-->
         </div>
         
-        <div id="payline-widget-container" data-bind="afterRender: tryReloadWidget">
+        <div id="payline-widget-container" data-bind="afterRender: afterRenderWidgetCallback">
         </div>
         
         <div class="actions-toolbar">
@@ -34,7 +34,7 @@
                 <button class="action primary checkout"
                         type="button"
                         data-bind="
-                        click: wrapSaveCheckoutPaymentInformationFacade,
+                        click: saveCheckoutPaymentInformationFacade,
                         visible: isRetryCallPaymentWidgetButtonVisible,
                         attr: {title: $t('Retry call payment widget')},
                         ">
