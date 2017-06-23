@@ -8,7 +8,7 @@ define([
         var checkoutAgreementsUtils = {
             checkoutAgreementsSelector: '.payline-payment-block .checkout-agreements-block div[data-role="checkout-agreements"]',
 
-            getCheckoutAgreementsLoadedDeferredObject: function() {
+            waitForCheckoutAgreementsLoaded: function() {
                 var self = this;
 
                 if(!self.areCheckoutAgreementsActive() || $(self.checkoutAgreementsSelector).length > 0) {
@@ -33,7 +33,7 @@ define([
                 }
             },
 
-            getCheckoutAgreementsVisibleDeferredObject: function() {
+            waitForCheckoutAgreementsVisible: function() {
                 var self = this;
 
                 if(!self.areCheckoutAgreementsActive() || $(self.checkoutAgreementsSelector).is(':visible')) {
@@ -73,14 +73,10 @@ define([
                 component.saveCheckoutPaymentInformationFacade = wrapper.wrap(component.saveCheckoutPaymentInformationFacade, function(originalAction){
                     if(!component.flagPreventSaveCheckoutPaymentInformationFacade) {
                         component.flagPreventSaveCheckoutPaymentInformationFacade = true;
-                        checkoutAgreementsUtils.getCheckoutAgreementsLoadedDeferredObject().done(function() {
-                            checkoutAgreementsUtils.getCheckoutAgreementsVisibleDeferredObject().done(function() {
+                        checkoutAgreementsUtils.waitForCheckoutAgreementsLoaded().done(function() {
+                            checkoutAgreementsUtils.waitForCheckoutAgreementsVisible().done(function() {
                                 component.flagPreventSaveCheckoutPaymentInformationFacade = false;
-
-                                if($(checkoutAgreementsUtils.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').length == 0
-                                || $(checkoutAgreementsUtils.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').is(':checked')) {
-                                    originalAction();
-                                }
+                                originalAction();
 
                                 var handler = function(event2) {
                                     if($(checkoutAgreementsUtils.checkoutAgreementsSelector).find('input[type=checkbox], input[type=radio]').is(':checked')) {
