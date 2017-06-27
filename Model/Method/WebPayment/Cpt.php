@@ -22,6 +22,10 @@ class Cpt extends AbstractMethod
 
     protected $_canVoid = true;
 
+    protected $_canCapturePartial = true;
+
+    protected $_canRefundInvoicePartial = true;
+
     public function initialize($paymentAction, $stateObject)
     {
         $payment = $this->getInfoInstance();
