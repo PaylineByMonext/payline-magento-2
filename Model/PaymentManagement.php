@@ -2,6 +2,11 @@
 
 namespace Monext\Payline\Model;
 
+use Magento\Framework\Api\FilterBuilder;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Framework\Api\SortOrderBuilder;
+use Magento\Framework\Data\Collection;
+
 use Magento\Checkout\Api\PaymentInformationManagementInterface as CheckoutPaymentInformationManagementInterface;
 use Magento\Quote\Api\BillingAddressManagementInterface as QuoteBillingAddressManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -154,7 +159,10 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         PaylineOrderManagement $paylineOrderManagement,
         Logger $logger,
         WalletManagement $walletManagement,
-        HelperData $helperData
+        HelperData $helperData,
+        FilterBuilder $filterBuilder,
+        SearchCriteriaBuilder $searchCriteriaBuilder,
+        SortOrderBuilder $sortOrderBuilder      
     )
     {
         $this->cartRepository = $cartRepository;
@@ -176,6 +184,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->logger = $logger;
         $this->walletManagement = $walletManagement;
         $this->helperData = $helperData;
+        $this->filterBuilder = $filterBuilder;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->sortOrderBuilder = $sortOrderBuilder;
     }
 
     public function saveCheckoutPaymentInformationFacade(
@@ -429,7 +440,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         $paymentData = $response1->getPaymentData();
-        $paymentData['amount'] = round($amount * 100, 0);
+        $paymentData['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($amount);
 
         $authorizationTransaction = $this->transactionRepository->getByTransactionType(
             Transaction::TYPE_AUTH,
@@ -478,7 +489,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $paymentData['transactionID'] = $payment->getTransactionId();
         $paymentData['comment'] = __('Transaction %s canceled for order %s from Magento Back-Office',
             $payment->getTransactionId(),
-            $order->getRealOrderId());
+            $order->getRealOrderId())->render();
 
         // Call API
         $response2 = $this->callPaylineApiDoVoid($paymentData);
@@ -497,19 +508,32 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $amount
     )
     {
-        $transactionId = $payment->getTransactionId();
+        // Get All transactions ids - if one in authorize mode get it, else first one
+        // $transaction = $this->transactionRepository->getByTransactionType(
+            // Transaction::TYPE_AUTH,
+            // $payment->getId(),
+            // $payment->getParentId()
+        // );
+
+        // if(!$transaction) {        
+            $filters[] = $this->filterBuilder
+                ->setField(TransactionInterface::ORDER_ID)
+                ->setValue($order->getId())
+                ->create();
+            $createdAtSort = $this->sortOrderBuilder
+                ->setField('created_at')
+                ->setDirection(Collection::SORT_ORDER_ASC)
+                ->create();
+            $searchCriteria = $this->searchCriteriaBuilder
+                ->addFilters($filters)
+                ->addSortOrder($createdAtSort)    
+                ->create();
+                
+            $transaction = $this->transactionRepository->getList($searchCriteria)->getFirstItem();//$this->transactionRepository->getList($searchCriteria)->getItems();
+        // }
         
-        // Check creditMemo exists and invoiced
-        $creditMemo = $payment->getCreditmemo();
-        if ($creditMemo) {
-            $invoice = $creditMemo->getInvoice();
-            if ($invoice && $invoice->getTransactionId()) {
-                $transactionId = $invoice->getTransactionId();
-            }
-        }
-                    
         // Check existing transaction - else refund impossible
-        if(!trim($transactionId)) {
+        if(!$transaction || ($transaction && !trim($transaction->getTxnId()))) {
             $this->logger->log(LoggerConstants::DEBUG, 'No transaction found for this order : '.$order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
@@ -524,11 +548,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         $paymentData = $response1->getPaymentData();
-        $paymentData['amount'] = round($amount * 100, 0);
-        $paymentData['transactionID'] = $transactionId;
+        $paymentData['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($amount);
+        $paymentData['transactionID'] = $transaction->getTxnId();
         $paymentData['comment'] = __('Transaction %s refunded for order %s from Magento Back-Office',
             $payment->getTransactionId(),
-            $order->getRealOrderId());
+            $order->getRealOrderId())->render();
 
         // Call API
         $response2 = $this->callPaylineApiDoRefund($order, $payment, $paymentData);
@@ -538,6 +562,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             throw new \Exception($response2->getShortErrorMessage());
         }
 
+        $payment->setTransactionId($response2->getTransactionId());
+        
         return $this;
     }
 
