@@ -3,6 +3,7 @@
 namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Framework\App\Action\Context;
+use Monext\Payline\Controller\Action;
 use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
 
 class ReturnFromWalletGateway extends Action

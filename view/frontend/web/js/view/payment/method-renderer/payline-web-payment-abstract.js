@@ -31,6 +31,7 @@ define(
 
             initialize: function () {
                 this._super().initChildren();
+                $(document).trigger('payline.web.payment.beforeInitialize', [this]);
 
                 if(this.getMethodConfigData('integrationType') === 'widget') {
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
@@ -71,7 +72,7 @@ define(
                 var self = this;
 
                 if(this.getPaylinetokenQueryParam()) {
-                    WidgetApi.showWidget(
+                    self.showWidget(
                         self.getEnvironment(),
                         self.getPaylinetokenQueryParam(),
                         self.getMethodConfigData('widgetDisplay'),
@@ -92,14 +93,14 @@ define(
                 if(self.getMethodConfigData('integrationType') === 'widget' 
                 && !self.flagPreventSaveCheckoutPaymentInformationFacade
                 && self.validate() && additionalValidators.validate()) {
-                    WidgetApi.destroyWidget(self.widgetContainerId);
+                    self.destroyWidget();
                     self.flagPreventSaveCheckoutPaymentInformationFacade = true;
                     self.isRetryCallPaymentWidgetButtonVisible(false);
 
                     $.when(
                         saveCheckoutPaymentInformationFacadeAction(self.getData(), self.messageContainer)
                     ).done(function(response) {
-                        WidgetApi.showWidget(
+                        self.showWidget(
                             self.getEnvironment(),
                             response[0],
                             self.getMethodConfigData('widgetDisplay'),
@@ -145,8 +146,24 @@ define(
             getPaylinetokenQueryParam: function() {
                 var uri = new Uri(window.location.href);
                 return uri.getQueryParamValue('paylinetoken');
+            },
+
+            afterRenderWidgetCallback: function() {
+                this.tryReloadWidget();
+            },
+
+            destroyWidget: function() {
+                WidgetApi.destroyWidget(this.widgetContainerId);
+            },
+
+            showWidget: function(environment, dataToken, dataColumn, widgetContainerId) {
+                WidgetApi.showWidget(
+                    environment,
+                    dataToken,
+                    dataColumn,
+                    widgetContainerId
+                );
             }
         });
     }
 );
-
