@@ -508,29 +508,21 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $amount
     )
     {
-        // Get All transactions ids - if one in authorize mode get it, else first one
-        // $transaction = $this->transactionRepository->getByTransactionType(
-            // Transaction::TYPE_AUTH,
-            // $payment->getId(),
-            // $payment->getParentId()
-        // );
-
-        // if(!$transaction) {        
-            $filters[] = $this->filterBuilder
-                ->setField(TransactionInterface::ORDER_ID)
-                ->setValue($order->getId())
-                ->create();
-            $createdAtSort = $this->sortOrderBuilder
-                ->setField('created_at')
-                ->setDirection(Collection::SORT_ORDER_ASC)
-                ->create();
-            $searchCriteria = $this->searchCriteriaBuilder
-                ->addFilters($filters)
-                ->addSortOrder($createdAtSort)    
-                ->create();
-                
-            $transaction = $this->transactionRepository->getList($searchCriteria)->getFirstItem();//$this->transactionRepository->getList($searchCriteria)->getItems();
-        // }
+        // Get first transaction used - Always use it for refund
+       $filters[] = $this->filterBuilder
+            ->setField(TransactionInterface::ORDER_ID)
+            ->setValue($order->getId())
+            ->create();
+        $createdAtSort = $this->sortOrderBuilder
+            ->setField('created_at')
+            ->setDirection(Collection::SORT_ORDER_ASC)
+            ->create();
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilters($filters)
+            ->addSortOrder($createdAtSort)    
+            ->create();
+            
+        $transaction = $this->transactionRepository->getList($searchCriteria)->getFirstItem();//$this->transactionRepository->getList($searchCriteria)->getItems();
         
         // Check existing transaction - else refund impossible
         if(!$transaction || ($transaction && !trim($transaction->getTxnId()))) {
