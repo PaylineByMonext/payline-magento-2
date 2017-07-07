@@ -555,6 +555,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         $payment->setTransactionId($response2->getTransactionId());
+        $payment->setParentTransactionId($transaction->getTxnId());
         
         return $this;
     }
