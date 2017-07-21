@@ -8,9 +8,8 @@ define(
         'Magento_Checkout/js/model/payment/additional-validators',
         'Monext_Payline/js/action/redirect',
         'Monext_Payline/js/action/save-checkout-payment-information-facade',
-        'Monext_Payline/js/action/load-widget',
-        'Monext_Payline/js/action/destroy-widget',
         'Monext_Payline/js/lib/Uri',
+        'Monext_Payline/js/widget-api',
     ],
     function (
         $,
@@ -21,9 +20,8 @@ define(
         additionalValidators,
         redirect,
         saveCheckoutPaymentInformationFacadeAction,
-        loadWidgetAction,
-        destroyWidgetAction,
-        Uri
+        Uri,
+        WidgetApi
     ) {
         'use strict';
 
@@ -33,18 +31,18 @@ define(
 
             initialize: function () {
                 this._super().initChildren();
+                $(document).trigger('payline.web.payment.beforeInitialize', [this]);
 
                 if(this.getMethodConfigData('integrationType') === 'widget') {
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
                     this.widgetContainerId = 'payline-widget-container';
-                    this.widgetJsApiId = 'payline-widget-js-api';
                     this.isPaymentWidgetMessageVisible = ko.observable(false);
                     this.isRetryCallPaymentWidgetButtonVisible = ko.observable(false);
                     this.isContractChecked = ko.observable(-1);
                     this.flagPreventSaveCheckoutPaymentInformationFacade = this.getPaylinetokenQueryParam() ? true : false;
                     this.areMagentoInputsVisible = ko.observable(this.getPaylinetokenQueryParam() ? false : true);
 
-                    destroyWidgetAction(this.widgetContainerId, this.widgetJsApiId);
+                    WidgetApi.destroyWidget(this.widgetContainerId);
 
                     // PREVENT TO SUSBCRIBE MULTIPLE TIMES AS THIS PAYMENT JS COMPONENTS CAN BE INITIALIZED SEVERAL 
                     // TIMES IF CUSTOMER GOES TO REVIEW => SHIPPING => REVIEW ... AND SO ON
@@ -53,7 +51,7 @@ define(
                             if(address !== null && this.isCurrentMethodSelected()) {
                                 this.saveCheckoutPaymentInformationFacade();
                             } else if(address === null) {
-                                destroyWidgetAction(this.widgetContainerId, this.widgetJsApiId);
+                                WidgetApi.destroyWidget(this.widgetContainerId);
                                 this.isPaymentWidgetMessageVisible(true);
                             }
                         }, this);
@@ -74,18 +72,11 @@ define(
                 var self = this;
 
                 if(this.getPaylinetokenQueryParam()) {
-                    loadWidgetAction(
-                        self.widgetContainerId,
+                    self.showWidget(
+                        self.getEnvironment(),
+                        self.getPaylinetokenQueryParam(),
                         self.getMethodConfigData('widgetDisplay'),
-                        this.getPaylinetokenQueryParam(),
-                        function() {
-                            if(!window.isPaylineWidgetCssApiLoaded) {
-                                self.initWidgetCssApi();
-                                window.isPaylineWidgetCssApiLoaded = true;
-                            }
-
-                            self.initWidgetJsApi();
-                        }
+                        self.widgetContainerId
                     );
                 }
             },
@@ -102,25 +93,18 @@ define(
                 if(self.getMethodConfigData('integrationType') === 'widget' 
                 && !self.flagPreventSaveCheckoutPaymentInformationFacade
                 && self.validate() && additionalValidators.validate()) {
-                    destroyWidgetAction(self.widgetContainerId, self.widgetJsApiId);
+                    self.destroyWidget();
                     self.flagPreventSaveCheckoutPaymentInformationFacade = true;
                     self.isRetryCallPaymentWidgetButtonVisible(false);
 
                     $.when(
                         saveCheckoutPaymentInformationFacadeAction(self.getData(), self.messageContainer)
                     ).done(function(response) {
-                        loadWidgetAction(
-                            self.widgetContainerId,
-                            self.getMethodConfigData('widgetDisplay'),
+                        self.showWidget(
+                            self.getEnvironment(),
                             response[0],
-                            function() {
-                                if(!window.isPaylineWidgetCssApiLoaded) {
-                                    self.initWidgetCssApi();
-                                    window.isPaylineWidgetCssApiLoaded = true;
-                                }
-
-                                self.initWidgetJsApi();
-                            }
+                            self.getMethodConfigData('widgetDisplay'),
+                            self.widgetContainerId
                         );
                         self.isPaymentWidgetMessageVisible(false);
                         self.flagPreventSaveCheckoutPaymentInformationFacade = false;
@@ -159,27 +143,27 @@ define(
                 return parentValidate && currentValidate;
             },
 
-            initWidgetJsApi: function() {
-                if(this.getEnvironment() === 'PROD') {
-                    $('head').append('<script id="payline-widget-api-js" type="text/javascript" src="https://payment.payline.com/scripts/widget-min.js"></script>');
-                } else {
-                    $('head').append('<script id="payline-widget-api-js" type="text/javascript" src="https://homologation-payment.payline.com/scripts/widget-min.js"></script>');
-                }
-            },
-
-            initWidgetCssApi: function() {
-                if(this.getEnvironment() === 'PROD') {
-                    $('head').append('<link rel="stylesheet" type="text/css" href="https://payment.payline.com/styles/widget-min.css">');
-                } else {
-                    $('head').append('<link rel="stylesheet" type="text/css" href="https://homologation-payment.payline.com/styles/widget-min.css">');
-                }
-            },
-
             getPaylinetokenQueryParam: function() {
                 var uri = new Uri(window.location.href);
                 return uri.getQueryParamValue('paylinetoken');
+            },
+
+            afterRenderWidgetCallback: function() {
+                this.tryReloadWidget();
+            },
+
+            destroyWidget: function() {
+                WidgetApi.destroyWidget(this.widgetContainerId);
+            },
+
+            showWidget: function(environment, dataToken, dataColumn, widgetContainerId) {
+                WidgetApi.showWidget(
+                    environment,
+                    dataToken,
+                    dataColumn,
+                    widgetContainerId
+                );
             }
         });
     }
 );
-

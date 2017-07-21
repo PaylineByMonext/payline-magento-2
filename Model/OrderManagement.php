@@ -5,6 +5,7 @@ namespace Monext\Payline\Model;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory;
+use Monext\Payline\Helper\Data as HelperData;
 
 class OrderManagement
 {
@@ -18,17 +19,25 @@ class OrderManagement
      */
     protected $orderFactory;
 
+    /**
+     * @var HelperData
+     */
+    protected $helperData;
+
     public function __construct(
         OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
-        OrderFactory $orderFactory
+        OrderFactory $orderFactory,
+        HelperData $helperData
     )
     {
         $this->orderFactory = $orderFactory;
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
+        $this->helperData = $helperData;
     }
 
     public function handleSetOrderStateStatus(Order $order, $state, $status, $message = null)
     {
+        $status = $this->helperData->getMatchingConfigurableStatus($order, $status);
         if($state == Order::STATE_CANCELED) {
             $this->handleOrderCancellation($order, $status);
         } else {
@@ -50,10 +59,13 @@ class OrderManagement
     {
         if($order->canCancel()) {
             $order->cancel();
-            $order->setStatus($status);
         } else {
-            $order->setState(Order::STATE_CANCELED)->setStatus($status);
+            $order->setState(Order::STATE_CANCELED);
             // TODO check stock
+        }
+
+        if(!empty($status)) {
+            $order->setStatus($status);
         }
     }
 

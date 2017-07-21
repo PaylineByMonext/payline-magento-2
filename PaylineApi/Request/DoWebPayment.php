@@ -113,30 +113,34 @@ class DoWebPayment extends AbstractRequest
     
     public function getData()
     {
-        $data = array();
-        
-        $this->preparePaymentData($data);
-        $this->prepareOrderData($data);
-        $this->prepareBuyerData($data);
-        $this->prepareBillingAddressData($data);
-        $this->prepareShippingAddressData($data);
-        
-        $paymentMethod = $this->payment->getMethod();
-        $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
-        $integrationType = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/integration_type');
-        
-        if($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
-            $data['payment']['contractNumber'] = $paymentAdditionalInformation['contract_number'];
-            $data['contracts'] = [$paymentAdditionalInformation['contract_number']];
-            $this->prepareUrlsForIntegrationTypeRedirect($data);
-        } elseif($integrationType == PaylineApiConstants::INTEGRATION_TYPE_WIDGET) {
-            $usedContracts = $this->contractManagement->getUsedContracts();
-            $data['payment']['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
-            $data['contracts'] = $usedContracts->getColumnValues('number');
-            $this->prepareUrlsForIntegrationTypeWidget($data);
+        if(!isset($this->data)) {
+            $data = parent::getData();
+
+            $this->preparePaymentData($data);
+            $this->prepareOrderData($data);
+            $this->prepareBuyerData($data);
+            $this->prepareBillingAddressData($data);
+            $this->prepareShippingAddressData($data);
+
+            $paymentMethod = $this->payment->getMethod();
+            $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
+            $integrationType = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/integration_type');
+
+            if($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
+                $data['payment']['contractNumber'] = $paymentAdditionalInformation['contract_number'];
+                $data['contracts'] = [$paymentAdditionalInformation['contract_number']];
+                $this->prepareUrlsForIntegrationTypeRedirect($data);
+            } elseif($integrationType == PaylineApiConstants::INTEGRATION_TYPE_WIDGET) {
+                $usedContracts = $this->contractManagement->getUsedContracts();
+                $data['payment']['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
+                $data['contracts'] = $usedContracts->getColumnValues('number');
+                $this->prepareUrlsForIntegrationTypeWidget($data);
+            }
+
+            $this->data = $data;
         }
-        
-        return $data;
+
+        return $this->data;
     }
     
     protected function preparePaymentData(&$data)
@@ -144,7 +148,7 @@ class DoWebPayment extends AbstractRequest
         $paymentMethod = $this->payment->getMethod();
         $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
         
-        $data['payment']['amount'] = round($this->totals->getGrandTotal() * 100, 0);
+        $data['payment']['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($this->totals->getGrandTotal());
         $data['payment']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['payment']['action'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_action');
         $data['payment']['mode'] = $paymentAdditionalInformation['payment_mode'];
@@ -167,7 +171,9 @@ class DoWebPayment extends AbstractRequest
     
     protected function prepareUrlsForIntegrationTypeWidget(&$data)
     {
-        if($this->cart->getCustomer() && $this->cart->getCustomer()->getId()) {
+        $customer = $this->cart->getCustomer();
+
+        if($customer->getId()) {
             $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
             $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
         } else {
@@ -180,33 +186,40 @@ class DoWebPayment extends AbstractRequest
     
     protected function prepareBuyerData(&$data)
     {
+        $customer = $this->cart->getCustomer();
+        $paymentMethod = $this->payment->getMethod();
+
         foreach(['lastName' => 'getLastname', 'firstName' => 'getFirstname', 'email' => 'getEmail'] as $dataIdx => $getter) {
-            $tmpData = null;
-            
-            if($this->cart->getCustomer()) {
-                $tmpData = $this->cart->getCustomer()->$getter();
-            }
-            
+            $tmpData = $customer->$getter();
+
             if(empty($tmpData)) {
                 $tmpData = $this->billingAddress->$getter();
             }
-            
+
             $data['buyer'][$dataIdx] = $this->helperData->encodeString($tmpData);
-            
+
             if($dataIdx == 'email') {
                 if(!$this->helperData->isEmailValid($tmpData)) {
                     unset($data['buyer']['email']);
                 }
-                
+
                 $data['buyer']['customerId'] = $this->helperData->encodeString($tmpData);
             }
         }
-        
-        if($this->cart->getCustomer() && $this->cart->getCustomer()->getId()) {
-            $data['buyer']['accountCreateDate'] = $this->formatDateTime($this->cart->getCustomer()->getCreatedAt(), 'd/m/y');
+
+        if($customer->getId()) {
+            $data['buyer']['accountCreateDate'] = $this->formatDateTime($customer->getCreatedAt(), 'd/m/y');
+        }
+
+        if($this->helperData->isWalletEnabled($paymentMethod)) {
+            if($customer->getId() && $customer->getCustomAttribute('wallet_id')->getValue()) {
+                $data['buyer']['walletId'] = $customer->getCustomAttribute('wallet_id')->getValue();
+            } else {
+                $data['buyer']['walletId'] = $this->helperData->generateRandomWalletId();
+            }
         }
     }
-    
+
     protected function prepareBillingAddressData(&$data)
     {
         $data['billingAddress']['title'] = $this->helperData->encodeString($this->billingAddress->getPrefix());
@@ -259,7 +272,7 @@ class DoWebPayment extends AbstractRequest
                     $data['shippingAddress']['street'.($i+1)] = $this->helperData->encodeString(substr($streetData[$i], 0, 100));
                 }
             }
-            
+
             $name = $this->helperData->buildPersonNameFromParts(
                 $this->shippingAddress->getFirstname(),
                 $this->shippingAddress->getLastname(), 

@@ -1,0 +1,24 @@
+<?php if($block->hasCustomerWallet()) : ?>
+    <?php if($this->isManageWebWalletInError()) : ?>
+    <div class="message error empty"><span><?php /* @escapeNotVerified */ echo __($this->getManageWebWalletErrorMessage()) ?></span></div>
+    <?php else : ?>
+    <?php $manageWebWalletJsConfig = $block->getManageWebWalletJsConfig() ?>
+    <div id="payline-widget-container">
+    </div>
+
+    <script type="text/x-magento-init">
+    {
+        "*": {
+            "Monext_Payline/js/manage-web-wallet": {
+                "environment": "<?php echo $manageWebWalletJsConfig['environment'] ?>",
+                "token": "<?php echo $manageWebWalletJsConfig['token'] ?>",
+                "widgetDisplay": "column",
+                "containerId": "payline-widget-container"
+            }
+        }
+    }
+    </script>
+    <?php endif; ?>
+<?php else : ?>
+<div class="message info empty"><span><?php /* @escapeNotVerified */ echo __('You have no wallets.') ?></span></div>
+<?php endif; ?>

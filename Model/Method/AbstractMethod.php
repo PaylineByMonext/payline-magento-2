@@ -17,6 +17,7 @@ use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Monext\Payline\Model\ContractManagement;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
+use Monext\Payline\Helper\Data as HelperData;
 
 class AbstractMethod extends BaseAbstractMethod
 {
@@ -29,6 +30,11 @@ class AbstractMethod extends BaseAbstractMethod
      * @var ContractManagement 
      */
     protected $contractManagement;
+
+    /**
+     * @var HelperData
+     */
+    protected $helperData;
     
     public function __construct(
         Context $context,
@@ -40,6 +46,7 @@ class AbstractMethod extends BaseAbstractMethod
         Logger $logger,
         PaylinePaymentManagement $paylinePaymentManagement,
         ContractManagement $contractManagement,
+        HelperData $helperData,
         AbstractResource $resource = null,
         CollectionAbstractDb $resourceCollection = null,
         array $data = []
@@ -58,6 +65,7 @@ class AbstractMethod extends BaseAbstractMethod
         );
         $this->paylinePaymentManagement = $paylinePaymentManagement;
         $this->contractManagement = $contractManagement;
+        $this->helperData = $helperData;
     }
     
     public function isAvailable(CartInterface $quote = null)

@@ -1,4 +1,4 @@
-<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+<div class="payment-method payline-payment-block" data-bind="css: {'_active': (getCode() == isChecked())}">
     <div class="payment-method-title field choice">
         <input type="radio"
                name="payment[method]"
@@ -26,7 +26,7 @@
             <!--/ko-->
         </div>
         
-        <div id="payline-widget-container" data-bind="afterRender: tryReloadWidget">
+        <div id="payline-widget-container" data-bind="afterRender: afterRenderWidgetCallback">
         </div>
         
         <div class="actions-toolbar">
