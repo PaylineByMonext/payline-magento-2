@@ -16,7 +16,8 @@ interface GuestPaymentManagementInterface
      * @param \Magento\Quote\Api\Data\PaymentInterface $paymentMethod
      * @param \Magento\Quote\Api\Data\AddressInterface|null $billingAddress
      * @throws \Magento\Framework\Exception\CouldNotSaveException
-     * @return array
+     * realReturnType array (Magento webapi does not accept it)
+     * @return anyType
      */
     public function saveCheckoutPaymentInformationFacade(
         $cartId,
