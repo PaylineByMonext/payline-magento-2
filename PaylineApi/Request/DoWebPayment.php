@@ -148,7 +148,7 @@ class DoWebPayment extends AbstractRequest
         $paymentMethod = $this->payment->getMethod();
         $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
         
-        $data['payment']['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($this->totals->getGrandTotal());
+        $data['payment']['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($this->totals->getGrandTotal() + $this->totals->getTaxAmount());
         $data['payment']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['payment']['action'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_action');
         $data['payment']['mode'] = $paymentAdditionalInformation['payment_mode'];
@@ -157,7 +157,7 @@ class DoWebPayment extends AbstractRequest
     protected function prepareOrderData(&$data)
     {
         $data['order']['ref'] = $this->cart->getReservedOrderId();
-        $data['order']['amount'] = round($this->totals->getGrandTotal() * 100, 0);
+        $data['order']['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($this->totals->getGrandTotal() + $this->totals->getTaxAmount());
         $data['order']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['order']['date'] = $this->formatDateTime($this->cart->getCreatedAt());
     }
