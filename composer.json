@@ -6,7 +6,7 @@
         "monext/payline-sdk": "*"
     },
     "type": "magento2-module",
-    "version": "1.2.0",
+    "version": "1.2.2",
     "authors" : [
         {
             "name" : "Matthieu BOUCHOT",
