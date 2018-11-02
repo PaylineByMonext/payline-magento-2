@@ -93,7 +93,7 @@ class DoWebPayment extends AbstractRequest
         return $this;
     }
     
-    public function setShippingAddress(AddressInterface $shippingAddress)
+    public function setShippingAddress(AddressInterface $shippingAddress = null)
     {
         $this->shippingAddress = $shippingAddress;
         return $this;
