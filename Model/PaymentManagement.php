@@ -7,6 +7,7 @@ use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SortOrderBuilder;
 use Magento\Framework\Data\Collection;
 
+use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Checkout\Api\PaymentInformationManagementInterface as CheckoutPaymentInformationManagementInterface;
 use Magento\Quote\Api\BillingAddressManagementInterface as QuoteBillingAddressManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -205,6 +206,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $response = $this->callPaylineApiDoWebPaymentFacade(
             $this->cartRepository->getActive($cartId), 
+            $this->paylineCartManagement->getProductCollectionFromCart($cartId),
             $this->cartTotalRepository->get($cartId),
             $this->quotePaymentMethodManagement->get($cartId),
             $this->quoteBillingAddressManagement->get($cartId),
@@ -219,6 +221,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     
     protected function callPaylineApiDoWebPaymentFacade(
         CartInterface $cart,
+        ProductCollection $productCollection,
         TotalsInterface $totals,
         PaymentInterface $payment,
         AddressInterface $billingAddress,
@@ -231,7 +234,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $shippingAddress = null;
         }
 
-        $response = $this->callPaylineApiDoWebPayment($cart, $totals, $payment, $billingAddress, $shippingAddress);
+        $response = $this->callPaylineApiDoWebPayment($cart, $productCollection, $totals, $payment, $billingAddress, $shippingAddress);
 
         if(!$response->isSuccess()) {
             // TODO log
@@ -248,6 +251,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     
     protected function callPaylineApiDoWebPayment(
         CartInterface $cart,
+        ProductCollection $productCollection,
         TotalsInterface $totals,
         PaymentInterface $payment,
         AddressInterface $billingAddress,
@@ -257,6 +261,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $request = $this->requestDoWebPaymentFactory->create();
         $request
             ->setCart($cart)
+            ->setProductCollection($productCollection)
             ->setBillingAddress($billingAddress)
             ->setShippingAddress($shippingAddress)
             ->setTotals($totals)

@@ -4,6 +4,7 @@ namespace Monext\Payline\PaylineApi;
 
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Module\ModuleListInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\PaylineApi\PaylineSDKFactory;
 use Monext\Payline\PaylineApi\Request\DoCapture as RequestDoCapture;
@@ -37,9 +38,9 @@ class Client
     protected $paylineSDKFactory;
 
     /**
-     * @var PaylineSDK 
+     * @var PaylineSDK
      */
-    protected $paylineSDK;    
+    protected $paylineSDK;
 
     /**
      * @var ScopeConfigInterface
@@ -60,19 +61,19 @@ class Client
      * @var ResponseDoVoidFactory
      */
     protected $responseDoVoidFactory;
-    
+
     /**
      * @var ResponseDoRefundFactory
      */
     protected $responseDoRefundFactory;
-    
+
     /**
-     * @var ResponseGetMerchantSettingsFactory 
+     * @var ResponseGetMerchantSettingsFactory
      */
     protected $responseGetMerchantSettingsFactory;
 
     /**
-     * @var ResponseGetWebPaymentDetailsFactory 
+     * @var ResponseGetWebPaymentDetailsFactory
      */
     protected $responseGetWebPaymentDetailsFactory;
 
@@ -85,12 +86,17 @@ class Client
      * @var Logger
      */
     protected $logger;
-    
+
     /**
      * @var EncryptorInterface
      */
     protected $encryptor;
-    
+
+    /**
+     * @var ModuleListInterface
+     */
+    protected $moduleList;
+
     public function __construct(
         PaylineSDKFactory $paylineSDKFactory,
         ScopeConfigInterface $scopeConfig,
@@ -102,7 +108,8 @@ class Client
         ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory,
         ResponseManageWebWalletFactory $responseManageWebWalletFactory,
         Logger $logger,
-        EncryptorInterface $encryptor
+        EncryptorInterface $encryptor,
+        ModuleListInterface $moduleList
     )
     {
         $this->paylineSDKFactory = $paylineSDKFactory;
@@ -116,8 +123,9 @@ class Client
         $this->responseManageWebWalletFactory = $responseManageWebWalletFactory;
         $this->logger = $logger;
         $this->encryptor = $encryptor;
+        $this->moduleList = $moduleList;
     }
-    
+
     /**
      * @param RequestDoWebPayment $request
      * @return ResponseDoWebPayment
@@ -127,8 +135,15 @@ class Client
         $this->initPaylineSDK();
 
         $response = $this->responseDoWebPaymentFactory->create();
+
+        $data = $request->getData();
+        foreach ($data['order']['details'] as $orderDetail) {
+            $this->paylineSDK->addOrderDetail($orderDetail);
+        }
+        unset($data['order']['details']);
+
         $response->fromData(
-            $this->paylineSDK->doWebPayment($request->getData())
+            $this->paylineSDK->doWebPayment($data)
         );
 
         if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
@@ -138,7 +153,7 @@ class Client
 
         return $response;
     }
-    
+
     /**
      * @param RequestDoCapture $request
      * @return ResponseDoCapture
@@ -180,7 +195,7 @@ class Client
 
         return $response;
     }
-    
+
     /**
      * @param RequestDoRefund $request
      * @return ResponseDoRefund
@@ -201,7 +216,7 @@ class Client
 
         return $response;
     }
-    
+
     /**
      * @param RequestGetMerchantSettings $request
      * @return ResponseGetMerchantSettings
@@ -217,7 +232,7 @@ class Client
 
         return $response;
     }
-    
+
     /**
      * @param RequestGetWebPaymentDetails $request
      * @return ResponseGetWebPaymentDetails
@@ -276,14 +291,16 @@ class Client
                 'pathLog' => BP . '/var/log/payline_sdk/',
                 'logLevel' => LoggerConstants::INFO,
             );
-            
+
             if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
                 $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
             }
-            
+
             $this->paylineSDK = $this->paylineSDKFactory->create($paylineSdkParams);
+            $currentModule = $this->moduleList->getOne(HelperConstants::MODULE_NAME);
+            $this->paylineSDK->usedBy(HelperConstants::PAYLINE_API_USED_BY_PREFIX.' v'.$currentModule['setup_version']);
         //}
-        
+
         return $this;
     }
 
