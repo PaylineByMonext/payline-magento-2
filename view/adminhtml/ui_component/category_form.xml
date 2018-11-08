@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <fieldset name="content">
+        <field name="payline_category_mapping" sortOrder="100" formElement="select">
+            <settings>
+                <dataType>string</dataType>
+                <label translate="true">Payline Category Mapping</label>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options class="Monext\Payline\Model\Category\Attribute\Source\CategoryMapping"/>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+    </fieldset>
+</form>

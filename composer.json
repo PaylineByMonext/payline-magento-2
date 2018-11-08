@@ -2,16 +2,15 @@
     "name": "monext/module-payline",
     "description": "N/A",
     "require": {
-        "php": "~5.6.5||^7.0.0",
         "monext/payline-sdk": "*"
     },
     "type": "magento2-module",
-    "version": "1.2.0",
+    "version": "1.2.3",
     "authors" : [
         {
             "name" : "Matthieu BOUCHOT",
-            "email" : "matthieu.bouchot@ecommerce-academy.fr",
-            "homepage" : "http://www.academy-ecommerce.com/"
+            "email" : "matthieu.bouchot@agence-tbd.com",
+            "homepage" : "https://www.agence-tbd.com/"
         }
     ],
     "autoload": {

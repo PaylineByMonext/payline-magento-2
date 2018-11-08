@@ -13,20 +13,27 @@ class UpgradeData implements UpgradeDataInterface
     /**
      * @var \Magento\Customer\Model\AttributeFactory
      */
-    protected $attributeFactory;
+    protected $customerAttributeFactory;
 
     /**
      * @var \Magento\Eav\Model\Entity\Attribute\SetFactory
      */
     protected $attributeSetFactory;
 
+    /**
+     * @var \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory
+     */
+    protected $eavSetupFactory;
+
     public function __construct(
-        \Magento\Customer\Model\AttributeFactory $attributeFactory,
-        \Magento\Eav\Model\Entity\Attribute\SetFactory $attributeSetFactory
+        \Magento\Customer\Model\AttributeFactory $customerAttributeFactory,
+        \Magento\Eav\Model\Entity\Attribute\SetFactory $attributeSetFactory,
+        \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory
     )
     {
-        $this->attributeFactory = $attributeFactory;
+        $this->customerAttributeFactory = $customerAttributeFactory;
         $this->attributeSetFactory = $attributeSetFactory;
+        $this->eavSetupFactory = $eavSetupFactory;
     }
 
     public function upgrade(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
@@ -43,25 +50,25 @@ class UpgradeData implements UpgradeDataInterface
             foreach ($statuses as $code => $info) {
                 $data[] = ['status' => $code, 'label' => $info];
             }
-            
+
             $setup->getConnection()->insertArray(
-                $setup->getTable('sales_order_status'), 
-                ['status', 'label'], 
+                $setup->getTable('sales_order_status'),
+                ['status', 'label'],
                 $data
             );
-            
+
             $data = [];
             foreach ($statuses as $code => $info) {
                 $data[] = ['status' => $code, 'state' => Order::STATE_PROCESSING, 'default' => 0, 'visible_on_front' => 1];
             }
-            
+
             $setup->getConnection()->insertArray(
                 $setup->getTable('sales_order_status_state'),
                 ['status', 'state', 'is_default', 'visible_on_front'],
                 $data
             );
         }
-        
+
         if (version_compare($context->getVersion(), '1.0.4', '<')) {
             $data = [];
             $statuses = [
@@ -70,25 +77,25 @@ class UpgradeData implements UpgradeDataInterface
             foreach ($statuses as $code => $info) {
                 $data[] = ['status' => $code, 'label' => $info];
             }
-            
+
             $setup->getConnection()->insertArray(
-                $setup->getTable('sales_order_status'), 
-                ['status', 'label'], 
+                $setup->getTable('sales_order_status'),
+                ['status', 'label'],
                 $data
             );
-            
+
             $data = [];
             foreach ($statuses as $code => $info) {
                 $data[] = ['status' => $code, 'state' => Order::STATE_NEW, 'default' => 0, 'visible_on_front' => 1];
             }
-            
+
             $setup->getConnection()->insertArray(
                 $setup->getTable('sales_order_status_state'),
                 ['status', 'state', 'is_default', 'visible_on_front'],
                 $data
             );
         }
-        
+
         if (version_compare($context->getVersion(), '1.0.5', '<')) {
             $setup->getConnection()->update(
                 $setup->getTable('sales_order_status_state'),
@@ -96,7 +103,7 @@ class UpgradeData implements UpgradeDataInterface
                 ['status = ?' => HelperConstants::ORDER_STATUS_PAYLINE_CANCELED]
             );
         }
-        
+
         if (version_compare($context->getVersion(), '1.0.7', '<')) {
             $data = [];
             $statuses = [
@@ -110,17 +117,17 @@ class UpgradeData implements UpgradeDataInterface
             }
 
             $setup->getConnection()->insertArray(
-                $setup->getTable('sales_order_status'), 
-                ['status', 'label'], 
+                $setup->getTable('sales_order_status'),
+                ['status', 'label'],
                 $data
             );
 
             $data = [];
             foreach ($statuses as $code => $info) {
                 $data[] = [
-                    'status' => $code, 
-                    'state' => $code == HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE ? Order::STATE_PROCESSING : Order::STATE_CANCELED, 
-                    'default' => 0, 
+                    'status' => $code,
+                    'state' => $code == HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE ? Order::STATE_PROCESSING : Order::STATE_CANCELED,
+                    'default' => 0,
                     'visible_on_front' => $code == HelperConstants::ORDER_STATUS_PAYLINE_FRAUD ? 0 : 1
                 ];
             }
@@ -133,7 +140,7 @@ class UpgradeData implements UpgradeDataInterface
         }
 
         if (version_compare($context->getVersion(), '1.2.0', '<')) {
-            $attribute = $this->attributeFactory->create();
+            $attribute = $this->customerAttributeFactory->create();
 
             $attribute->setData(array(
                 'entity_type_id' => \Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER,
@@ -164,6 +171,22 @@ class UpgradeData implements UpgradeDataInterface
                 ->setAttributeSetId($attributeSet->getId())
                 ->setEntityTypeId(\Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER)
                 ->save();
+        }
+
+        if (version_compare($context->getVersion(), '1.2.3', '<')) {
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+            $eavSetup->addAttribute(\Magento\Catalog\Model\Category::ENTITY, 'payline_category_mapping', [
+                'type'         => 'int',
+                'label'        => 'Payline Category Mapping',
+                'input'        => 'select',
+                'source'       => 'Monext\Payline\Model\Category\Attribute\Source\CategoryMapping',
+                'visible'      => true,
+                'global'       => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                'group'        => 'Content',
+                'sort_order'   => 2000,
+                'required'     => false,
+                'user_defined' => true,
+            ]);
         }
 
         $setup->endSetup();
