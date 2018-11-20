@@ -204,13 +204,14 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
     public function wrapCallPaylineApiDoWebPaymentFacade($cartId)
     {
+        $cart = $this->cartRepository->getActive($cartId);
         $response = $this->callPaylineApiDoWebPaymentFacade(
-            $this->cartRepository->getActive($cartId), 
+            $cart, 
             $this->paylineCartManagement->getProductCollectionFromCart($cartId),
             $this->cartTotalRepository->get($cartId),
             $this->quotePaymentMethodManagement->get($cartId),
             $this->quoteBillingAddressManagement->get($cartId),
-            $this->quoteShippingAddressManagement->get($cartId)
+            $cart->getIsVirtual() ? null : $this->quoteShippingAddressManagement->get($cartId)
         );
 
         return [
