@@ -9,6 +9,7 @@ composer require monext/module-payline
 
 php -f bin/magento module:enable Monext_Payline
 php -f bin/magento setup:upgrade
+```
 
 ## Configuration
 *Find Payline configuration menu under STORES > Settings > Configuration > SALES > Payment Methods
