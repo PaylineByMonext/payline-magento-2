@@ -2,6 +2,7 @@
 
 namespace Monext\Payline\PaylineApi\Request;
 
+use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Quote\Api\Data\AddressInterface;
@@ -20,52 +21,57 @@ class DoWebPayment extends AbstractRequest
      * @var CartInterface
      */
     protected $cart;
-    
+
+    /**
+     * @var ProductCollection
+     */
+    protected $productCollection;
+
     /**
      * @var TotalsInterface
      */
     protected $totals;
-    
+
     /**
      * @var PaymentInterface
      */
     protected $payment;
-    
+
     /**
-     * @var AddressInterface 
+     * @var AddressInterface
      */
     protected $billingAddress;
-    
+
     /**
-     * @var AddressInterface 
+     * @var AddressInterface
      */
     protected $shippingAddress;
-    
+
     /**
      * @var ScopeConfigInterface
      */
     protected $scopeConfig;
-    
+
     /**
-     * @var HelperCurrency 
+     * @var HelperCurrency
      */
     protected $helperCurrency;
-    
+
     /**
      * @var UrlInterface
      */
     protected $urlBuilder;
-    
+
     /**
      * @var ContractManagement
      */
     protected $contractManagement;
-    
+
     /**
-     * @var HelperData 
+     * @var HelperData
      */
     protected $helperData;
-    
+
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         HelperCurrency $helperCurrency,
@@ -80,37 +86,43 @@ class DoWebPayment extends AbstractRequest
         $this->urlBuilder = $urlBuilder;
         $this->contractManagement = $contractManagement;
     }
-    
+
     public function setCart(CartInterface $cart)
     {
         $this->cart = $cart;
         return $this;
     }
-    
+
+    public function setProductCollection(ProductCollection $productCollection)
+    {
+        $this->productCollection = $productCollection;
+        return $this;
+    }
+
     public function setBillingAddress(AddressInterface $billingAddress)
     {
         $this->billingAddress = $billingAddress;
         return $this;
     }
-    
+
     public function setShippingAddress(AddressInterface $shippingAddress)
     {
         $this->shippingAddress = $shippingAddress;
         return $this;
     }
-    
+
     public function setTotals(TotalsInterface $totals)
     {
         $this->totals = $totals;
         return $this;
     }
-    
+
     public function setPayment(PaymentInterface $payment)
     {
         $this->payment = $payment;
         return $this;
     }
-    
+
     public function getData()
     {
         if(!isset($this->data)) {
@@ -142,33 +154,53 @@ class DoWebPayment extends AbstractRequest
 
         return $this->data;
     }
-    
+
     protected function preparePaymentData(&$data)
     {
         $paymentMethod = $this->payment->getMethod();
         $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
-        
+
         $data['payment']['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($this->totals->getGrandTotal() + $this->totals->getTaxAmount());
         $data['payment']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['payment']['action'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_action');
         $data['payment']['mode'] = $paymentAdditionalInformation['payment_mode'];
     }
-    
+
     protected function prepareOrderData(&$data)
     {
         $data['order']['ref'] = $this->cart->getReservedOrderId();
         $data['order']['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($this->totals->getGrandTotal() + $this->totals->getTaxAmount());
         $data['order']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['order']['date'] = $this->formatDateTime($this->cart->getCreatedAt());
+        $this->prepareOrderDetailsData($data);
     }
-    
+
+    protected function prepareOrderDetailsData(&$data)
+    {
+        $data['order']['details'] = [];
+
+        foreach ($this->cart->getItems() as $item) {
+            $tmpProduct = $this->productCollection->getItemById($item->getProductId());
+            $orderDetail = [
+                'ref' => $item->getSku(),
+                'price' => $this->helperData->mapMagentoAmountToPaylineAmount($item->getPrice()),
+                'quantity' => $item->getQty(),
+                'brand' => $tmpProduct->getManufacturer(),
+                'category' => $tmpProduct->getPaylineCategoryMapping(),
+                'taxRate' => $this->helperData->mapMagentoAmountToPaylineAmount($item->getTaxPercent()),
+            ];
+
+            $data['order']['details'][] = $orderDetail;
+        }
+    }
+
     protected function prepareUrlsForIntegrationTypeRedirect(&$data)
     {
         $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
         $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
         $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
     }
-    
+
     protected function prepareUrlsForIntegrationTypeWidget(&$data)
     {
         $customer = $this->cart->getCustomer();
@@ -183,7 +215,7 @@ class DoWebPayment extends AbstractRequest
 
         $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
     }
-    
+
     protected function prepareBuyerData(&$data)
     {
         $customer = $this->cart->getCustomer();
@@ -229,27 +261,27 @@ class DoWebPayment extends AbstractRequest
         $data['billingAddress']['zipCode'] = substr($this->billingAddress->getPostcode(), 0, 12);
         $data['billingAddress']['country'] = $this->billingAddress->getCountry();
         $data['billingAddress']['state'] = $this->helperData->encodeString($this->billingAddress->getRegion());
-        
+
         $billingPhone = $this->helperData->getNormalizedPhoneNumber($this->billingAddress->getTelephone());
         if($billingPhone) {
             $data['billingAddress']['phone'] = $billingPhone;
         }
-        
+
         $streetData = $this->billingAddress->getStreet();
         for($i = 0; $i <= 1; $i++) {
             if(isset($streetData[$i])) {
                 $data['billingAddress']['street'.($i+1)] = $this->helperData->encodeString(substr($streetData[$i], 0, 100));
             }
         }
-        
+
         $name = $this->helperData->buildPersonNameFromParts(
             $this->billingAddress->getFirstname(),
-            $this->billingAddress->getLastname(), 
+            $this->billingAddress->getLastname(),
             $this->billingAddress->getPrefix()
         );
         $data['billingAddress']['name'] = $this->helperData->encodeString(substr($name, 0, 100));
     }
-    
+
     protected function prepareShippingAddressData(&$data)
     {
         if(!$this->cart->getIsVirtual() && isset($this->shippingAddress)) {
@@ -260,12 +292,12 @@ class DoWebPayment extends AbstractRequest
             $data['shippingAddress']['zipCode'] = substr($this->shippingAddress->getPostcode(), 0, 12);
             $data['shippingAddress']['country'] = $this->shippingAddress->getCountry();
             $data['shippingAddress']['state'] = $this->helperData->encodeString($this->shippingAddress->getRegion());
-            
+
             $shippingPhone = $this->helperData->getNormalizedPhoneNumber($this->shippingAddress->getTelephone());
             if($shippingPhone) {
                 $data['shippingAddress']['phone'] = $shippingPhone;
             }
-            
+
             $streetData = $this->shippingAddress->getStreet();
             for($i = 0; $i <= 1; $i++) {
                 if(isset($streetData[$i])) {
@@ -275,7 +307,7 @@ class DoWebPayment extends AbstractRequest
 
             $name = $this->helperData->buildPersonNameFromParts(
                 $this->shippingAddress->getFirstname(),
-                $this->shippingAddress->getLastname(), 
+                $this->shippingAddress->getLastname(),
                 $this->shippingAddress->getPrefix()
             );
             $data['shippingAddress']['name'] = $this->helperData->encodeString(substr($name, 0, 100));
