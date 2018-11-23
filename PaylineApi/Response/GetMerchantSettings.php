@@ -18,6 +18,9 @@ class GetMerchantSettings extends AbstractResponse
         if(!empty($allPointOfSell['contracts']) && !empty($allPointOfSell['label'])) {
             $contractsList = !empty($allPointOfSell['contracts']['contract']) ? $allPointOfSell['contracts']['contract'] : [];
             $pointOfSellLabel = $allPointOfSell['label'];
+            if (isset($contractsList['contractNumber'])) {
+                $contractsList = [$contractsList];
+            }
             foreach ($contractsList as $contract) {
                 $result[] = [
                     'label' => $contract['label'],
