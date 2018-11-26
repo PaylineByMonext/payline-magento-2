@@ -4,15 +4,15 @@ namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\App\Action\Context;
-use Magento\Sales\Api\OrderPaymentRepositoryInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Monext\Payline\Controller\Action;
 
 class RedirectToPaymentGateway extends Action
 {
     /**
-     * @var OrderPaymentRepositoryInterface
+     * @var OrderRepositoryInterface
      */
-    protected $orderPaymentRepository;
+    protected $orderRepository;
     
     /**
      * @var CheckoutSession
@@ -21,19 +21,19 @@ class RedirectToPaymentGateway extends Action
     
     public function __construct(
         Context $context,
-        OrderPaymentRepositoryInterface $orderPaymentRepository,
+        OrderRepositoryInterface $orderRepository,
         CheckoutSession $checkoutSession
     )
     {
         parent::__construct($context);
-        $this->orderPaymentRepository = $orderPaymentRepository;
+        $this->orderRepository = $orderRepository;
         $this->checkoutSession = $checkoutSession;
     }
     
     public function execute() 
     {
-        $orderPayment = $this->orderPaymentRepository->get($this->checkoutSession->getLastOrderId());
-        $additionalInformation = $orderPayment->getAdditionalInformation();
+        $order = $this->orderRepository->get($this->checkoutSession->getLastOrderId());
+        $additionalInformation = $order->getPayment()->getAdditionalInformation();
         
         $resultRedirect = $this->resultRedirectFactory->create();
         // TODO Handle case if data is not present
