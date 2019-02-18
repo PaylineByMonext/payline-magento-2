@@ -42,7 +42,7 @@ class GetMerchantSettings extends AbstractResponse
                     $pointOfSellLabel = (!empty($pointOfSell['label'])) ? $pointOfSell['label']: '';
                 }
 
-                if (!is_array($contractsList)) {
+                if (isset($contractsList['contractNumber'])) {
                     $contractsList = [$contractsList];
                 }
 
