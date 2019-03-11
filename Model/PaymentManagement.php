@@ -50,79 +50,79 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      * @var CartRepositoryInterface
      */
     protected $cartRepository;
-    
+
     /**
      * @var CartTotalRepositoryInterface
      */
     protected $cartTotalRepository;
-    
+
     /**
-     * @var CheckoutPaymentInformationManagementInterface 
+     * @var CheckoutPaymentInformationManagementInterface
      */
     protected $checkoutPaymentInformationManagement;
-    
+
     /**
      * @var QuotePaymentMethodManagementInterface
      */
     protected $quotePaymentMethodManagement;
-    
+
     /**
      * @var RequestDoWebPaymentFactory
      */
     protected $requestDoWebPaymentFactory;
-    
+
     /**
      * @var RequestGetWebPaymentDetailsFactory
      */
     protected $requestGetWebPaymentDetailsFactory;
-    
+
     /**
      * @var RequestDoCaptureFactory
      */
     protected $requestDoCaptureFactory;
-    
+
     /**
      * @var RequestDoVoidFactory
      */
     protected $requestDoVoidFactory;
-    
+
     /**
      * @var RequestDoRefundFactory
      */
     protected $requestDoRefundFactory;
-    
+
     /**
-     * @var PaylineApiClient 
+     * @var PaylineApiClient
      */
     protected $paylineApiClient;
-    
+
     /**
-     * @var PaylineCartManagement 
+     * @var PaylineCartManagement
      */
     protected $paylineCartManagement;
-    
+
     /**
-     * @var OrderIncrementIdTokenFactory 
+     * @var OrderIncrementIdTokenFactory
      */
     protected $orderIncrementIdTokenFactory;
-    
+
     /**
-     * @var TransactionRepository 
+     * @var TransactionRepository
      */
     protected $transactionRepository;
-    
+
     /**
-     * @var QuoteBillingAddressManagementInterface 
+     * @var QuoteBillingAddressManagementInterface
      */
     protected $quoteBillingAddressManagement;
-    
+
     /**
-     * @var QuoteShippingAddressManagementInterface 
+     * @var QuoteShippingAddressManagementInterface
      */
     protected $quoteShippingAddressManagement;
-    
+
     /**
-     * @var PaylineOrderManagement 
+     * @var PaylineOrderManagement
      */
     protected $paylineOrderManagement;
 
@@ -130,7 +130,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      * @var Logger
      */
     public $logger;
-    
+
     /**
      * @var WalletManagement
      */
@@ -142,7 +142,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected $helperData;
 
     public function __construct(
-        CartRepositoryInterface $cartRepository, 
+        CartRepositoryInterface $cartRepository,
         CartTotalRepositoryInterface $cartTotalRepository,
         CheckoutPaymentInformationManagementInterface $checkoutPaymentInformationManagement,
         QuotePaymentMethodManagementInterface $quotePaymentMethodManagement,
@@ -163,7 +163,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         HelperData $helperData,
         FilterBuilder $filterBuilder,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        SortOrderBuilder $sortOrderBuilder      
+        SortOrderBuilder $sortOrderBuilder
     )
     {
         $this->cartRepository = $cartRepository;
@@ -206,7 +206,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $cart = $this->cartRepository->getActive($cartId);
         $response = $this->callPaylineApiDoWebPaymentFacade(
-            $cart, 
+            $cart,
             $this->paylineCartManagement->getProductCollectionFromCart($cartId),
             $this->cartTotalRepository->get($cartId),
             $this->quotePaymentMethodManagement->get($cartId),
@@ -215,11 +215,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         );
 
         return [
-            'token' => $response->getToken(), 
+            'token' => $response->getToken(),
             'redirect_url' => $response->getRedirectUrl(),
         ];
     }
-    
+
     protected function callPaylineApiDoWebPaymentFacade(
         CartInterface $cart,
         ProductCollection $productCollection,
@@ -243,13 +243,13 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         $this->orderIncrementIdTokenFactory->create()->associateTokenToOrderIncrementId(
-            $cart->getReservedOrderId(), 
+            $cart->getReservedOrderId(),
             $response->getToken()
         );
 
         return $response;
     }
-    
+
     protected function callPaylineApiDoWebPayment(
         CartInterface $cart,
         ProductCollection $productCollection,
@@ -279,7 +279,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         return $this->paylineApiClient->callGetWebPaymentDetails($request);
     }
-    
+
     protected function callPaylineApiDoCapture(
         TransactionInterface $authorizationTransaction,
         array $paymentData
@@ -294,19 +294,19 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     }
 
     protected function callPaylineApiDoVoid(
-        array $paymentData        
+        array $paymentData
     )
     {
         $request = $this->requestDoVoidFactory->create();
         $request->setPaymentData($paymentData);
-        
+
         return $this->paylineApiClient->callDoVoid($request);
     }
-    
+
     protected function callPaylineApiDoRefund(
         OrderInterface $order,
         OrderPaymentInterface $payment,
-        array $paymentData        
+        array $paymentData
     )
     {
         $request = $this->requestDoRefundFactory->create();
@@ -314,10 +314,10 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             ->setOrder($order)
             ->setPayment($payment)
             ->setPaymentData($paymentData);
-        
+
         return $this->paylineApiClient->callDoRefund($request);
     }
-    
+
     public function synchronizePaymentWithPaymentGatewayFacade($token, $restoreCartOnError = false)
     {
         $order = $this->paylineOrderManagement->getOrderByToken($token);
@@ -326,6 +326,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $this->paylineCartManagement->placeOrderByToken($token);
             $order = $this->paylineOrderManagement->getOrderByToken($token);
         }
+        // IN CASE PAYMENT METHOD IS NOT PAYLINE WE EXIT
+        $this->paylineOrderManagement->checkOrderPaymentFromPayline($order);
 
         $this->synchronizePaymentWithPaymentGateway($order->getPayment(), $token);
 
@@ -409,21 +411,21 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $payment->getOrder(), Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE, $message
         );
     }
-    
+
     protected function handlePaymentAbandoned(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
             $payment->getOrder(), Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED, $message
         );
     }
-    
+
     protected function handlePaymentRefused(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
             $payment->getOrder(), Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_REFUSED, $message
         );
     }
-    
+
     protected function handlePaymentCanceled(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
@@ -433,7 +435,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
     public function callPaylineApiDoCaptureFacade(
         OrderInterface $order,
-        OrderPaymentInterface $payment, 
+        OrderPaymentInterface $payment,
         $amount
     )
     {
@@ -475,7 +477,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         OrderInterface $order,
         $payment
     )
-    {        
+    {
         // Check existing transaction - else void impossible
         if(!$payment->getTransactionId()) {
             $this->logger->log(LoggerConstants::DEBUG, 'No transaction found for this order : '.$order->getId());
@@ -505,12 +507,12 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             throw new \Exception($response2->getShortErrorMessage());
         }
 
-        return $this;    
+        return $this;
     }
-    
+
     public function callPaylineApiDoRefundFacade(
         OrderInterface $order,
-        $payment, 
+        $payment,
         $amount
     )
     {
@@ -525,11 +527,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             ->create();
         $searchCriteria = $this->searchCriteriaBuilder
             ->addFilters($filters)
-            ->addSortOrder($createdAtSort)    
+            ->addSortOrder($createdAtSort)
             ->create();
-            
+
         $transaction = $this->transactionRepository->getList($searchCriteria)->getFirstItem();//$this->transactionRepository->getList($searchCriteria)->getItems();
-        
+
         // Check existing transaction - else refund impossible
         if(!$transaction || ($transaction && !trim($transaction->getTxnId()))) {
             $this->logger->log(LoggerConstants::DEBUG, 'No transaction found for this order : '.$order->getId());
@@ -562,7 +564,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         $payment->setTransactionId($response2->getTransactionId());
         $payment->setParentTransactionId($transaction->getTxnId());
-        
+
         return $this;
     }
 

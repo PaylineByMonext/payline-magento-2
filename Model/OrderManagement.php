@@ -5,6 +5,7 @@ namespace Monext\Payline\Model;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory;
+use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\Helper\Data as HelperData;
 
 class OrderManagement
@@ -73,5 +74,14 @@ class OrderManagement
     {
         $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);
         return $this->orderFactory->create()->load($orderIncrementId, 'increment_id');
+    }
+
+    public function checkOrderPaymentFromPayline(\Magento\Sales\Model\Order $order)
+    {
+        if ($order->getPayment()->getMethod() != HelperConstants::WEB_PAYMENT_CPT) {
+            throw new \Exception('Invalid Payment Method');
+        }
+
+        return $this;
     }
 }
