@@ -13,6 +13,11 @@
             <argument name="logger" xsi:type="object">paylineLogger</argument>
         </arguments>
     </type>
+    <type name="Monext\Payline\Model\PaymentManagement">
+        <arguments>
+            <argument name="paylineLogger" xsi:type="object">paylineLogger</argument>
+        </arguments>
+    </type>
     <virtualType name="paylineLogger" type="Monolog\Logger">
         <arguments>
             <argument name="name" xsi:type="string">payline</argument>

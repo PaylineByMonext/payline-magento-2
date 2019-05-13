@@ -9,6 +9,7 @@ use Magento\Framework\Data\Collection;
 
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Checkout\Api\PaymentInformationManagementInterface as CheckoutPaymentInformationManagementInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Quote\Api\BillingAddressManagementInterface as QuoteBillingAddressManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\CartTotalRepositoryInterface;
@@ -140,6 +141,16 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      * @var HelperData
      */
     protected $helperData;
+    
+    /**
+     * @var ScopeConfigInterface
+     */
+    protected $scopeConfig;
+    
+    /**
+     * @var Logger
+     */
+    public $paylineLogger;
 
     public function __construct(
         CartRepositoryInterface $cartRepository,
@@ -163,7 +174,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         HelperData $helperData,
         FilterBuilder $filterBuilder,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        SortOrderBuilder $sortOrderBuilder
+        SortOrderBuilder $sortOrderBuilder,
+        ScopeConfigInterface $scopeConfig,
+        Logger $paylineLogger
     )
     {
         $this->cartRepository = $cartRepository;
@@ -188,6 +201,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->filterBuilder = $filterBuilder;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->sortOrderBuilder = $sortOrderBuilder;
+        $this->scopeConfig = $scopeConfig;
+        $this->paylineLogger = $logger;
     }
 
     public function saveCheckoutPaymentInformationFacade(
@@ -229,6 +244,15 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         AddressInterface $shippingAddress = null
     )
     {
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+            $logData = [
+                'grand_total' => $totals->getGrandTotal(),
+                'shipping_amount' => $totals->getShippingInclTax(),
+                'discount_amount' => $totals->getDiscountAmount(),
+            ];
+            $this->paylineLogger->log(LoggerConstants::DEBUG, print_r($logData, true));
+        }
+
         $this->paylineCartManagement->handleReserveCartOrderId($cart->getId());
 
         if($cart->getIsVirtual()) {
@@ -329,6 +353,15 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         // IN CASE PAYMENT METHOD IS NOT PAYLINE WE EXIT
         $this->paylineOrderManagement->checkOrderPaymentFromPayline($order);
 
+        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+            $logData = [
+                'grand_total' => $order->getGrandTotal(),
+                'shipping_amount' => $order->getShippingInclTax(),
+                'discount_amount' => $order->getDiscountAmount(),
+            ];
+            $this->paylineLogger->log(LoggerConstants::DEBUG, print_r($logData, true));
+        }
+        
         $this->synchronizePaymentWithPaymentGateway($order->getPayment(), $token);
 
         if($order->getPayment()->getData('is_in_error')) {
@@ -346,22 +379,18 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $response = $this->callPaylineApiGetWebPaymentDetails($token);
 
-        if(!$this->isPaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
-            $message = __(
-                'ERROR for order ; payment gateway amount %1 does not match order amount %2.',
-                $response->getAmount(),
-                $this->helperData->mapMagentoAmountToPaylineAmount($payment->getOrder()->getGrandTotal())
-            );
-            $payment->setAmountToCancel($response->getAmount());
-            $this->handlePaymentCanceled($payment->setData('is_in_error', true), $message);
-        } elseif($response->isSuccess()) {
-            $this->handlePaymentSuccess($response, $payment);
-            $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
+        if($response->isSuccess()) {
+            if ($this->ensurePaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
+                $this->handlePaymentSuccess($response, $payment);
+                $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
+            }
         } else {
             $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
 
             if($response->isWaitingAcceptance()) {
-                $this->handlePaymentWaitingAcceptance($payment, $message);
+                if ($this->ensurePaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
+                    $this->handlePaymentWaitingAcceptance($payment, $message);
+                }
             } elseif($response->isCanceled()) {
                 $this->handlePaymentCanceled($payment->setData('is_in_error', true), $message);
             } elseif($response->isAbandoned()) {
@@ -480,7 +509,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         // Check existing transaction - else void impossible
         if(!$payment->getTransactionId()) {
-            $this->logger->log(LoggerConstants::DEBUG, 'No transaction found for this order : '.$order->getId());
+            $this->logger->log(LoggerConstants::ERROR, 'No transaction found for this order : '.$order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
 
@@ -489,7 +518,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
         if(!$response1->isSuccess()) {
-            $this->logger->log(LoggerConstants::DEBUG, 'No payment details found : '.$response1->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'No payment details found : '.$response1->getLongErrorMessage());
             throw new \Exception($response1->getShortErrorMessage());
         }
 
@@ -503,7 +532,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response2 = $this->callPaylineApiDoVoid($paymentData);
 
         if(!$response2->isSuccess()) {
-            $this->logger->log(LoggerConstants::DEBUG, 'DoVoid error : '.$response2->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'DoVoid error : '.$response2->getLongErrorMessage());
             throw new \Exception($response2->getShortErrorMessage());
         }
 
@@ -534,7 +563,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         // Check existing transaction - else refund impossible
         if(!$transaction || ($transaction && !trim($transaction->getTxnId()))) {
-            $this->logger->log(LoggerConstants::DEBUG, 'No transaction found for this order : '.$order->getId());
+            $this->logger->log(LoggerConstants::ERROR, 'No transaction found for this order : '.$order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
 
@@ -543,7 +572,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
         if(!$response1->isSuccess()) {
-            $this->logger->log(LoggerConstants::DEBUG, 'No payment details found : '.$response1->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'No payment details found : '.$response1->getLongErrorMessage());
             throw new \Exception($response1->getShortErrorMessage());
         }
 
@@ -558,7 +587,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response2 = $this->callPaylineApiDoRefund($order, $payment, $paymentData);
 
         if(!$response2->isSuccess()) {
-            $this->logger->log(LoggerConstants::DEBUG, 'DoRefund error : '.$response2->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'DoRefund error : '.$response2->getLongErrorMessage());
             throw new \Exception($response2->getShortErrorMessage());
         }
 
@@ -568,7 +597,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         return $this;
     }
 
-    protected function isPaymentGatewayAmountSameAsOrderAmount(
+    protected function ensurePaymentGatewayAmountSameAsOrderAmount(
         ResponseGetWebPaymentDetails $response,
         OrderPayment $payment
     )
@@ -576,6 +605,17 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $orderAmount = $this->helperData->mapMagentoAmountToPaylineAmount($payment->getOrder()->getGrandTotal());
         $responseAmount = $response->getAmount();
 
-        return $responseAmount == $orderAmount;
+        if($responseAmount == $orderAmount) {
+            return true;
+        } else {
+            $message = __(
+                'ERROR for order ; payment gateway amount %1 does not match order amount %2.',
+                $response->getAmount(),
+                $this->helperData->mapMagentoAmountToPaylineAmount($payment->getOrder()->getGrandTotal())
+            );
+            $payment->setAmountToCancel($response->getAmount());
+            $this->handlePaymentCanceled($payment->setData('is_in_error', true), $message);
+            return false;
+        }
     }
 }

@@ -1,8 +1,9 @@
 define([
         'jquery',
         'mage/utils/wrapper',
+        'Magento_CheckoutAgreements/js/model/agreements-assigner',
     ],
-    function ($, wrapper) {
+    function ($, wrapper, agreementsAssigner) {
         'use strict';
 
         var checkoutAgreementsUtils = {
@@ -70,7 +71,7 @@ define([
             }
 
             $(document).on('payline.web.payment.beforeInitialize', function(event1, component) {
-                component.saveCheckoutPaymentInformationFacade = wrapper.wrap(component.saveCheckoutPaymentInformationFacade, function(originalAction){
+                component.saveCheckoutPaymentInformationFacade = wrapper.wrap(component.saveCheckoutPaymentInformationFacade, function(originalAction) {
                     if(!component.flagPreventSaveCheckoutPaymentInformationFacade) {
                         component.flagPreventSaveCheckoutPaymentInformationFacade = true;
                         checkoutAgreementsUtils.waitForCheckoutAgreementsLoaded().done(function() {
@@ -93,6 +94,10 @@ define([
                         });
                     }
                 });
+            });
+
+            $(document).on('payline.web.payment.beforeSaveCheckoutPaymentInformationFacade', function(event1, payload) {
+                agreementsAssigner(payload.paymentMethod);
             });
         };
     }
