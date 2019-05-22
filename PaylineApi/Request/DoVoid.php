@@ -9,7 +9,7 @@ class DoVoid extends AbstractRequest
 {
 
     /**
-     * @var array 
+     * @var array
      */
     protected $paymentData;
    
@@ -19,7 +19,7 @@ class DoVoid extends AbstractRequest
         return $this;
     }
     
-    public function getData() 
+    public function getData()
     {
         $data = array();
 
@@ -29,7 +29,7 @@ class DoVoid extends AbstractRequest
         // Transaction ID
         // Remove -void part added by Magento to keep original transactionID
         // @see Magento\Sales\Model\Order\Payment\Transaction generateTransactionId
-        $data['transactionID'] = str_replace('-void','',$data['payment']['transactionID']);
+        $data['transactionID'] = str_replace('-void', '', $data['payment']['transactionID']);
         
         // Same for comment
         $data['comment'] = $data['payment']['comment'];

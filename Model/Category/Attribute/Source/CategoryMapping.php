@@ -24,8 +24,7 @@ class CategoryMapping extends \Magento\Eav\Model\Entity\Attribute\Source\Abstrac
     public function __construct(
         ComponentRegistrar $componentRegistrar,
         Csv $csvReader
-    )
-    {
+    ) {
         $this->componentRegistrar = $componentRegistrar;
         $this->csvReader = $csvReader;
     }

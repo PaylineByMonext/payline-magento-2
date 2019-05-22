@@ -7,7 +7,7 @@ use Magento\Customer\Model\ResourceModel\Customer as ResourceCustomer;
 class Helper
 {
     /**
-     * @var ResourceCustomer 
+     * @var ResourceCustomer
      */
     protected $resourceCustomer;
 
@@ -38,7 +38,8 @@ class Helper
             $this->resourceCustomer->getEntityTable(),
             ['wallet_id']
         )->where(
-            'entity_id = ?', $customerId
+            'entity_id = ?',
+            $customerId
         );
 
         return $connection->fetchOne($select);
@@ -50,4 +51,3 @@ class Helper
         return !empty($walletId);
     }
 }
-

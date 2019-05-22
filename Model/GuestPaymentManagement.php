@@ -14,7 +14,7 @@ use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
 {
     /**
-     * @var CheckoutGuestPaymentInformationManagementInterface 
+     * @var CheckoutGuestPaymentInformationManagementInterface
      */
     protected $checkoutGuestPaymentInformationManagement;
     
@@ -29,7 +29,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
     protected $quoteIdMaskFactory;
 
     /**
-     * @var PaylineGuestCartManagement 
+     * @var PaylineGuestCartManagement
      */
     protected $paylineGuestCartManagement;
     
@@ -44,8 +44,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
         QuoteIdMaskFactory $quoteIdMaskFactory,
         PaylineGuestCartManagement $paylineGuestCartManagement,
         PaylineOrderManagement $paylineOrderManagement
-    )
-    {
+    ) {
         $this->checkoutGuestPaymentInformationManagement = $checkoutGuestPaymentInformationManagement;
         $this->paylinePaymentManagement = $paylinePaymentManagement;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
@@ -58,8 +57,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
         $email,
         PaymentInterface $paymentMethod,
         AddressInterface $billingAddress = null
-    )
-    {
+    ) {
         $this->checkoutGuestPaymentInformationManagement->savePaymentInformation($cartId, $email, $paymentMethod, $billingAddress);
         $quoteIdMask = $this->quoteIdMaskFactory->create()->load($cartId, 'masked_id');
         $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteIdMask->getQuoteId());
@@ -70,7 +68,7 @@ class GuestPaymentManagement implements PaylineGuestPaymentManagementInterface
     {
         $order = $this->paylineOrderManagement->getOrderByToken($token);
 
-        if(!$order->getId()) {
+        if (!$order->getId()) {
             $this->paylineGuestCartManagement->placeOrderByToken($token);
         }
 

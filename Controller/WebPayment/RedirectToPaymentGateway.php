@@ -23,14 +23,13 @@ class RedirectToPaymentGateway extends Action
         Context $context,
         OrderRepositoryInterface $orderRepository,
         CheckoutSession $checkoutSession
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->orderRepository = $orderRepository;
         $this->checkoutSession = $checkoutSession;
     }
     
-    public function execute() 
+    public function execute()
     {
         $order = $this->orderRepository->get($this->checkoutSession->getLastOrderId());
         $additionalInformation = $order->getPayment()->getAdditionalInformation();
@@ -41,4 +40,3 @@ class RedirectToPaymentGateway extends Action
         return $resultRedirect;
     }
 }
-

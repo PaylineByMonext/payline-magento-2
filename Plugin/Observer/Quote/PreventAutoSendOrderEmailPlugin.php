@@ -8,8 +8,7 @@ class PreventAutoSendOrderEmailPlugin
 
     public function __construct(
         \Monext\Payline\Helper\Data $helperData
-    )
-    {
+    ) {
         $this->helperData = $helperData;
     }
 
@@ -17,8 +16,7 @@ class PreventAutoSendOrderEmailPlugin
         \Magento\Quote\Observer\Webapi\SubmitObserver $subject,
         \Closure $proceed,
         \Magento\Framework\Event\Observer $observer
-    )
-    {
+    ) {
         /** @var  \Magento\Sales\Model\Order $order */
         $order = $observer->getEvent()->getOrder();
 

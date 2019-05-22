@@ -38,8 +38,7 @@ class WalletManagement
         PaylineResourceHelper $paylineResourceHelper,
         RequestManageWebWalletFactory $requestManageWebWalletFactory,
         PaylineApiClient $paylineApiClient
-    )
-    {
+    ) {
         $this->helperData = $helperData;
         $this->paylineResourceHelper = $paylineResourceHelper;
         $this->requestManageWebWalletFactory = $requestManageWebWalletFactory;
@@ -52,9 +51,9 @@ class WalletManagement
         $customerId = $order->getCustomerId();
         $walletId = $payment->getAdditionalInformation('wallet_id');
 
-        if(!empty($customerId) 
-        && !empty($walletId) 
-        && $this->helperData->isWalletEnabled($payment->getMethod()) 
+        if (!empty($customerId)
+        && !empty($walletId)
+        && $this->helperData->isWalletEnabled($payment->getMethod())
         && !$this->paylineResourceHelper->hasCustomerWalletId($customerId)) {
             $this->paylineResourceHelper->saveCustomerWalletId($customerId, $walletId);
         }
@@ -70,12 +69,11 @@ class WalletManagement
     public function handleWalletReturnFromPaymentGateway(
         ResponseGetWebPaymentDetails $response,
         OrderPayment $payment
-    )
-    {
+    ) {
         $paymentMethod = $payment->getMethod();
         $walletData = $response->getWalletData();
 
-        if($this->helperData->isWalletEnabled($paymentMethod) && $walletData && isset($walletData['walletId'])) {
+        if ($this->helperData->isWalletEnabled($paymentMethod) && $walletData && isset($walletData['walletId'])) {
             $payment->setAdditionalInformation('wallet_id', $walletData['walletId']);
         }
 
@@ -86,7 +84,7 @@ class WalletManagement
     {
         $response = $this->callPaylineManageWebWallet($customer);
 
-        if(!$response->isSuccess()) {
+        if (!$response->isSuccess()) {
             throw new \Exception($response->getLongErrorMessage());
         }
 

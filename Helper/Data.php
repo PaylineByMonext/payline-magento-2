@@ -20,8 +20,7 @@ class Data extends AbstractHelper
     public function __construct(
         Context $context,
         MathRandom $mathRandom
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->mathRandom = $mathRandom;
     }
@@ -91,12 +90,12 @@ class Data extends AbstractHelper
 
     public function getMatchingConfigurableStatus(\Magento\Sales\Model\Order $order, $status)
     {
-        if(empty($status)) {
+        if (empty($status)) {
             return null;
         }
 
         $path = 'payment/' . $order->getPayment()->getMethod() . '/order_status_' . $status;
-        if($configurableStatus = $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE)) {
+        if ($configurableStatus = $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE)) {
             $status = $configurableStatus;
         }
         return $status;

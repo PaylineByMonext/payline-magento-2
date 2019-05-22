@@ -19,7 +19,7 @@ abstract class AbstractMethodConfigProvider implements ConfigProviderInterface
     protected $paymentHelper;
     
     /**
-     * @var MethodInterface 
+     * @var MethodInterface
      */
     protected $method;
     
@@ -29,12 +29,12 @@ abstract class AbstractMethodConfigProvider implements ConfigProviderInterface
     protected $assetRepository;
     
     /**
-     * @var ContractManagement 
+     * @var ContractManagement
      */
     protected $contractManagement;
     
     /**
-     * @var UrlInterface 
+     * @var UrlInterface
      */
     protected $urlBuilder;
     
@@ -65,7 +65,7 @@ abstract class AbstractMethodConfigProvider implements ConfigProviderInterface
         
         $contractCollection = $this->contractManagement->getUsedContracts();
                 
-        foreach($contractCollection as $contract) {
+        foreach ($contractCollection as $contract) {
             $config['payline']['general']['contracts'][] = [
                 'id' => $contract->getId(),
                 'cardType' => $contract->getCardType(),
@@ -87,7 +87,7 @@ abstract class AbstractMethodConfigProvider implements ConfigProviderInterface
         try {
             $fileNames = $this->getCardTypeImageFileNames();
             
-            if(!isset($fileNames[$cardType])) {
+            if (!isset($fileNames[$cardType])) {
                 throw new \Exception(__('Payline card type logo url does not exists.'));
             }
 

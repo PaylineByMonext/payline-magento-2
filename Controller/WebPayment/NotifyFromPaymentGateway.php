@@ -10,12 +10,12 @@ use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 class NotifyFromPaymentGateway extends Action
 {
     /**
-     * @var ResultRawFactory 
+     * @var ResultRawFactory
      */
     protected $resultRawFactory;
     
     /**
-     * @var PaylinePaymentManagement 
+     * @var PaylinePaymentManagement
      */
     protected $paylinePaymentManagement;
     
@@ -23,14 +23,13 @@ class NotifyFromPaymentGateway extends Action
         Context $context,
         ResultRawFactory $resultRawFactory,
         PaylinePaymentManagement $paylinePaymentManagement
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->resultRawFactory = $resultRawFactory;
         $this->paylinePaymentManagement = $paylinePaymentManagement;
     }
     
-    public function execute() 
+    public function execute()
     {
         $isSuccess = true;
 

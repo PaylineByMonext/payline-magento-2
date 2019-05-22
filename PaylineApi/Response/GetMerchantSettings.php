@@ -10,12 +10,12 @@ class GetMerchantSettings extends AbstractResponse
     {
         $result = array();
 
-        if(empty($this->data['listPointOfSell']['pointOfSell']) || !is_array($this->data['listPointOfSell']['pointOfSell'])) {
+        if (empty($this->data['listPointOfSell']['pointOfSell']) || !is_array($this->data['listPointOfSell']['pointOfSell'])) {
             return $result;
         }
 
         $allPointOfSell =  $this->data['listPointOfSell']['pointOfSell'];
-        if(!empty($allPointOfSell['contracts']) && !empty($allPointOfSell['label'])) {
+        if (!empty($allPointOfSell['contracts']) && !empty($allPointOfSell['label'])) {
             $contractsList = !empty($allPointOfSell['contracts']['contract']) ? $allPointOfSell['contracts']['contract'] : [];
             $pointOfSellLabel = $allPointOfSell['label'];
             if (isset($contractsList['contractNumber'])) {
@@ -31,12 +31,12 @@ class GetMerchantSettings extends AbstractResponse
                 ];
             }
         } else {
-            foreach($this->data['listPointOfSell']['pointOfSell'] as $pointOfSell) {
+            foreach ($this->data['listPointOfSell']['pointOfSell'] as $pointOfSell) {
                 if (is_object($pointOfSell)) {
                     $contractsList    = $pointOfSell->contracts->contract;
                     $pointOfSellLabel = $pointOfSell->label;
                 } else { //if only one point of sell, we parse an array
-                    if(!empty($pointOfSell['contracts'])) {
+                    if (!empty($pointOfSell['contracts'])) {
                         $contractsList = !empty($pointOfSell['contracts']['contract']) ? $pointOfSell['contracts']['contract'] : [];
                     }
                     $pointOfSellLabel = (!empty($pointOfSell['label'])) ? $pointOfSell['label']: '';

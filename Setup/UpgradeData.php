@@ -29,8 +29,7 @@ class UpgradeData implements UpgradeDataInterface
         \Magento\Customer\Model\AttributeFactory $customerAttributeFactory,
         \Magento\Eav\Model\Entity\Attribute\SetFactory $attributeSetFactory,
         \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory
-    )
-    {
+    ) {
         $this->customerAttributeFactory = $customerAttributeFactory;
         $this->attributeSetFactory = $attributeSetFactory;
         $this->eavSetupFactory = $eavSetupFactory;
@@ -192,4 +191,3 @@ class UpgradeData implements UpgradeDataInterface
         $setup->endSetup();
     }
 }
-

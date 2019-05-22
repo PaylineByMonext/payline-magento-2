@@ -12,7 +12,7 @@ use Monext\Payline\Model\OrderManagement as PaylineOrderManagement;
 class CaptureCommandPlugin
 {
     /**
-     * @var PaylineOrderManagement 
+     * @var PaylineOrderManagement
      */
     protected $paylineOrderManagement;
 
@@ -24,25 +24,26 @@ class CaptureCommandPlugin
     public function __construct(
         PaylineOrderManagement $paylineOrderManagement,
         \Monext\Payline\Helper\Data $helperData
-    )
-    {
+    ) {
         $this->paylineOrderManagement = $paylineOrderManagement;
         $this->helperData = $helperData;
     }
 
     public function aroundExecute(
-        CaptureCommand $subject, 
-        \Closure $proceed, 
-        OrderPaymentInterface $payment, 
-        $amount, 
-        OrderInterface $order)
-    {
+        CaptureCommand $subject,
+        \Closure $proceed,
+        OrderPaymentInterface $payment,
+        $amount,
+        OrderInterface $order
+    ) {
         $result = $proceed($payment, $amount, $order);
 
-        if($order->getState() == SalesOrder::STATE_PROCESSING
+        if ($order->getState() == SalesOrder::STATE_PROCESSING
         && $this->helperData->isPaymentFromPayline($order->getPayment())) {
             $this->paylineOrderManagement->handleSetOrderStateStatus(
-                $order, SalesOrder::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED
+                $order,
+                SalesOrder::STATE_PROCESSING,
+                HelperConstants::ORDER_STATUS_PAYLINE_CAPTURED
             );
         }
 

@@ -34,8 +34,7 @@ class OrderManagement
         OrderFactory $orderFactory,
         HelperData $helperData,
         \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender
-    )
-    {
+    ) {
         $this->orderFactory = $orderFactory;
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
         $this->helperData = $helperData;
@@ -45,33 +44,33 @@ class OrderManagement
     public function handleSetOrderStateStatus(Order $order, $state, $status, $message = null)
     {
         $status = $this->helperData->getMatchingConfigurableStatus($order, $status);
-        if($state == Order::STATE_CANCELED) {
+        if ($state == Order::STATE_CANCELED) {
             $this->handleOrderCancellation($order, $status);
         } else {
-            if(!empty($state)) {
+            if (!empty($state)) {
                 $order->setState($state);
             }
 
-            if(!empty($status)) {
+            if (!empty($status)) {
                 $order->setStatus($status);
             }
         }
 
-        if(!empty($message)) {
+        if (!empty($message)) {
             $order->addStatusHistoryComment($message);
         }
     }
 
     protected function handleOrderCancellation(Order $order, $status)
     {
-        if($order->canCancel()) {
+        if ($order->canCancel()) {
             $order->cancel();
         } else {
             $order->setState(Order::STATE_CANCELED);
             // TODO check stock
         }
 
-        if(!empty($status)) {
+        if (!empty($status)) {
             $order->setStatus($status);
         }
     }

@@ -8,7 +8,7 @@ use Monext\Payline\Model\WalletManagement;
 class OrderPlugin
 {
     /**
-     * @var WalletManagement 
+     * @var WalletManagement
      */
     protected $walletManagement;
 

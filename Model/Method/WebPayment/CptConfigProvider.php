@@ -15,12 +15,12 @@ use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 class CptConfigProvider extends AbstractMethodConfigProvider
 {
     /**
-     * @var ContractManagement 
+     * @var ContractManagement
      */
     protected $contractManagement;
     
     /**
-     * @var MethodInterface 
+     * @var MethodInterface
      */
     protected $method;
 

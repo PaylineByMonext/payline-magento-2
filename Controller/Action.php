@@ -10,11 +10,10 @@ abstract class Action extends BaseAction
     {
         $token = $this->getRequest()->getParam('paylinetoken');
         
-        if(empty($token)) {
+        if (empty($token)) {
             $token = $this->getRequest()->getParam('token');
         }
         
         return $token;
     }
 }
-

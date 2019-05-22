@@ -9,7 +9,7 @@ use Monext\Payline\Model\ResourceModel\Contract\CollectionFactory as ContractCol
 class Contract implements ArrayInterface
 {
     /**
-     * @var ContractCollectionFactory 
+     * @var ContractCollectionFactory
      */
     protected $contractCollectionFactory;
     
@@ -21,8 +21,7 @@ class Contract implements ArrayInterface
     public function __construct(
         ContractCollectionFactory $contractCollectionFactory,
         ContractManagement $contractManagement
-    )
-    {
+    ) {
         $this->contractCollectionFactory = $contractCollectionFactory;
         $this->contractManagement = $contractManagement;
     }
@@ -38,14 +37,14 @@ class Contract implements ArrayInterface
         // TODO Use a contract repository for this
         $contractCollection = $this->contractCollectionFactory->create();
 
-        foreach($contractCollection as $contract) {
+        foreach ($contractCollection as $contract) {
             $result[] = [
                 'value' => $contract->getId(),
                 'label' => $contract->getPointOfSellLabel() . ' : ' . $contract->getLabel() . ' (' . $contract->getCardType() . ')',
             ];
         }
         
-        if(empty($result)) {
+        if (empty($result)) {
             $result[] = [
                 'value' => '',
                 'label' => __('No contracts available.'),

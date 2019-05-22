@@ -9,7 +9,7 @@ define(
     function (urlBuilder) {
         'use strict';
 
-        return function(urlPath) {
+        return function (urlPath) {
             window.location.replace(urlBuilder.build(urlPath));
         };
     }

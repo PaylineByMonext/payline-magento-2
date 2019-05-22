@@ -16,19 +16,18 @@ class ReturnFromWidget extends Action
     public function __construct(
         Context $context,
         PaylinePaymentManagement $paylinePaymentManagement
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->paylinePaymentManagement = $paylinePaymentManagement;
     }
 
-    public function execute() 
+    public function execute()
     {
         $isSuccess = true;
 
         try {
             $this->paylinePaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), true);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $isSuccess = false;
         }
 
@@ -37,4 +36,3 @@ class ReturnFromWidget extends Action
         return $resultRedirect;
     }
 }
-

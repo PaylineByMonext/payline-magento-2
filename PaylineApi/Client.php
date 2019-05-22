@@ -110,8 +110,7 @@ class Client
         Logger $logger,
         EncryptorInterface $encryptor,
         ModuleListInterface $moduleList
-    )
-    {
+    ) {
         $this->paylineSDKFactory = $paylineSDKFactory;
         $this->scopeConfig = $scopeConfig;
         $this->responseDoWebPaymentFactory = $responseDoWebPaymentFactory;
@@ -146,7 +145,7 @@ class Client
             $this->paylineSDK->doWebPayment($data)
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
             $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
@@ -167,7 +166,7 @@ class Client
             $this->paylineSDK->doCapture($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
             $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
@@ -188,7 +187,7 @@ class Client
             $this->paylineSDK->doReset($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
             $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
@@ -209,7 +208,7 @@ class Client
             $this->paylineSDK->doRefund($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
             $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
@@ -246,7 +245,7 @@ class Client
             $this->paylineSDK->getWebPaymentDetails($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
             $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
@@ -267,7 +266,7 @@ class Client
             $this->paylineSDK->manageWebWallet($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
             $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
         }
@@ -292,7 +291,7 @@ class Client
                 'logLevel' => LoggerConstants::INFO,
             );
 
-            if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+            if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
                 $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
             }
 
@@ -301,12 +300,12 @@ class Client
             $this->paylineSDK->usedBy(HelperConstants::PAYLINE_API_USED_BY_PREFIX.' v'.$currentModule['setup_version']);
         //}
 
-        return $this;
+            return $this;
     }
 
     protected function addPrivateDataToPaylineSDK(array $privateData)
     {
-        foreach($privateData as $privateDataItem) {
+        foreach ($privateData as $privateDataItem) {
             $this->paylineSDK->addPrivateData($privateDataItem);
         }
 

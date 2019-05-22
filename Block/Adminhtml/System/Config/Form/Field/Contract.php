@@ -20,4 +20,3 @@ class Contract extends Field
         return parent::_getElementHtml($element) . $this->_toHtml();
     }
 }
-

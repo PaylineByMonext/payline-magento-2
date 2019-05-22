@@ -177,8 +177,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         SortOrderBuilder $sortOrderBuilder,
         ScopeConfigInterface $scopeConfig,
         Logger $paylineLogger
-    )
-    {
+    ) {
         $this->cartRepository = $cartRepository;
         $this->cartTotalRepository = $cartTotalRepository;
         $this->checkoutPaymentInformationManagement = $checkoutPaymentInformationManagement;
@@ -209,8 +208,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $cartId,
         PaymentInterface $paymentMethod,
         AddressInterface $billingAddress = null
-    )
-    {
+    ) {
         $this->checkoutPaymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
         $result = $this->wrapCallPaylineApiDoWebPaymentFacade($cartId);
 
@@ -242,9 +240,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         PaymentInterface $payment,
         AddressInterface $billingAddress,
         AddressInterface $shippingAddress = null
-    )
-    {
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+    ) {
+        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $logData = [
                 'grand_total' => $totals->getGrandTotal(),
                 'shipping_amount' => $totals->getShippingInclTax(),
@@ -255,13 +252,13 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         $this->paylineCartManagement->handleReserveCartOrderId($cart->getId());
 
-        if($cart->getIsVirtual()) {
+        if ($cart->getIsVirtual()) {
             $shippingAddress = null;
         }
 
         $response = $this->callPaylineApiDoWebPayment($cart, $productCollection, $totals, $payment, $billingAddress, $shippingAddress);
 
-        if(!$response->isSuccess()) {
+        if (!$response->isSuccess()) {
             // TODO log
             throw new \Exception($response->getShortErrorMessage());
         }
@@ -281,8 +278,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         PaymentInterface $payment,
         AddressInterface $billingAddress,
         AddressInterface $shippingAddress = null
-    )
-    {
+    ) {
         $request = $this->requestDoWebPaymentFactory->create();
         $request
             ->setCart($cart)
@@ -307,8 +303,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function callPaylineApiDoCapture(
         TransactionInterface $authorizationTransaction,
         array $paymentData
-    )
-    {
+    ) {
         $request = $this->requestDoCaptureFactory->create();
         $request
             ->setAuthorizationTransaction($authorizationTransaction)
@@ -319,8 +314,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
     protected function callPaylineApiDoVoid(
         array $paymentData
-    )
-    {
+    ) {
         $request = $this->requestDoVoidFactory->create();
         $request->setPaymentData($paymentData);
 
@@ -331,8 +325,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         OrderInterface $order,
         OrderPaymentInterface $payment,
         array $paymentData
-    )
-    {
+    ) {
         $request = $this->requestDoRefundFactory->create();
         $request
             ->setOrder($order)
@@ -346,14 +339,14 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $order = $this->paylineOrderManagement->getOrderByToken($token);
 
-        if(!$order->getId()) {
+        if (!$order->getId()) {
             $this->paylineCartManagement->placeOrderByToken($token);
             $order = $this->paylineOrderManagement->getOrderByToken($token);
         }
         // IN CASE PAYMENT METHOD IS NOT PAYLINE WE EXIT
         $this->paylineOrderManagement->checkOrderPaymentFromPayline($order);
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
+        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
             $logData = [
                 'grand_total' => $order->getGrandTotal(),
                 'shipping_amount' => $order->getShippingInclTax(),
@@ -364,8 +357,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         $this->synchronizePaymentWithPaymentGateway($order->getPayment(), $token);
 
-        if($order->getPayment()->getData('is_in_error')) {
-            if($restoreCartOnError) {
+        if ($order->getPayment()->getData('is_in_error')) {
+            if ($restoreCartOnError) {
                 $this->paylineCartManagement->restoreCartFromOrder($order);
             }
 
@@ -379,22 +372,22 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $response = $this->callPaylineApiGetWebPaymentDetails($token);
 
-        if($response->isSuccess()) {
+        if ($response->isSuccess()) {
             if ($this->ensurePaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
                 $this->handlePaymentSuccessFacade($response, $payment);
             }
         } else {
             $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
 
-            if($response->isWaitingAcceptance()) {
+            if ($response->isWaitingAcceptance()) {
                 if ($this->ensurePaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
                     $this->handlePaymentWaitingAcceptance($payment, $message);
                 }
-            } elseif($response->isCanceled()) {
+            } elseif ($response->isCanceled()) {
                 $this->handlePaymentCanceled($payment->setData('is_in_error', true), $message);
-            } elseif($response->isAbandoned()) {
+            } elseif ($response->isAbandoned()) {
                 $this->handlePaymentAbandoned($payment->setData('is_in_error', true), $message);
-            } elseif($response->isFraud()) {
+            } elseif ($response->isFraud()) {
                 $this->handlePaymentFraud($payment->setData('is_in_error', true), $message);
             } else {
                 $this->handlePaymentRefused($payment->setData('is_in_error', true), $message);
@@ -409,8 +402,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function handlePaymentSuccessFacade(
         ResponseGetWebPaymentDetails $response,
         OrderPayment $payment
-    )
-    {
+    ) {
         $this->handlePaymentSuccess($response, $payment);
         $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
         $this->paylineOrderManagement->sendNewOrderEmail($payment->getOrder());
@@ -421,18 +413,17 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function handlePaymentSuccess(
         ResponseGetWebPaymentDetails $response,
         OrderPayment $payment
-    )
-    {
+    ) {
         $transactionData = $response->getTransactionData();
         $paymentData = $response->getPaymentData();
 
         $payment->setTransactionId($transactionData['id']);
 
         // TODO Add controls to avoid double authorization/capture
-        if($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION) {
+        if ($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION) {
             $payment->setIsTransactionClosed(false);
             $payment->authorize(false, $this->helperData->mapPaylineAmountToMagentoAmount($paymentData['amount']));
-        } elseif($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION_CAPTURE) {
+        } elseif ($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION_CAPTURE) {
             $payment->getMethodInstance()->setSkipCapture(true);
             $payment->capture();
         }
@@ -441,35 +432,50 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function handlePaymentFraud(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $payment->getOrder(), Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_FRAUD, $message
+            $payment->getOrder(),
+            Order::STATE_PROCESSING,
+            HelperConstants::ORDER_STATUS_PAYLINE_FRAUD,
+            $message
         );
     }
 
     protected function handlePaymentWaitingAcceptance(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $payment->getOrder(), Order::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE, $message
+            $payment->getOrder(),
+            Order::STATE_PROCESSING,
+            HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE,
+            $message
         );
     }
 
     protected function handlePaymentAbandoned(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $payment->getOrder(), Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED, $message
+            $payment->getOrder(),
+            Order::STATE_CANCELED,
+            HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED,
+            $message
         );
     }
 
     protected function handlePaymentRefused(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $payment->getOrder(), Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_REFUSED, $message
+            $payment->getOrder(),
+            Order::STATE_CANCELED,
+            HelperConstants::ORDER_STATUS_PAYLINE_REFUSED,
+            $message
         );
     }
 
     protected function handlePaymentCanceled(OrderPayment $payment, $message = null)
     {
         $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $payment->getOrder(), Order::STATE_CANCELED, HelperConstants::ORDER_STATUS_PAYLINE_CANCELED, $message
+            $payment->getOrder(),
+            Order::STATE_CANCELED,
+            HelperConstants::ORDER_STATUS_PAYLINE_CANCELED,
+            $message
         );
     }
 
@@ -477,12 +483,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         OrderInterface $order,
         OrderPaymentInterface $payment,
         $amount
-    )
-    {
+    ) {
         $token = $this->orderIncrementIdTokenFactory->create()->getTokenByOrderIncrementId($order->getIncrementId());
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
-        if(!$response1->isSuccess()) {
+        if (!$response1->isSuccess()) {
             // TODO log
             throw new \Exception($response1->getShortErrorMessage());
         }
@@ -496,14 +501,14 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $payment->getParentId()
         );
 
-        if(!$authorizationTransaction) {
+        if (!$authorizationTransaction) {
             // TODO log
             throw new \Exception(__('No authorization transaction found for this order.'));
         }
 
         $response2 = $this->callPaylineApiDoCapture($authorizationTransaction, $paymentData);
 
-        if(!$response2->isSuccess()) {
+        if (!$response2->isSuccess()) {
             // TODO log
             throw new \Exception($response2->getShortErrorMessage());
         }
@@ -516,10 +521,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     public function callPaylineApiDoVoidFacade(
         OrderInterface $order,
         $payment
-    )
-    {
+    ) {
         // Check existing transaction - else void impossible
-        if(!$payment->getTransactionId()) {
+        if (!$payment->getTransactionId()) {
             $this->logger->log(LoggerConstants::ERROR, 'No transaction found for this order : '.$order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
@@ -528,21 +532,23 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $token = $this->orderIncrementIdTokenFactory->create()->getTokenByOrderIncrementId($order->getIncrementId());
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
-        if(!$response1->isSuccess()) {
+        if (!$response1->isSuccess()) {
             $this->logger->log(LoggerConstants::ERROR, 'No payment details found : '.$response1->getLongErrorMessage());
             throw new \Exception($response1->getShortErrorMessage());
         }
 
         $paymentData = $response1->getPaymentData();
         $paymentData['transactionID'] = $payment->getTransactionId();
-        $paymentData['comment'] = __('Transaction %s canceled for order %s from Magento Back-Office',
+        $paymentData['comment'] = __(
+            'Transaction %s canceled for order %s from Magento Back-Office',
             $payment->getTransactionId(),
-            $order->getRealOrderId())->render();
+            $order->getRealOrderId()
+        )->render();
 
         // Call API
         $response2 = $this->callPaylineApiDoVoid($paymentData);
 
-        if(!$response2->isSuccess()) {
+        if (!$response2->isSuccess()) {
             $this->logger->log(LoggerConstants::ERROR, 'DoVoid error : '.$response2->getLongErrorMessage());
             throw new \Exception($response2->getShortErrorMessage());
         }
@@ -554,10 +560,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         OrderInterface $order,
         $payment,
         $amount
-    )
-    {
+    ) {
         // Get first transaction used - Always use it for refund
-       $filters[] = $this->filterBuilder
+        $filters[] = $this->filterBuilder
             ->setField(TransactionInterface::ORDER_ID)
             ->setValue($order->getId())
             ->create();
@@ -573,7 +578,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $transaction = $this->transactionRepository->getList($searchCriteria)->getFirstItem();//$this->transactionRepository->getList($searchCriteria)->getItems();
 
         // Check existing transaction - else refund impossible
-        if(!$transaction || ($transaction && !trim($transaction->getTxnId()))) {
+        if (!$transaction || ($transaction && !trim($transaction->getTxnId()))) {
             $this->logger->log(LoggerConstants::ERROR, 'No transaction found for this order : '.$order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
@@ -582,7 +587,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $token = $this->orderIncrementIdTokenFactory->create()->getTokenByOrderIncrementId($order->getIncrementId());
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
-        if(!$response1->isSuccess()) {
+        if (!$response1->isSuccess()) {
             $this->logger->log(LoggerConstants::ERROR, 'No payment details found : '.$response1->getLongErrorMessage());
             throw new \Exception($response1->getShortErrorMessage());
         }
@@ -590,14 +595,16 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $paymentData = $response1->getPaymentData();
         $paymentData['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($amount);
         $paymentData['transactionID'] = $transaction->getTxnId();
-        $paymentData['comment'] = __('Transaction %s refunded for order %s from Magento Back-Office',
+        $paymentData['comment'] = __(
+            'Transaction %s refunded for order %s from Magento Back-Office',
             $payment->getTransactionId(),
-            $order->getRealOrderId())->render();
+            $order->getRealOrderId()
+        )->render();
 
         // Call API
         $response2 = $this->callPaylineApiDoRefund($order, $payment, $paymentData);
 
-        if(!$response2->isSuccess()) {
+        if (!$response2->isSuccess()) {
             $this->logger->log(LoggerConstants::ERROR, 'DoRefund error : '.$response2->getLongErrorMessage());
             throw new \Exception($response2->getShortErrorMessage());
         }
@@ -611,12 +618,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function ensurePaymentGatewayAmountSameAsOrderAmount(
         ResponseGetWebPaymentDetails $response,
         OrderPayment $payment
-    )
-    {
+    ) {
         $orderAmount = $this->helperData->mapMagentoAmountToPaylineAmount($payment->getOrder()->getGrandTotal());
         $responseAmount = $response->getAmount();
 
-        if($responseAmount == $orderAmount) {
+        if ($responseAmount == $orderAmount) {
             return true;
         } else {
             $message = __(

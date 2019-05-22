@@ -9,7 +9,7 @@ use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 class GuestCartManagement
 {
     /**
-     * @var GuestCartManagementInterface 
+     * @var GuestCartManagementInterface
      */
     protected $guestCartManagement;
     
@@ -27,8 +27,7 @@ class GuestCartManagement
         GuestCartManagementInterface $guestCartManagement,
         QuoteIdMaskFactory $quoteIdMaskFactory,
         PaylineCartManagement $paylineCartManagement
-    )
-    {
+    ) {
         $this->guestCartManagement = $guestCartManagement;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->paylineCartManagement = $paylineCartManagement;
@@ -42,4 +41,3 @@ class GuestCartManagement
         return $this;
     }
 }
-

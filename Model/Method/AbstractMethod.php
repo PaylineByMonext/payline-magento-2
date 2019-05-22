@@ -22,12 +22,12 @@ use Monext\Payline\Helper\Data as HelperData;
 class AbstractMethod extends BaseAbstractMethod
 {
     /**
-     * @var PaylinePaymentManagement 
+     * @var PaylinePaymentManagement
      */
     protected $paylinePaymentManagement;
     
     /**
-     * @var ContractManagement 
+     * @var ContractManagement
      */
     protected $contractManagement;
 
@@ -70,7 +70,7 @@ class AbstractMethod extends BaseAbstractMethod
     
     public function isAvailable(CartInterface $quote = null)
     {
-    	$parentResult = parent::isAvailable($quote);
+        $parentResult = parent::isAvailable($quote);
         $currentResult = count($this->contractManagement->getUsedContracts()) > 0;
         return $parentResult && $currentResult;
     }
@@ -79,15 +79,15 @@ class AbstractMethod extends BaseAbstractMethod
     {
         parent::assignData($data);
         
-        if(isset($data[PaymentInterface::KEY_ADDITIONAL_DATA]['payment_mode'])) {
+        if (isset($data[PaymentInterface::KEY_ADDITIONAL_DATA]['payment_mode'])) {
             $this->getInfoInstance()
                 ->setAdditionalInformation('payment_mode', $data[PaymentInterface::KEY_ADDITIONAL_DATA]['payment_mode']);
         }
         
-        if(isset($data[PaymentInterface::KEY_ADDITIONAL_DATA]['contract_id']) && $data[PaymentInterface::KEY_ADDITIONAL_DATA]['contract_id'] != -1) {
+        if (isset($data[PaymentInterface::KEY_ADDITIONAL_DATA]['contract_id']) && $data[PaymentInterface::KEY_ADDITIONAL_DATA]['contract_id'] != -1) {
             $contract = $this->contractManagement->getUsedContracts()->getItemById($data[PaymentInterface::KEY_ADDITIONAL_DATA]['contract_id']);
             
-            if(!$contract || !$contract->getId()) {
+            if (!$contract || !$contract->getId()) {
                 throw new \Exception(__('Invalid contract'));
             }
             
@@ -98,4 +98,3 @@ class AbstractMethod extends BaseAbstractMethod
         return $this;
     }
 }
-

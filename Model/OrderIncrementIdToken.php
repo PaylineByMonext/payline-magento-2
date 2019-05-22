@@ -18,7 +18,7 @@ class OrderIncrementIdToken extends AbstractModel
             ->addFieldToFilter('order_increment_id', $orderIncrementId)
             ->getFirstItem();
         
-        if(empty($itemCandidate) || !$itemCandidate->getId()) {
+        if (empty($itemCandidate) || !$itemCandidate->getId()) {
             $item = $this->getCollection()->getNewEmptyItem();
             $item
                 ->setOrderIncrementId($orderIncrementId);
@@ -40,7 +40,7 @@ class OrderIncrementIdToken extends AbstractModel
             ->addFieldToFilter('token', $token)
             ->getFirstItem();
 
-        if(empty($itemCandidate) || !$itemCandidate->getId()) {
+        if (empty($itemCandidate) || !$itemCandidate->getId()) {
             $item = $this->getCollection()->getNewEmptyItem();
             $item
                 ->setToken($token);
@@ -62,7 +62,7 @@ class OrderIncrementIdToken extends AbstractModel
             ->addFieldToFilter('token', $token)
             ->getFirstItem();
         
-        if(empty($itemCandidate) || !$itemCandidate->getId()) {
+        if (empty($itemCandidate) || !$itemCandidate->getId()) {
             return null;
         }
         
@@ -75,11 +75,10 @@ class OrderIncrementIdToken extends AbstractModel
             ->addFieldToFilter('order_increment_id', $orderIncrementId)
             ->getFirstItem();
         
-        if(empty($itemCandidate) || !$itemCandidate->getId()) {
+        if (empty($itemCandidate) || !$itemCandidate->getId()) {
             return null;
         }
         
         return $itemCandidate->getToken();
     }
 }
-

@@ -58,4 +58,3 @@ class GetWebPaymentDetails extends AbstractResponse
         return !$this->isSuccess() && !$this->isCanceled() && !$this->isAbandoned() && !$this->isWaitingAcceptance() && !$this->isFraud();
     }
 }
-

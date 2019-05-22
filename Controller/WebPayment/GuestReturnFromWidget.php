@@ -14,31 +14,30 @@ class GuestReturnFromWidget extends Action
     protected $paylineGuestPaymentManagement;
     
     /**
-     * @var ResultRawFactory 
+     * @var ResultRawFactory
      */
     protected $resultRawFactory;
     
     /**
-     * @var TemplateFactory 
+     * @var TemplateFactory
      */
     protected $templateFactory;
     
     public function __construct(
         Context $context,
         PaylineGuestPaymentManagement $paylineGuestPaymentManagement
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->paylineGuestPaymentManagement = $paylineGuestPaymentManagement;
     }
     
-    public function execute() 
+    public function execute()
     {
         $isSuccess = true;
 
         try {
             $this->paylineGuestPaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), true);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $isSuccess = false;
         }
 
@@ -47,4 +46,3 @@ class GuestReturnFromWidget extends Action
         return $resultRedirect;
     }
 }
-
