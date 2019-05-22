@@ -42,4 +42,8 @@
         <plugin name="handle_save_wallet"
                 type="Monext\Payline\Plugin\Model\OrderPlugin"/>
     </type>
+    <type name="Magento\Quote\Observer\SubmitObserver">
+        <plugin name="monextPaylinePreventAutoSendOrderEmailPlugin" 
+                type="Monext\Payline\Plugin\Observer\Quote\PreventAutoSendOrderEmailPlugin"/>
+    </type>
 </config>

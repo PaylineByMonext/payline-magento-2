@@ -5,7 +5,6 @@ namespace Monext\Payline\Model;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory;
-use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\Helper\Data as HelperData;
 
 class OrderManagement
@@ -25,15 +24,22 @@ class OrderManagement
      */
     protected $helperData;
 
+    /**
+     * @var OrderSender
+     */
+    protected $orderSender;
+
     public function __construct(
         OrderIncrementIdTokenFactory $orderIncrementIdTokenFactory,
         OrderFactory $orderFactory,
-        HelperData $helperData
+        HelperData $helperData,
+        \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender
     )
     {
         $this->orderFactory = $orderFactory;
         $this->orderIncrementIdTokenFactory = $orderIncrementIdTokenFactory;
         $this->helperData = $helperData;
+        $this->orderSender = $orderSender;
     }
 
     public function handleSetOrderStateStatus(Order $order, $state, $status, $message = null)
@@ -78,10 +84,21 @@ class OrderManagement
 
     public function checkOrderPaymentFromPayline(\Magento\Sales\Model\Order $order)
     {
-        if ($order->getPayment()->getMethod() != HelperConstants::WEB_PAYMENT_CPT) {
+        if (!$this->helperData->isPaymentFromPayline($order->getPayment())) {
             throw new \Exception('Invalid Payment Method');
         }
 
         return $this;
+    }
+
+    public function sendNewOrderEmail(\Magento\Sales\Model\Order $order)
+    {
+        if ($order->getCanSendNewEmailFlag()) {
+            try {
+                $this->orderSender->send($order);
+            } catch (\Exception $e) {
+                // TODO Log
+            }
+        }
     }
 }

@@ -141,12 +141,12 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      * @var HelperData
      */
     protected $helperData;
-    
+
     /**
      * @var ScopeConfigInterface
      */
     protected $scopeConfig;
-    
+
     /**
      * @var Logger
      */
@@ -202,7 +202,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->sortOrderBuilder = $sortOrderBuilder;
         $this->scopeConfig = $scopeConfig;
-        $this->paylineLogger = $logger;
+        $this->paylineLogger = $paylineLogger;
     }
 
     public function saveCheckoutPaymentInformationFacade(
@@ -361,7 +361,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             ];
             $this->paylineLogger->log(LoggerConstants::DEBUG, print_r($logData, true));
         }
-        
+
         $this->synchronizePaymentWithPaymentGateway($order->getPayment(), $token);
 
         if($order->getPayment()->getData('is_in_error')) {
@@ -381,8 +381,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         if($response->isSuccess()) {
             if ($this->ensurePaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
-                $this->handlePaymentSuccess($response, $payment);
-                $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
+                $this->handlePaymentSuccessFacade($response, $payment);
             }
         } else {
             $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
@@ -403,6 +402,18 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         $payment->getOrder()->save();
+
+        return $this;
+    }
+
+    protected function handlePaymentSuccessFacade(
+        ResponseGetWebPaymentDetails $response,
+        OrderPayment $payment
+    )
+    {
+        $this->handlePaymentSuccess($response, $payment);
+        $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
+        $this->paylineOrderManagement->sendNewOrderEmail($payment->getOrder());
 
         return $this;
     }

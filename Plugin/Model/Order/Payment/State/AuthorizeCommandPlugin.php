@@ -16,9 +16,18 @@ class AuthorizeCommandPlugin
      */
     protected $paylineOrderManagement;
 
-    public function __construct(PaylineOrderManagement $paylineOrderManagement)
+    /**
+     * @var \Monext\Payline\Helper\Data
+     */
+    protected $helperData;
+    
+    public function __construct(
+        PaylineOrderManagement $paylineOrderManagement,
+        \Monext\Payline\Helper\Data $helperData
+    )
     {
         $this->paylineOrderManagement = $paylineOrderManagement;
+        $this->helperData = $helperData;
     }
 
     public function aroundExecute(
@@ -31,7 +40,7 @@ class AuthorizeCommandPlugin
         $result = $proceed($payment, $amount, $order);
 
         if($order->getState() == SalesOrder::STATE_PROCESSING
-        && $order->getPayment()->getMethod() == HelperConstants::WEB_PAYMENT_CPT) {
+        && $this->helperData->isPaymentFromPayline($order->getPayment())) {
             $this->paylineOrderManagement->handleSetOrderStateStatus(
                 $order, SalesOrder::STATE_PROCESSING, HelperConstants::ORDER_STATUS_PAYLINE_WAITING_CAPTURE
             );
