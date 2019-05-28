@@ -13,7 +13,7 @@ class PreventAutoSendOrderEmailPlugin
     }
 
     public function aroundExecute(
-        \Magento\Quote\Observer\Webapi\SubmitObserver $subject,
+        \Magento\Quote\Observer\SubmitObserver $subject,
         \Closure $proceed,
         \Magento\Framework\Event\Observer $observer
     ) {
