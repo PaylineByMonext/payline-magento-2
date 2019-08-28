@@ -33,7 +33,7 @@ define(
                 this._super().initChildren();
                 $(document).trigger('payline.web.payment.beforeInitialize', [this]);
 
-                if(this.getMethodConfigData('integrationType') === 'widget') {
+                if (this.getMethodConfigData('integrationType') === 'widget') {
                     this.template = 'Monext_Payline/payment/payline-web-payment-widget';
                     this.widgetContainerId = 'payline-widget-container';
                     this.isPaymentWidgetMessageVisible = ko.observable(false);
@@ -44,13 +44,13 @@ define(
 
                     WidgetApi.destroyWidget(this.widgetContainerId);
 
-                    // PREVENT TO SUSBCRIBE MULTIPLE TIMES AS THIS PAYMENT JS COMPONENTS CAN BE INITIALIZED SEVERAL 
+                    // PREVENT TO SUSBCRIBE MULTIPLE TIMES AS THIS PAYMENT JS COMPONENTS CAN BE INITIALIZED SEVERAL
                     // TIMES IF CUSTOMER GOES TO REVIEW => SHIPPING => REVIEW ... AND SO ON
-                    if(!window.hasQuoteBillingAddressSubscribedToPaylineWidget) {
-                        quote.billingAddress.subscribe(function(address) {
-                            if(address !== null && this.isCurrentMethodSelected()) {
+                    if (!window.hasQuoteBillingAddressSubscribedToPaylineWidget) {
+                        quote.billingAddress.subscribe(function (address) {
+                            if (address !== null && this.isCurrentMethodSelected()) {
                                 this.saveCheckoutPaymentInformationFacade();
-                            } else if(address === null) {
+                            } else if (address === null) {
                                 WidgetApi.destroyWidget(this.widgetContainerId);
                                 this.isPaymentWidgetMessageVisible(true);
                             }
@@ -59,7 +59,7 @@ define(
                         window.hasQuoteBillingAddressSubscribedToPaylineWidget = true;
                     }
 
-                    if(this.isCurrentMethodSelected()) {
+                    if (this.isCurrentMethodSelected()) {
                         this.selectPaymentMethod();
                     }
                 } else {
@@ -68,10 +68,10 @@ define(
                 }
             },
 
-            tryReloadWidget: function() {
+            tryReloadWidget: function () {
                 var self = this;
 
-                if(this.getPaylinetokenQueryParam()) {
+                if (this.getPaylinetokenQueryParam()) {
                     self.showWidget(
                         self.getEnvironment(),
                         self.getPaylinetokenQueryParam(),
@@ -82,15 +82,15 @@ define(
             },
 
             afterPlaceOrder: function () {
-                if(this.getMethodConfigData('integrationType') === 'redirect') {
+                if (this.getMethodConfigData('integrationType') === 'redirect') {
                     redirect('payline/webpayment/redirecttopaymentgateway');
                 }
             },
 
-            saveCheckoutPaymentInformationFacade: function() {
+            saveCheckoutPaymentInformationFacade: function () {
                 var self = this;
 
-                if(self.getMethodConfigData('integrationType') === 'widget' 
+                if (self.getMethodConfigData('integrationType') === 'widget'
                 && !self.flagPreventSaveCheckoutPaymentInformationFacade
                 && self.validate() && additionalValidators.validate()) {
                     self.destroyWidget();
@@ -99,7 +99,7 @@ define(
 
                     $.when(
                         saveCheckoutPaymentInformationFacadeAction(self.getData(), self.messageContainer)
-                    ).done(function(response) {
+                    ).done(function (response) {
                         self.showWidget(
                             self.getEnvironment(),
                             response[0],
@@ -108,34 +108,34 @@ define(
                         );
                         self.isPaymentWidgetMessageVisible(false);
                         self.flagPreventSaveCheckoutPaymentInformationFacade = false;
-                    }).fail(function(response) {
+                    }).fail(function (response) {
                         self.isRetryCallPaymentWidgetButtonVisible(true);
                         self.flagPreventSaveCheckoutPaymentInformationFacade = false;
                     });
                 }
             },
 
-            getMethodConfigData: function(field) {
+            getMethodConfigData: function (field) {
                 throw new Error();
             },
 
-            isCurrentMethodSelected: function() {
+            isCurrentMethodSelected: function () {
                 return quote.paymentMethod() && quote.paymentMethod().method === this.getCode();
             },
 
-            getContracts: function() {
+            getContracts: function () {
                 return window.checkoutConfig['payline']['general']['contracts'];
             },
 
-            getEnvironment: function() {
+            getEnvironment: function () {
                 return window.checkoutConfig['payline']['general']['environment'];
             },
 
-            validate: function() {
+            validate: function () {
                 var parentValidate = this._super();
                 var currentValidate = true;
 
-                if(!this.isContractChecked()) {
+                if (!this.isContractChecked()) {
                     this.messageContainer.addErrorMessage({'message' : $t('You must choose a card type.')});
                     currentValidate = false;
                 }
@@ -143,20 +143,20 @@ define(
                 return parentValidate && currentValidate;
             },
 
-            getPaylinetokenQueryParam: function() {
+            getPaylinetokenQueryParam: function () {
                 var uri = new Uri(window.location.href);
                 return uri.getQueryParamValue('paylinetoken');
             },
 
-            afterRenderWidgetCallback: function() {
+            afterRenderWidgetCallback: function () {
                 this.tryReloadWidget();
             },
 
-            destroyWidget: function() {
+            destroyWidget: function () {
                 WidgetApi.destroyWidget(this.widgetContainerId);
             },
 
-            showWidget: function(environment, dataToken, dataColumn, widgetContainerId) {
+            showWidget: function (environment, dataToken, dataColumn, widgetContainerId) {
                 WidgetApi.showWidget(
                     environment,
                     dataToken,

@@ -10,25 +10,24 @@ use Monext\Payline\Model\ContractManagement;
 class Refresh extends AbstractAction
 {
     /**
-     * @var ContractManagement 
+     * @var ContractManagement
      */
     protected $contractManagement;
     
     /**
-     * @var ResultRedirectFactory 
+     * @var ResultRedirectFactory
      */
     protected $resultRedirectFactory;
     
     public function __construct(
         Context $context,
         ContractManagement $contractManagement
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->contractManagement = $contractManagement;
     }
 
-    public function execute() 
+    public function execute()
     {
         $this->contractManagement->refreshContracts();
         

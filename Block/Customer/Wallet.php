@@ -29,8 +29,7 @@ class Wallet extends Template
         CurrentCustomerHelper $currentCustomerHelper,
         WalletManagement $walletManagement,
         array $data = []
-    )
-    {
+    ) {
         parent::__construct($context, $data);
         $this->walletManagement = $walletManagement;
         $this->currentCustomerHelper = $currentCustomerHelper;
@@ -53,7 +52,7 @@ class Wallet extends Template
             $this->manageWebWalletResponse = $this->walletManagement->wrapCallPaylineManageWebWallet(
                 $this->currentCustomerHelper->getCustomer()
             );
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->manageWebWalletResponse = array(
                 'error' => true,
                 'message' => 'There was an issue for collecting your wallet informations.',
@@ -81,4 +80,3 @@ class Wallet extends Template
         return $this->manageWebWalletResponse['message'];
     }
 }
-

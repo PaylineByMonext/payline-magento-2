@@ -9,20 +9,19 @@ use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 class ReturnFromPaymentGateway extends Action
 {
     /**
-     * @var PaylinePaymentManagement 
+     * @var PaylinePaymentManagement
      */
     protected $paylinePaymentManagement;
     
     public function __construct(
         Context $context,
         PaylinePaymentManagement $paylinePaymentManagement
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->paylinePaymentManagement = $paylinePaymentManagement;
     }
     
-    public function execute() 
+    public function execute()
     {
         $isSuccess = true;
 
@@ -37,4 +36,3 @@ class ReturnFromPaymentGateway extends Action
         return $resultRedirect;
     }
 }
-

@@ -13,6 +13,11 @@
             <argument name="logger" xsi:type="object">paylineLogger</argument>
         </arguments>
     </type>
+    <type name="Monext\Payline\Model\PaymentManagement">
+        <arguments>
+            <argument name="paylineLogger" xsi:type="object">paylineLogger</argument>
+        </arguments>
+    </type>
     <virtualType name="paylineLogger" type="Monolog\Logger">
         <arguments>
             <argument name="name" xsi:type="string">payline</argument>
@@ -36,5 +41,9 @@
     <type name="Magento\Sales\Model\Order">
         <plugin name="handle_save_wallet"
                 type="Monext\Payline\Plugin\Model\OrderPlugin"/>
+    </type>
+    <type name="Magento\Quote\Observer\SubmitObserver">
+        <plugin name="monextPaylinePreventAutoSendOrderEmailPlugin" 
+                type="Monext\Payline\Plugin\Observer\Quote\PreventAutoSendOrderEmailPlugin"/>
     </type>
 </config>

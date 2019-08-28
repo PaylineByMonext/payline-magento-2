@@ -56,8 +56,7 @@ class CartManagement
         CheckoutCart $checkoutCart,
         ProductCollectionFactory $productCollectionFactory,
         CategoryCollectionFactory $categoryCollectionFactory
-    )
-    {
+    ) {
         $this->cartRepository = $cartRepository;
         $this->cartManagement = $cartManagement;
         $this->quoteFactory = $quoteFactory;
@@ -71,11 +70,11 @@ class CartManagement
     {
         $cart = $this->cartRepository->getActive($cartId);
 
-        if($forceReserve) {
+        if ($forceReserve) {
             $cart->setReservedOrderId(null);
         }
 
-        if(!$cart->getReservedOrderId()) {
+        if (!$cart->getReservedOrderId()) {
             $cart->reserveOrderId();
             $this->cartRepository->save($cart);
         }
@@ -92,7 +91,7 @@ class CartManagement
 
     public function restoreCartFromOrder(Order $order)
     {
-        foreach($order->getItemsCollection() as $orderItem) {
+        foreach ($order->getItemsCollection() as $orderItem) {
             $this->checkoutCart->addOrderItem($orderItem);
         }
 
@@ -158,4 +157,3 @@ class CartManagement
         return $productCollection;
     }
 }
-

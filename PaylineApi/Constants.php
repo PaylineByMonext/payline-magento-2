@@ -19,7 +19,7 @@ class Constants
     const PAYMENT_ACTION_CAPTURE = 201;
     const PAYMENT_ACTION_REFUND = 421;
 
-    // 
+    //
     const INTEGRATION_TYPE_REDIRECT = 'redirect';
     const INTEGRATION_TYPE_WIDGET = 'widget';
     

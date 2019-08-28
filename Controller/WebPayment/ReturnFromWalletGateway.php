@@ -16,13 +16,12 @@ class ReturnFromWalletGateway extends Action
     public function __construct(
         Context $context,
         ResultRawFactory $resultRawFactory
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->resultRawFactory = $resultRawFactory;
     }
     
-    public function execute() 
+    public function execute()
     {
         // TODO This is not supposed to be called because wallet is handled by widget
         $resultRaw = $this->resultRawFactory->create();

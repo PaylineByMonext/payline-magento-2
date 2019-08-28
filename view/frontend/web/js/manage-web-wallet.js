@@ -1,4 +1,5 @@
-define([
+define(
+    [
         'jquery',
         'Monext_Payline/js/widget-api',
     ],

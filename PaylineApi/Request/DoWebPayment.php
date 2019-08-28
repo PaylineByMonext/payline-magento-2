@@ -78,8 +78,7 @@ class DoWebPayment extends AbstractRequest
         HelperData $helperData,
         UrlInterface $urlBuilder,
         ContractManagement $contractManagement
-    )
-    {
+    ) {
         $this->scopeConfig = $scopeConfig;
         $this->helperCurrency = $helperCurrency;
         $this->helperData = $helperData;
@@ -125,7 +124,7 @@ class DoWebPayment extends AbstractRequest
 
     public function getData()
     {
-        if(!isset($this->data)) {
+        if (!isset($this->data)) {
             $data = parent::getData();
 
             $this->preparePaymentData($data);
@@ -138,11 +137,11 @@ class DoWebPayment extends AbstractRequest
             $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
             $integrationType = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/integration_type');
 
-            if($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
+            if ($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
                 $data['payment']['contractNumber'] = $paymentAdditionalInformation['contract_number'];
                 $data['contracts'] = [$paymentAdditionalInformation['contract_number']];
                 $this->prepareUrlsForIntegrationTypeRedirect($data);
-            } elseif($integrationType == PaylineApiConstants::INTEGRATION_TYPE_WIDGET) {
+            } elseif ($integrationType == PaylineApiConstants::INTEGRATION_TYPE_WIDGET) {
                 $usedContracts = $this->contractManagement->getUsedContracts();
                 $data['payment']['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
                 $data['contracts'] = $usedContracts->getColumnValues('number');
@@ -205,7 +204,7 @@ class DoWebPayment extends AbstractRequest
     {
         $customer = $this->cart->getCustomer();
 
-        if($customer->getId()) {
+        if ($customer->getId()) {
             $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
             $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
         } else {
@@ -221,17 +220,17 @@ class DoWebPayment extends AbstractRequest
         $customer = $this->cart->getCustomer();
         $paymentMethod = $this->payment->getMethod();
 
-        foreach(['lastName' => 'getLastname', 'firstName' => 'getFirstname', 'email' => 'getEmail'] as $dataIdx => $getter) {
+        foreach (['lastName' => 'getLastname', 'firstName' => 'getFirstname', 'email' => 'getEmail'] as $dataIdx => $getter) {
             $tmpData = $customer->$getter();
 
-            if(empty($tmpData)) {
+            if (empty($tmpData)) {
                 $tmpData = $this->billingAddress->$getter();
             }
 
             $data['buyer'][$dataIdx] = $this->helperData->encodeString($tmpData);
 
-            if($dataIdx == 'email') {
-                if(!$this->helperData->isEmailValid($tmpData)) {
+            if ($dataIdx == 'email') {
+                if (!$this->helperData->isEmailValid($tmpData)) {
                     unset($data['buyer']['email']);
                 }
 
@@ -239,12 +238,12 @@ class DoWebPayment extends AbstractRequest
             }
         }
 
-        if($customer->getId()) {
+        if ($customer->getId()) {
             $data['buyer']['accountCreateDate'] = $this->formatDateTime($customer->getCreatedAt(), 'd/m/y');
         }
 
-        if($this->helperData->isWalletEnabled($paymentMethod)) {
-            if($customer->getId() && $customer->getCustomAttribute('wallet_id')->getValue()) {
+        if ($this->helperData->isWalletEnabled($paymentMethod)) {
+            if ($customer->getId() && $customer->getCustomAttribute('wallet_id')->getValue()) {
                 $data['buyer']['walletId'] = $customer->getCustomAttribute('wallet_id')->getValue();
             } else {
                 $data['buyer']['walletId'] = $this->helperData->generateRandomWalletId();
@@ -263,13 +262,13 @@ class DoWebPayment extends AbstractRequest
         $data['billingAddress']['state'] = $this->helperData->encodeString($this->billingAddress->getRegion());
 
         $billingPhone = $this->helperData->getNormalizedPhoneNumber($this->billingAddress->getTelephone());
-        if($billingPhone) {
+        if ($billingPhone) {
             $data['billingAddress']['phone'] = $billingPhone;
         }
 
         $streetData = $this->billingAddress->getStreet();
-        for($i = 0; $i <= 1; $i++) {
-            if(isset($streetData[$i])) {
+        for ($i = 0; $i <= 1; $i++) {
+            if (isset($streetData[$i])) {
                 $data['billingAddress']['street'.($i+1)] = $this->helperData->encodeString(substr($streetData[$i], 0, 100));
             }
         }
@@ -284,7 +283,7 @@ class DoWebPayment extends AbstractRequest
 
     protected function prepareShippingAddressData(&$data)
     {
-        if(!$this->cart->getIsVirtual() && isset($this->shippingAddress)) {
+        if (!$this->cart->getIsVirtual() && isset($this->shippingAddress)) {
             $data['shippingAddress']['title'] = $this->helperData->encodeString($this->shippingAddress->getPrefix());
             $data['shippingAddress']['firstName'] = $this->helperData->encodeString(substr($this->shippingAddress->getFirstname(), 0, 100));
             $data['shippingAddress']['lastName'] = $this->helperData->encodeString(substr($this->shippingAddress->getLastname(), 0, 100));
@@ -294,13 +293,13 @@ class DoWebPayment extends AbstractRequest
             $data['shippingAddress']['state'] = $this->helperData->encodeString($this->shippingAddress->getRegion());
 
             $shippingPhone = $this->helperData->getNormalizedPhoneNumber($this->shippingAddress->getTelephone());
-            if($shippingPhone) {
+            if ($shippingPhone) {
                 $data['shippingAddress']['phone'] = $shippingPhone;
             }
 
             $streetData = $this->shippingAddress->getStreet();
-            for($i = 0; $i <= 1; $i++) {
-                if(isset($streetData[$i])) {
+            for ($i = 0; $i <= 1; $i++) {
+                if (isset($streetData[$i])) {
                     $data['shippingAddress']['street'.($i+1)] = $this->helperData->encodeString(substr($streetData[$i], 0, 100));
                 }
             }

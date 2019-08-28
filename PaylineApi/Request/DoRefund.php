@@ -13,7 +13,7 @@ use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 class DoRefund extends AbstractRequest
 {
     /**
-     * @var HelperCurrency 
+     * @var HelperCurrency
      */
     protected $helperCurrency;
     
@@ -28,7 +28,7 @@ class DoRefund extends AbstractRequest
     protected $scopeConfig;
 
     /**
-     * @var array 
+     * @var array
      */
     protected $paymentData;
 
@@ -41,8 +41,7 @@ class DoRefund extends AbstractRequest
         ScopeConfigInterface $scopeConfig,
         HelperCurrency $helperCurrency,
         ContractManagement $contractManagement
-    )
-    {
+    ) {
         $this->scopeConfig = $scopeConfig;
         $this->helperCurrency = $helperCurrency;
         $this->contractManagement = $contractManagement;
@@ -66,7 +65,7 @@ class DoRefund extends AbstractRequest
         return $this;
     }
           
-    public function getData() 
+    public function getData()
     {
         $data = array();
         
@@ -77,9 +76,9 @@ class DoRefund extends AbstractRequest
         $paymentMethod = $this->payment->getMethod();
         $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
         $integrationType = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/integration_type');
-        if($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
+        if ($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
             $data['payment']['contractNumber'] = $paymentAdditionalInformation['contract_number'];
-        } elseif($integrationType == PaylineApiConstants::INTEGRATION_TYPE_WIDGET) {
+        } elseif ($integrationType == PaylineApiConstants::INTEGRATION_TYPE_WIDGET) {
             $usedContracts = $this->contractManagement->getUsedContracts();
             $data['payment']['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
         }

@@ -9,12 +9,12 @@ use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 class DoCapture extends AbstractRequest
 {
     /**
-     * @var TransactionInterface 
+     * @var TransactionInterface
      */
     protected $authorizationTransaction;
     
     /**
-     * @var array 
+     * @var array
      */
     protected $paymentData;
    
@@ -30,7 +30,7 @@ class DoCapture extends AbstractRequest
         return $this;
     }
     
-    public function getData() 
+    public function getData()
     {
         $data = parent::getData();
 

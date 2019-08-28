@@ -21,7 +21,7 @@ define(
                 });
             },
             
-            getMethodConfigData: function(field) {
+            getMethodConfigData: function (field) {
                 return window.checkoutConfig['payment']['paylineWebPaymentCpt'][field];
             }
         });

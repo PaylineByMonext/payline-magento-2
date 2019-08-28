@@ -5,6 +5,7 @@ namespace Monext\Payline\Helper;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Math\Random as MathRandom;
+use Monext\Payline\Helper\Constants as HelperConstants;
 
 class Data extends AbstractHelper
 {
@@ -19,8 +20,7 @@ class Data extends AbstractHelper
     public function __construct(
         Context $context,
         MathRandom $mathRandom
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->mathRandom = $mathRandom;
     }
@@ -88,16 +88,21 @@ class Data extends AbstractHelper
         return $paylineAmount / 100;
     }
 
-    public function getMatchingConfigurableStatus( \Magento\Sales\Model\Order $order, $status)
+    public function getMatchingConfigurableStatus(\Magento\Sales\Model\Order $order, $status)
     {
-        if(empty($status)) {
+        if (empty($status)) {
             return null;
         }
 
         $path = 'payment/' . $order->getPayment()->getMethod() . '/order_status_' . $status;
-        if($configurableStatus = $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE)) {
+        if ($configurableStatus = $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE)) {
             $status = $configurableStatus;
         }
         return $status;
+    }
+
+    public function isPaymentFromPayline(\Magento\Sales\Model\Order\Payment $payment)
+    {
+        return $payment->getMethod() == HelperConstants::WEB_PAYMENT_CPT;
     }
 }

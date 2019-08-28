@@ -30,11 +30,11 @@ class Cpt extends AbstractMethod
     {
         $payment = $this->getInfoInstance();
         $status = HelperConstants::ORDER_STATUS_PAYLINE_PENDING;
-        if($payment instanceof OrderPayment) {
+        if ($payment instanceof OrderPayment) {
             $order = $payment->getOrder();
             $status = $this->helperData->getMatchingConfigurableStatus($order, $status);
 
-            if( $this->getConfigData('integration_type') == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
+            if ($this->getConfigData('integration_type') == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
                 $quoteId = $order->getQuoteId();
                 $result = $this->paylinePaymentManagement->wrapCallPaylineApiDoWebPaymentFacade($quoteId);
 
@@ -51,7 +51,7 @@ class Cpt extends AbstractMethod
     
     public function capture(InfoInterface $payment, $amount)
     {
-        if($this->canCapture() && !$this->getSkipCapture() && $payment instanceof OrderPayment) {
+        if ($this->canCapture() && !$this->getSkipCapture() && $payment instanceof OrderPayment) {
             $this->paylinePaymentManagement->callPaylineApiDoCaptureFacade($payment->getOrder(), $payment, $amount);
         }
 
@@ -60,14 +60,14 @@ class Cpt extends AbstractMethod
     
     public function void(InfoInterface $payment)
     {
-        if($this->canVoid() && !$this->getSkipVoid() && $payment instanceof OrderPayment) {
+        if ($this->canVoid() && !$this->getSkipVoid() && $payment instanceof OrderPayment) {
             $this->paylinePaymentManagement->callPaylineApiDoVoidFacade($payment->getOrder(), $payment);
         }
     }
     
     public function refund(InfoInterface $payment, $amount)
     {
-        if($this->canRefund() && !$this->getSkipRefund() && $payment instanceof OrderPayment) {
+        if ($this->canRefund() && !$this->getSkipRefund() && $payment instanceof OrderPayment) {
             $this->paylinePaymentManagement->callPaylineApiDoRefundFacade($payment->getOrder(), $payment, $amount);
         }
     }

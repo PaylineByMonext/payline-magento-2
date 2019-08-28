@@ -15,7 +15,7 @@ class ManageWebWallet extends AbstractRequest
     protected $contractManagement;
 
     /**
-     * @var CustomerInterface 
+     * @var CustomerInterface
      */
     protected $customer;
 
@@ -27,8 +27,7 @@ class ManageWebWallet extends AbstractRequest
     public function __construct(
         ContractManagement $contractManagement,
         UrlInterface $urlBuilder
-    )
-    {
+    ) {
         $this->contractManagement = $contractManagement;
         $this->urlBuilder = $urlBuilder;
     }
@@ -39,7 +38,7 @@ class ManageWebWallet extends AbstractRequest
         return $this;
     }
 
-    public function getData() 
+    public function getData()
     {
         $data = parent::getData();
 
