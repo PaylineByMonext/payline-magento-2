@@ -8,8 +8,7 @@ class GetMerchantSettings extends AbstractResponse
 {
     public function getContractsData()
     {
-        $result = array();
-
+        $result = [];
         if (empty($this->data['listPointOfSell']['pointOfSell']) || !is_array($this->data['listPointOfSell']['pointOfSell'])) {
             return $result;
         }
@@ -18,20 +17,11 @@ class GetMerchantSettings extends AbstractResponse
         if (!empty($allPointOfSell['contracts']) && !empty($allPointOfSell['label'])) {
             $contractsList = !empty($allPointOfSell['contracts']['contract']) ? $allPointOfSell['contracts']['contract'] : [];
             $pointOfSellLabel = $allPointOfSell['label'];
-            if (isset($contractsList['contractNumber'])) {
-                $contractsList = [$contractsList];
-            }
-            foreach ($contractsList as $contract) {
-                $result[] = [
-                    'label' => $contract['label'],
-                    'number' => $contract['contractNumber'],
-                    'card_type' => $contract['cardType'],
-                    'currency' => isset($contract['currency']) ? $contract['currency'] : null,
-                    'point_of_sell_label' => $pointOfSellLabel,
-                ];
-            }
+
+            return $this->formatContractsList($contractsList, $pointOfSellLabel);
         } else {
             foreach ($this->data['listPointOfSell']['pointOfSell'] as $pointOfSell) {
+                $contractsList = [];
                 if (is_object($pointOfSell)) {
                     $contractsList    = $pointOfSell->contracts->contract;
                     $pointOfSellLabel = $pointOfSell->label;
@@ -42,22 +32,41 @@ class GetMerchantSettings extends AbstractResponse
                     $pointOfSellLabel = (!empty($pointOfSell['label'])) ? $pointOfSell['label']: '';
                 }
 
-                if (!is_array($contractsList)) {
-                    $contractsList = [$contractsList];
-                }
 
-                foreach ($contractsList as $contract) {
-                    $result[] = [
-                        'label' => $contract['label'],
-                        'number' => $contract['contractNumber'],
-                        'card_type' => $contract['cardType'],
-                        'currency' => isset($contract['currency']) ? $contract['currency'] : null,
-                        'point_of_sell_label' => $pointOfSellLabel,
-                    ];
-                }
+                
+
+                $result = array_merge($result, $this->formatContractsList($contractsList, $pointOfSellLabel));
             }
         }
 
         return $result;
     }
+
+
+
+    protected function formatContractsList(array $contractsList, $pointOfSellLabel)
+    {
+        $result = [];
+        $contractsList = array_filter($contractsList);
+        if(!empty($contractsList)) {
+            $firstKey = key($contractsList);
+            if(!is_numeric($firstKey) && isset($contractsList['contractNumber'])) {
+                $contractsList = [$contractsList];
+            }
+
+            foreach ($contractsList as $contract) {
+                $result[] = [
+                    'label' => $contract['label'],
+                    'number' => $contract['contractNumber'],
+                    'card_type' => $contract['cardType'],
+                    'currency' => isset($contract['currency']) ? $contract['currency'] : null,
+                    'point_of_sell_label' => $pointOfSellLabel,
+                ];
+            }
+
+        }
+
+        return $result;
+    }
+
 }
