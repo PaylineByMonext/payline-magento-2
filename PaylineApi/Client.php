@@ -308,7 +308,6 @@ class Client
         foreach ($privateData as $privateDataItem) {
             $this->paylineSDK->addPrivateData($privateDataItem);
         }
-
         return $this;
     }
 }

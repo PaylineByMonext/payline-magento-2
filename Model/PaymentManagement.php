@@ -250,7 +250,10 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $this->paylineLogger->log(LoggerConstants::DEBUG, print_r($logData, true));
         }
 
+
         $this->paylineCartManagement->handleReserveCartOrderId($cart->getId());
+
+        $this->paylineLogger->debug(__METHOD__, ['reserved_order_id'=>$cart->getReservedOrderId()]);
 
         if ($cart->getIsVirtual()) {
             $shippingAddress = null;
@@ -362,7 +365,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
                 $this->paylineCartManagement->restoreCartFromOrder($order);
             }
 
-            throw new \Exception(__('Payment is in error.'));
+            throw new \Exception(__($order->getPayment()->getData('payline_response')->getLongErrorMessage() ?? 'Payment is in error.'));
         }
 
         return $this;
@@ -371,6 +374,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function synchronizePaymentWithPaymentGateway(OrderPayment $payment, $token)
     {
         $response = $this->callPaylineApiGetWebPaymentDetails($token);
+        $payment->setData('payline_response', $response);
 
         if ($response->isSuccess()) {
             if ($this->ensurePaymentGatewayAmountSameAsOrderAmount($response, $payment)) {

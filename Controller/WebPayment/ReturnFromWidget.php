@@ -32,11 +32,12 @@ class ReturnFromWidget extends Action
             $this->loggerPayline->critical(__CLASS__. ' : ' .__FUNCTION__);
             $this->loggerPayline->critical('Token # '.$this->getToken());
             $this->loggerPayline->critical($e->getMessage());
+            $this->messageManager->addErrorMessage($e->getMessage());
             $isSuccess = false;
         }
 
         $resultRedirect = $this->resultRedirectFactory->create();
-        $resultRedirect->setPath($isSuccess ? 'checkout/onepage/success' : 'checkout');
+        $resultRedirect->setPath($isSuccess ? 'checkout/onepage/success' : 'checkout/cart');
         return $resultRedirect;
     }
 }

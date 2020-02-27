@@ -6,6 +6,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
 use Monext\Payline\Controller\Action;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
+use Psr\Log\LoggerInterface as Logger;
 
 class NotifyFromPaymentGateway extends Action
 {
@@ -14,14 +15,19 @@ class NotifyFromPaymentGateway extends Action
      */
     protected $paylinePaymentManagement;
 
+    /**
+     * @var Logger
+     */
+    protected $paylineLogger;
+
     public function __construct(
         Context $context,
-        \Psr\Log\LoggerInterface $loggerPayline,
-        PaylinePaymentManagement $paylinePaymentManagement
-    )
-    {
-        parent::__construct($context, $loggerPayline);
+        PaylinePaymentManagement $paylinePaymentManagement,
+        Logger $loggerPayline
+    ) {
+        parent::__construct($context, $paylineLogger);
         $this->paylinePaymentManagement = $paylinePaymentManagement;
+        $this->loggerPayline = $loggerPayline;
     }
 
     public function execute()
@@ -32,6 +38,7 @@ class NotifyFromPaymentGateway extends Action
             $this->loggerPayline->critical(__CLASS__. ' : ' .__FUNCTION__);
             $this->loggerPayline->critical('Token # '.$this->getToken());
             $this->loggerPayline->critical($e->getMessage());
+            $this->loggerPayline->debug($e->getMessage());
         }
 
         $resultRaw = $this->resultFactory->create(ResultFactory::TYPE_RAW);

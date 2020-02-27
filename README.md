@@ -2,20 +2,29 @@
 
 ## Installation
 
-Log in to the Magento server, go to your Magento install dir and run these commands:
+Log in to the Magento server, go to your Magento install dir.
+ 
+You have to create a new directory to store the module zip package, payline-magento2-__x.y.z__.zip (__x.y.z__ is the version of the module).
+ ```
+mkdir -p extra/composer/artifact/zip
 ```
-composer config repositories.paylinebymonext-payline-magento-2 vcs https://github.com/PaylineByMonext/payline-magento-2
-composer require monext/module-payline
 
+Save the zip package payline-magento2-__x.y.z__.zip in the directory extra/composer/artifact/zip
+
+Run composer to deploy module and dependencies (_monext/payline-sdk_)
+```
+composer config repositories.zip artifact extra/composer/artifact/zip
+composer require monext/module-payline:x.y.z
+```
+
+Run magento command to enable the module
+```
 php -f bin/magento module:enable Monext_Payline
 php -f bin/magento setup:upgrade
 ```
 
 ## Configuration
-*  Find Payline configuration menu under STORES > Settings > Configuration > SALES > Payment Methods
-*  Fill your merchant ID and access key under the "Common settings" section.
+*  Find Payline configuration menu under STORES > Settings > Configuration > SALES > Payment Methods > Payline
+*  Fill your Merchant ID and Access key under the "Common settings" section.
 *  Contracts are imported under the "Payline Contracts" section. The multi-select "Contracts" fied allows to choose which one will be visible on your store.
-*  "Payment solutions" section displays the "Payline - Web Payment Cpt" method configuration (more to come). Select your payment options and order status mapping in this section.
-
-##  Payline Category Mapping
-The dedicated "Payline Category Mapping" field is added by the Payline extension under the "Content" section of each product category. The drop-down list allows to map your custom category with one from Payline's nomenclature. This mapping is necessary for partner solutions like Oney, Cofinoga, Cetelem,...
+*  "Payment solutions" section displays the "Payline - Web Payment Cpt" method configuration (more to come). You have to enable the solution and select your payment options and order status mapping in this section.
