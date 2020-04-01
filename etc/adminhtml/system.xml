@@ -18,31 +18,36 @@
                     <label>Common settings</label>
                     <attribute type="expanded">1</attribute>
                     <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-                    <field id="merchant_id" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="merchant_id" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Merchant ID</label>
                         <config_path>payline/general/merchant_id</config_path>
                     </field>
-                    <field id="access_key" translate="label" type="obscure" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="access_key" translate="label" type="obscure" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Access key</label>
                         <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                         <config_path>payline/general/access_key</config_path>
                     </field>
-                    <field id="environment" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="environment" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Environment</label>
                         <source_model>Monext\Payline\Model\System\Config\Source\Environment</source_model>
                         <config_path>payline/general/environment</config_path>
                     </field>
-                    <field id="debug" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="language" translate="label" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Language</label>
+                        <source_model>Monext\Payline\Model\System\Config\Source\Language</source_model>
+                        <config_path>payline/general/language</config_path>
+                    </field>
+                    <field id="debug" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Debug</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                         <config_path>payline/general/debug</config_path>
                     </field>
-                    <field id="proxy_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="proxy_enabled" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Proxy Enabled</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                         <config_path>payline/general/proxy_enabled</config_path>
                     </field>
-                    <field id="proxy_host" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="proxy_host" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Proxy Host</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                         <config_path>payline/general/proxy_host</config_path>
@@ -50,21 +55,21 @@
                             <field id="proxy_enabled">1</field>
                         </depends>
                     </field>
-                    <field id="proxy_port" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="proxy_port" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Proxy Port</label>
-                        <config_path>ppayline/general/proxy_port</config_path>
+                        <config_path>payline/general/proxy_port</config_path>
                         <depends>
                             <field id="proxy_enabled">1</field>
                         </depends>
                     </field>
-                    <field id="proxy_login" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="proxy_login" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Proxy Login</label>
                         <config_path>payline/general/proxy_login</config_path>
                         <depends>
                             <field id="proxy_enabled">1</field>
                         </depends>
                     </field>
-                    <field id="proxy_password" translate="label" type="obscure" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <field id="proxy_password" translate="label" type="obscure" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Proxy Password</label>
                         <config_path>payline/general/proxy_password</config_path>
                         <depends>
@@ -165,6 +170,47 @@
                                 <config_path>payment/payline_web_payment_cpt/order_status_payline_abandoned</config_path>
                             </field>
                         </group>
+                    </group>
+                </group>
+                <group id="contracts_specific_settings" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="40">
+                    <label>Contracts specific settings</label>
+                    <comment>Please fill in the fields in the "Delivery configuration" and "Prefix configuration" section first and foremost. If you they are not filled in, the Default values will be used.</comment>
+                    <attribute type="expanded">0</attribute>
+                    <field id="address" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Delivery configuration</label>
+                        <frontend_model>Monext\Payline\Block\Adminhtml\System\Config\Form\Field\Delivery</frontend_model>
+                        <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                        <config_path>payline/payline_common/address</config_path>
+                    </field>
+                    <field id="prefix" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Prefix configuration</label>
+                        <frontend_model>Monext\Payline\Block\Adminhtml\System\Config\Form\Field\Prefix</frontend_model>
+                        <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                        <config_path>payline/payline_common/prefix</config_path>
+                    </field>
+
+                    <group id="default_values" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="100">
+                        <label>Default values</label>
+                        <attribute type="expanded">0</attribute>
+                        <field id="default_address_deliverytime" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Delivery time</label>
+                            <source_model>Monext\Payline\Model\System\Config\Source\Delivery\Time</source_model>
+                            <config_path>payment/payline_common_default/deliverytime</config_path>
+                        </field>
+                        <field id="default_address_deliverymode" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Delivery mode</label>
+                            <source_model>Monext\Payline\Model\System\Config\Source\Delivery\Mode</source_model>
+                            <config_path>payment/payline_common_default/deliverymode</config_path>
+                        </field>
+                        <field id="default_address_delivery_expected_delay" translate="label" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Delivery expected delay</label>
+                            <config_path>payment/payline_common_default/delivery_expected_delay</config_path>
+                        </field>
+                        <field id="default_address_prefix" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                            <label>Prefix</label>
+                            <source_model>\Monext\Payline\Model\System\Config\Source\Customer\Title</source_model>
+                            <config_path>payment/payline_common_default/prefix</config_path>
+                        </field>
                     </group>
                 </group>
             </group>

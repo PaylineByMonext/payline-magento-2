@@ -1,6 +1,6 @@
 # Magento 2 Payline Module #
 
-## Installation
+## Installation (EN)
 
 Log in to the Magento server, go to your Magento install dir.
  
@@ -22,6 +22,35 @@ Run magento command to enable the module
 php -f bin/magento module:enable Monext_Payline
 php -f bin/magento setup:upgrade
 ```
+
+
+## Installation  (FR)
+
+Se connecter en ssh sur le serveur qui héberge Magento et se positionner dans le répertoire d'installation.
+ 
+Si il n'existe pas encore, créer le répertoire extra/composer/artifact/zip pour stocker l'archive du module (payline-magento2-__x.y.z__.zip, __x.y.z__ étant la version du module).
+ ```
+mkdir -p extra/composer/artifact/zip
+```
+
+Copier l'archive du module payline-magento2-__x.y.z__.zip dans ce  répertoire ( extra/composer/artifact/zip )
+
+Lancer composer pour déployer le module et ses dépendances (_monext/payline-sdk_)
+```
+composer config repositories.zip artifact extra/composer/artifact/zip
+composer require monext/module-payline:x.y.z
+```
+
+Lancer la commande Magento pour activer le module
+```
+php -f bin/magento module:enable Monext_Payline
+php -f bin/magento setup:upgrade
+```
+
+Vérifier dans le dossier vendor que les dossiers sont bien présents et non vide
+- vendor/monext/module-payline
+- vendor/monext/payline-sdk
+
 
 ## Configuration
 *  Find Payline configuration menu under STORES > Settings > Configuration > SALES > Payment Methods > Payline

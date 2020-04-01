@@ -18,6 +18,15 @@
                 <active>0</active>
                 <model>Monext\Payline\Model\Method\WebPayment\Cpt</model>
             </payline_web_payment_cpt>
+            <payline_common>
+                <default>
+                    <deliverytime>2</deliverytime>
+                    <deliverymode>4</deliverymode>
+                    <delivery_expected_delay>3</delivery_expected_delay>
+                    <prefix>4</prefix>
+                </default>
+                <model>Monext\Payline\Model\Method\WebPayment\Cpt</model>
+            </payline_common>
         </payment>
     </default>
 </config>

@@ -11,6 +11,7 @@ class Constants
     const CONFIG_PATH_PAYLINE_GENERAL_ENVIRONMENT = 'payline/general/environment';
     const CONFIG_PATH_PAYLINE_GENERAL_MERCHANT_ID = 'payline/general/merchant_id';
     const CONFIG_PATH_PAYLINE_GENERAL_ACCESS_KEY = 'payline/general/access_key';
+    const CONFIG_PATH_PAYLINE_GENERAL_LANGUAGE = 'payline/general/language';
     const CONFIG_PATH_PAYLINE_GENERAL_DEBUG = 'payline/general/debug';
     const CONFIG_PATH_PAYLINE_GENERAL_CONTRACTS = 'payline/general/contracts';
 
@@ -23,7 +24,9 @@ class Constants
     const ORDER_STATUS_PAYLINE_FRAUD = 'payline_fraud';
     const ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE = 'payline_waiting_acceptance';
 
-    const PAYLINE_API_USED_BY_PREFIX = 'MGT2';
+    const ORDER_STATUS_PAYLINE_PENDING_ONEY  = 'pending_oney';
+
+    const PAYLINE_API_USED_BY_PREFIX = 'Magento';
 
     const MODULE_NAME = 'Monext_Payline';
 }

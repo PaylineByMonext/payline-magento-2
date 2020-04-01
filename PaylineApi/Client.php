@@ -5,6 +5,7 @@ namespace Monext\Payline\PaylineApi;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\App\ProductMetadata;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\PaylineApi\PaylineSDKFactory;
 use Monext\Payline\PaylineApi\Request\DoCapture as RequestDoCapture;
@@ -96,7 +97,27 @@ class Client
      * @var ModuleListInterface
      */
     protected $moduleList;
+    /**
+     * @var ProductMetadata
+     */
+    private $productMetadata;
 
+    /**
+     * Client constructor.
+     * @param \Monext\Payline\PaylineApi\PaylineSDKFactory $paylineSDKFactory
+     * @param ScopeConfigInterface $scopeConfig
+     * @param ResponseDoWebPaymentFactory $responseDoWebPaymentFactory
+     * @param ResponseDoCaptureFactory $responseDoCaptureFactory
+     * @param ResponseDoVoidFactory $responseDoVoidFactory
+     * @param ResponseDoRefundFactory $responseDoRefundFactory
+     * @param ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory
+     * @param ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory
+     * @param ResponseManageWebWalletFactory $responseManageWebWalletFactory
+     * @param Logger $logger
+     * @param EncryptorInterface $encryptor
+     * @param ModuleListInterface $moduleList
+     * @param ProductMetadata $productMetadata
+     */
     public function __construct(
         PaylineSDKFactory $paylineSDKFactory,
         ScopeConfigInterface $scopeConfig,
@@ -109,7 +130,8 @@ class Client
         ResponseManageWebWalletFactory $responseManageWebWalletFactory,
         Logger $logger,
         EncryptorInterface $encryptor,
-        ModuleListInterface $moduleList
+        ModuleListInterface $moduleList,
+        ProductMetadata $productMetadata
     ) {
         $this->paylineSDKFactory = $paylineSDKFactory;
         $this->scopeConfig = $scopeConfig;
@@ -123,6 +145,7 @@ class Client
         $this->logger = $logger;
         $this->encryptor = $encryptor;
         $this->moduleList = $moduleList;
+        $this->productMetadata = $productMetadata;
     }
 
     /**
@@ -297,8 +320,11 @@ class Client
 
             $this->paylineSDK = $this->paylineSDKFactory->create($paylineSdkParams);
             $currentModule = $this->moduleList->getOne(HelperConstants::MODULE_NAME);
-            $this->paylineSDK->usedBy(HelperConstants::PAYLINE_API_USED_BY_PREFIX.' v'.$currentModule['setup_version']);
+            $this->paylineSDK->usedBy(      HelperConstants::PAYLINE_API_USED_BY_PREFIX . ' ' .
+                $this->productMetadata->getVersion() . ' - '
+                .' v'.$currentModule['setup_version']);
         //}
+        
 
             return $this;
     }

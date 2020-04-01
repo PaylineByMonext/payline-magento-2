@@ -6,9 +6,15 @@ use Magento\Customer\Api\Data\CustomerInterface;
 use Magento\Framework\UrlInterface;
 use Monext\Payline\Model\ContractManagement;
 use Monext\Payline\PaylineApi\AbstractRequest;
+use Monext\Payline\PaylineApi\Constants;
 
 class ManageWebWallet extends AbstractRequest
 {
+    protected $includeCardTypeWallet = array(
+        Constants::PAYMENT_CONTRACT_CARD_TYPE_CB,
+        Constants::PAYMENT_CONTRACT_CARD_TYPE_CB_3DS
+    );
+
     /**
      * @var ContractManagement
      */
@@ -42,7 +48,7 @@ class ManageWebWallet extends AbstractRequest
     {
         $data = parent::getData();
 
-        $usedContracts = $this->contractManagement->getUsedContracts();
+        $usedContracts = $this->contractManagement->getUsedContracts()->addFieldToFilter('card_type', array('in' => $this->includeCardTypeWallet));
         $data['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
         $data['contracts'] = $usedContracts->getColumnValues('number');
 

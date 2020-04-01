@@ -250,7 +250,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $this->paylineLogger->log(LoggerConstants::DEBUG, print_r($logData, true));
         }
 
-
         $this->paylineCartManagement->handleReserveCartOrderId($cart->getId());
 
         $this->paylineLogger->debug(__METHOD__, ['reserved_order_id'=>$cart->getReservedOrderId()]);
@@ -262,7 +261,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response = $this->callPaylineApiDoWebPayment($cart, $productCollection, $totals, $payment, $billingAddress, $shippingAddress);
 
         if (!$response->isSuccess()) {
-            // TODO log
             throw new \Exception($response->getShortErrorMessage());
         }
 

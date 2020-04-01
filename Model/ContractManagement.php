@@ -115,4 +115,27 @@ class ContractManagement
         
         return $this->usedContracts;
     }
+
+
+    /**
+     * @deprecated
+     *
+     * DO not used but for test to avoid error
+     *
+     *     [result] => Array
+    (
+    [code] => 02716
+    [shortMessage] => REFUSED
+    [longMessage] => SelectedContractList must be filled with only one contract per payment method or enable the option Isolate the payment method in the payment page
+    )
+
+     *
+     * @return array
+     */
+    public function getUsedContractsByDisctinctType()
+    {
+        $usedContracts = $this->getUsedContracts();
+        return array_values(array_column($usedContracts->getData(), 'number', 'card_type'));
+    }
+
 }

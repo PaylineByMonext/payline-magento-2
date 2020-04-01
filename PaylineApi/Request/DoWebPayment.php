@@ -4,11 +4,13 @@ namespace Monext\Payline\PaylineApi\Request;
 
 use Magento\Catalog\Model\ResourceModel\Product\Collection as ProductCollection;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Stdlib\DateTime;
 use Magento\Framework\UrlInterface;
 use Magento\Quote\Api\Data\AddressInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Api\Data\TotalsInterface;
+use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\Helper\Currency as HelperCurrency;
 use Monext\Payline\Helper\Data as HelperData;
 use Monext\Payline\Model\ContractManagement;
@@ -72,18 +74,33 @@ class DoWebPayment extends AbstractRequest
      */
     protected $helperData;
 
+    /**
+     * @var DateTime
+     */
+    protected $dateTime;
+
+    /**
+     * @var DateTime\Timezone
+     */
+    protected $timezone;
+
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         HelperCurrency $helperCurrency,
         HelperData $helperData,
         UrlInterface $urlBuilder,
-        ContractManagement $contractManagement
-    ) {
+        ContractManagement $contractManagement,
+        DateTime $dateTime,
+        DateTime\Timezone $timezone
+    )
+    {
         $this->scopeConfig = $scopeConfig;
         $this->helperCurrency = $helperCurrency;
         $this->helperData = $helperData;
         $this->urlBuilder = $urlBuilder;
         $this->contractManagement = $contractManagement;
+        $this->dateTime = $dateTime;
+        $this->timezone = $timezone;
     }
 
     public function setCart(CartInterface $cart)
@@ -133,9 +150,12 @@ class DoWebPayment extends AbstractRequest
             $this->prepareBillingAddressData($data);
             $this->prepareShippingAddressData($data);
 
+            $data['languageCode'] = $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_LANGUAGE);
+            $data['languageCode'] = 'fr';
+
             $paymentMethod = $this->payment->getMethod();
             $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
-            $integrationType = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/integration_type');
+            $integrationType = $this->scopeConfig->getValue('payment/' . $paymentMethod . '/integration_type');
 
             if ($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
                 $data['payment']['contractNumber'] = $paymentAdditionalInformation['contract_number'];
@@ -161,17 +181,21 @@ class DoWebPayment extends AbstractRequest
 
         $data['payment']['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($this->totals->getGrandTotal() + $this->totals->getTaxAmount());
         $data['payment']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
-        $data['payment']['action'] = $this->scopeConfig->getValue('payment/'.$paymentMethod.'/payment_action');
+        $data['payment']['action'] = $this->scopeConfig->getValue('payment/' . $paymentMethod . '/payment_action');
         $data['payment']['mode'] = $paymentAdditionalInformation['payment_mode'];
     }
 
     protected function prepareOrderData(&$data)
     {
         $data['order']['ref'] = $this->cart->getReservedOrderId();
+        //Todo: Set final country
+        $data['order']['country'] = 'FR';
         $data['order']['amount'] = $this->helperData->mapMagentoAmountToPaylineAmount($this->totals->getGrandTotal() + $this->totals->getTaxAmount());
         $data['order']['currency'] = $this->helperCurrency->getNumericCurrencyCode($this->totals->getBaseCurrencyCode());
         $data['order']['date'] = $this->formatDateTime($this->cart->getCreatedAt());
+        $data['order']['comment'] = 'Magento order';
         $this->prepareOrderDetailsData($data);
+        $this->prepareOrderDeliveryData($data);
     }
 
     protected function prepareOrderDetailsData(&$data)
@@ -187,10 +211,58 @@ class DoWebPayment extends AbstractRequest
                 'brand' => $tmpProduct->getManufacturer(),
                 'category' => $tmpProduct->getPaylineCategoryMapping(),
                 'taxRate' => $this->helperData->mapMagentoAmountToPaylineAmount($item->getTaxPercent()),
+                'comment' => 'Magento item'
             ];
 
             $data['order']['details'][] = $orderDetail;
         }
+    }
+
+    protected function prepareOrderDeliveryData(&$data)
+    {
+
+        if (!$this->cart->getIsVirtual()) {
+            $deliveryData = [
+                'deliveryTime' => $this->helperData->getDefaultDeliveryTime(),
+                'deliveryMode' => $this->helperData->getDefaultDeliveryMode(),
+                'deliveryExpectedDelay' => $this->helperData->getDefaultDeliveryExpectedDelay(),
+            ];
+            $objectShippingMethod = $this->shippingAddress->getShippingMethod();
+            $addressConfig        = $this->helperData->getDeliverySetting();
+            if ($objectShippingMethod && !empty($addressConfig)) {
+                foreach ($addressConfig as $shippingMethodConfig) {
+                    if ($shippingMethodConfig['shipping_method'] == $objectShippingMethod) {
+                        $deliveryData['deliveryTime'] = $shippingMethodConfig['deliverytime'];
+                        $deliveryData['deliveryMode'] = $shippingMethodConfig['deliverymode'];
+                        $deliveryData['deliveryExpectedDelay'] = $shippingMethodConfig['delivery_expected_delay'];
+                        $deliveryData = array_filter($deliveryData);
+                        break;
+                    }
+                }
+            }
+
+            if($deliveryData['deliveryExpectedDelay']) {
+                $deliveryData['deliveryExpectedDate'] = $this->getDeliveryExpectedDate($deliveryData['deliveryExpectedDelay']);
+            }
+
+            $data['order'] = array_merge($data['order'], $deliveryData);
+        }
+    }
+
+    /**
+     * @param $expectedDelay
+     *
+     *
+     * @return false|string Order.ExpectedDeliveryDate : Required (format : dd/MM/yyyy or dd/MM/yyyy HH:mm:ss)
+     * @throws \Exception
+     */
+    protected function getDeliveryExpectedDate($expectedDelay)
+    {
+        $expectedDelay = (int)$expectedDelay;
+        $currentDate = new \DateTime();
+        $expectedDate = $currentDate->add(new \DateInterval('P'.$expectedDelay.'D'));
+
+        return $expectedDate->format('d/m/Y');
     }
 
     protected function prepareUrlsForIntegrationTypeRedirect(&$data)
@@ -226,7 +298,7 @@ class DoWebPayment extends AbstractRequest
             if (empty($tmpData)) {
                 $tmpData = $this->billingAddress->$getter();
             }
-
+            $data['buyer']['title'] =  $this->getCustomerTitle($this->billingAddress->getPrefix());
             $data['buyer'][$dataIdx] = $this->helperData->encodeString($tmpData);
 
             if ($dataIdx == 'email') {
@@ -253,7 +325,7 @@ class DoWebPayment extends AbstractRequest
 
     protected function prepareBillingAddressData(&$data)
     {
-        $data['billingAddress']['title'] = $this->helperData->encodeString($this->billingAddress->getPrefix());
+        $data['billingAddress']['title'] = $this->getCustomerTitle($this->billingAddress->getPrefix());
         $data['billingAddress']['firstName'] = $this->helperData->encodeString(substr($this->billingAddress->getFirstname(), 0, 100));
         $data['billingAddress']['lastName'] = $this->helperData->encodeString(substr($this->billingAddress->getLastname(), 0, 100));
         $data['billingAddress']['cityName'] = $this->helperData->encodeString(substr($this->billingAddress->getCity(), 0, 40));
@@ -269,7 +341,7 @@ class DoWebPayment extends AbstractRequest
         $streetData = $this->billingAddress->getStreet();
         for ($i = 0; $i <= 1; $i++) {
             if (isset($streetData[$i])) {
-                $data['billingAddress']['street'.($i+1)] = $this->helperData->encodeString(substr($streetData[$i], 0, 100));
+                $data['billingAddress']['street' . ($i + 1)] = $this->helperData->encodeString(substr($streetData[$i], 0, 100));
             }
         }
 
@@ -284,7 +356,8 @@ class DoWebPayment extends AbstractRequest
     protected function prepareShippingAddressData(&$data)
     {
         if (!$this->cart->getIsVirtual() && isset($this->shippingAddress)) {
-            $data['shippingAddress']['title'] = $this->helperData->encodeString($this->shippingAddress->getPrefix());
+
+            $data['shippingAddress']['title'] = $this->getCustomerTitle($this->shippingAddress->getPrefix());
             $data['shippingAddress']['firstName'] = $this->helperData->encodeString(substr($this->shippingAddress->getFirstname(), 0, 100));
             $data['shippingAddress']['lastName'] = $this->helperData->encodeString(substr($this->shippingAddress->getLastname(), 0, 100));
             $data['shippingAddress']['cityName'] = $this->helperData->encodeString(substr($this->shippingAddress->getCity(), 0, 40));
@@ -300,7 +373,7 @@ class DoWebPayment extends AbstractRequest
             $streetData = $this->shippingAddress->getStreet();
             for ($i = 0; $i <= 1; $i++) {
                 if (isset($streetData[$i])) {
-                    $data['shippingAddress']['street'.($i+1)] = $this->helperData->encodeString(substr($streetData[$i], 0, 100));
+                    $data['shippingAddress']['street' . ($i + 1)] = $this->helperData->encodeString(substr($streetData[$i], 0, 100));
                 }
             }
 
@@ -311,5 +384,20 @@ class DoWebPayment extends AbstractRequest
             );
             $data['shippingAddress']['name'] = $this->helperData->encodeString(substr($name, 0, 100));
         }
+    }
+
+    protected function getCustomerTitle($prefix)
+    {
+        $title = $this->helperData->getDefaultPrefix();
+        if ($this->billingAddress->getPrefix() && $prefixConfig = $this->helperData->getPrefixSetting()) {
+            foreach ($prefixConfig as $prefixMapping) {
+                if ($prefixMapping['customer_prefix'] == $prefix) {
+                    $title = $prefixMapping['customer_title'];
+                    break;
+                }
+            }
+        }
+
+        return $title;
     }
 }

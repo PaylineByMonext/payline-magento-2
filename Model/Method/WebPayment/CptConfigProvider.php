@@ -18,7 +18,7 @@ class CptConfigProvider extends AbstractMethodConfigProvider
      * @var ContractManagement
      */
     protected $contractManagement;
-    
+
     /**
      * @var MethodInterface
      */
@@ -38,13 +38,13 @@ class CptConfigProvider extends AbstractMethodConfigProvider
     public function getConfig()
     {
         $config = parent::getConfig();
-        
+
         $config['payment']['paylineWebPaymentCpt']['integrationType'] = $this->getMethodConfigData('integration_type');
         $config['payment']['paylineWebPaymentCpt']['widgetDisplay'] = $this->getMethodConfigData('widget_display');
 
         return $config;
     }
-    
+
     public function getCardTypeImageFileNames()
     {
         return [
@@ -52,6 +52,11 @@ class CptConfigProvider extends AbstractMethodConfigProvider
             PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_CB_3DS => 'cb.png',
             PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_PAYPAL => 'paypal.png',
             PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_AMEX => 'amex.gif',
+            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_ONEY => 'oney.png',
+            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_3XONEY => 'oney.png',
+            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_4XONEY => 'oney.png',
+            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_3XONEY_SF => 'oney.png',
+            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_4XONEY_SF => 'oney.png',
         ];
     }
 }
