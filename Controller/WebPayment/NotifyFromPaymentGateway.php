@@ -3,43 +3,38 @@
 namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result\RawFactory as ResultRawFactory;
+use Magento\Framework\Controller\ResultFactory;
 use Monext\Payline\Controller\Action;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
 class NotifyFromPaymentGateway extends Action
 {
     /**
-     * @var ResultRawFactory
-     */
-    protected $resultRawFactory;
-    
-    /**
      * @var PaylinePaymentManagement
      */
     protected $paylinePaymentManagement;
-    
+
     public function __construct(
         Context $context,
-        ResultRawFactory $resultRawFactory,
+        \Psr\Log\LoggerInterface $loggerPayline,
         PaylinePaymentManagement $paylinePaymentManagement
-    ) {
-        parent::__construct($context);
-        $this->resultRawFactory = $resultRawFactory;
+    )
+    {
+        parent::__construct($context, $loggerPayline);
         $this->paylinePaymentManagement = $paylinePaymentManagement;
     }
-    
+
     public function execute()
     {
-        $isSuccess = true;
-
         try {
             $this->paylinePaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), false);
         } catch (\Exception $e) {
-            $isSuccess = false;
+            $this->loggerPayline->critical(__CLASS__. ' : ' .__FUNCTION__);
+            $this->loggerPayline->critical('Token # '.$this->getToken());
+            $this->loggerPayline->critical($e->getMessage());
         }
 
-        $resultRaw = $this->resultRawFactory->create();
+        $resultRaw = $this->resultFactory->create(ResultFactory::TYPE_RAW);
         $resultRaw->setContents('');
         return $resultRaw;
     }

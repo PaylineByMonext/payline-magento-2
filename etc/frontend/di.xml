@@ -7,4 +7,9 @@
             </argument>
         </arguments>
     </type>
+    <type name="Monext\Payline\Controller\Action">
+        <arguments>
+            <argument name="loggerPayline" xsi:type="object">paylineLogger</argument>
+        </arguments>
+    </type>
 </config>
