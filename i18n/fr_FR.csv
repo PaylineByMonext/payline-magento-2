@@ -6,3 +6,5 @@
 "No transaction found for this order.","Aucune transaction trouvée pour cette commande."
 "Transaction %s canceled for order %s from Magento Back-Office","Annulation de la transaction %s de la commande %s depuis le back office Magento"
 "Transaction %s refunded for order %s from Magento Back-Office","Remboursement de la transaction %s de la commande %s depuis le back office Magento"
+"There was an error processing your order. Please contact us or try again later.","Une erreur s'est produite lors du traitement de votre commande. Veuillez nous contacter ou réessayer plus tard."
+"Click here if you are not redirected within 10 seconds...","Cliquez ici si vous n'êtes pas redirigé dans les 10 secondes ..."

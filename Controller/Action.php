@@ -4,6 +4,8 @@ namespace Monext\Payline\Controller;
 
 use Magento\Framework\App\Action\Action as BaseAction;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\View\Element\Template;
 
 abstract class Action extends BaseAction
 {
@@ -31,4 +33,21 @@ abstract class Action extends BaseAction
 
         return $token;
     }
+
+    protected function getRedirect($success)
+    {
+        if ($success) {
+            $resultRedirect = $this->resultRedirectFactory->create();
+            $resultRedirect->setPath('checkout/onepage/success');
+        } else {
+            $layout = $this->_view->getLayout();
+            $pageErrorHtml = $layout->createBlock(Template::class, 'gateway.error')->setTemplate('Monext_Payline::gateway/error.phtml')->toHtml();
+            /** @var \Magento\Framework\Controller\Result\Raw $resultRedirect */
+            $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_RAW);
+            $resultRedirect->setHttpResponseCode(200);
+            $resultRedirect->setContents($pageErrorHtml);
+        }
+        return $resultRedirect;
+    }
+
 }

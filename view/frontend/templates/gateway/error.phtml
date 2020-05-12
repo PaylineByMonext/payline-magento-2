@@ -1,0 +1,14 @@
+<?php /** @var \Magento\Framework\View\Element\Template $block */ ?>
+<html>
+    <head>
+        <script type="text/javascript">
+            window.location.replace("<?php echo $block->getUrl('checkout/cart') ?>");
+        </script>
+    </head>
+    <body>
+        <noscript>
+            <h1><?php echo __('There was an error processing your order. Please contact us or try again later.') ?></h1>
+            <a href="<?php echo $block->getUrl('checkout/cart') ?>"><?php echo __('Click here if you are not redirected within 10 seconds...'); ?></a>
+        </noscript>
+    </body>
+</html>

@@ -39,15 +39,11 @@ class GuestReturnFromWidget extends Action
         try {
             $this->paylineGuestPaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), true);
         } catch (\Exception $e) {
+            $this->loggerPayline->critical(__METHOD__, ['token'=>$this->getToken(), 'exception'=>['message'=>$e->getMessage(), 'code'=>$e->getCode()]]);
             $this->messageManager->addErrorMessage($e->getMessage());
-            $this->loggerPayline->critical(__CLASS__. ' : ' .__FUNCTION__);
-            $this->loggerPayline->critical('Token # '.$this->getToken());
-            $this->loggerPayline->critical($e->getMessage());
             $isSuccess = false;
         }
 
-        $resultRedirect = $this->resultRedirectFactory->create();
-        $resultRedirect->setPath($isSuccess ? 'checkout/onepage/success' : 'checkout/cart');
-        return $resultRedirect;
+        return $this->getRedirect($isSuccess);
     }
 }

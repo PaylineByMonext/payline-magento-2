@@ -3,6 +3,8 @@
 namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\View\Element\Template;
 use Monext\Payline\Controller\Action;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
@@ -36,8 +38,6 @@ class ReturnFromWidget extends Action
             $isSuccess = false;
         }
 
-        $resultRedirect = $this->resultRedirectFactory->create();
-        $resultRedirect->setPath($isSuccess ? 'checkout/onepage/success' : 'checkout/cart');
-        return $resultRedirect;
+        return $this->getRedirect($isSuccess);
     }
 }
