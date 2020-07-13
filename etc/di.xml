@@ -1,10 +1,4 @@
 <?xml version="1.0"?>
-<!--
-/**
- * Copyright © 2016 Magento. All rights reserved.
- * See COPYING.txt for license details.
- */
--->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Monext\Payline\Api\PaymentManagementInterface" type="Monext\Payline\Model\PaymentManagement" />
     <preference for="Monext\Payline\Api\GuestPaymentManagementInterface" type="Monext\Payline\Model\GuestPaymentManagement" />
@@ -16,6 +10,22 @@
     <type name="Monext\Payline\Model\PaymentManagement">
         <arguments>
             <argument name="paylineLogger" xsi:type="object">paylineLogger</argument>
+        </arguments>
+    </type>
+    <type name="Monext\Payline\PaylineApi\Request\DoWebPaymentTypeFactory">
+        <arguments>
+            <argument name="availableDoWebPaymentTypeClass" xsi:type="array">
+                <item name="payline_web_payment_cpt" xsi:type="string">Monext\Payline\PaylineApi\Request\DoWebPaymentType\Cpt</item>
+                <item name="payline_web_payment_nx" xsi:type="string">Monext\Payline\PaylineApi\Request\DoWebPaymentType\Nx</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Monext\Payline\Model\PaymentTypeManagementFactory">
+        <arguments>
+            <argument name="availablePaymentTypeManagementClass" xsi:type="array">
+                <item name="payline_web_payment_cpt" xsi:type="string">Monext\Payline\Model\PaymentTypeManagement\Cpt</item>
+                <item name="payline_web_payment_nx" xsi:type="string">Monext\Payline\Model\PaymentTypeManagement\Nx</item>
+            </argument>
         </arguments>
     </type>
     <virtualType name="paylineLogger" type="Monolog\Logger">
@@ -43,7 +53,11 @@
                 type="Monext\Payline\Plugin\Model\OrderPlugin"/>
     </type>
     <type name="Magento\Quote\Observer\SubmitObserver">
-        <plugin name="monextPaylinePreventAutoSendOrderEmailPlugin" 
+        <plugin name="monextPaylinePreventAutoSendOrderEmailPlugin"
                 type="Monext\Payline\Plugin\Observer\Quote\PreventAutoSendOrderEmailPlugin"/>
+    </type>
+    <type name="Magento\Sales\Model\ResourceModel\Order\Handler\State">
+        <plugin name="set_payline_status_cycle_paiement_after_complete_order"
+                type="Monext\Payline\Plugin\Model\ResourceModel\Order\Handler\StatePlugin"/>
     </type>
 </config>

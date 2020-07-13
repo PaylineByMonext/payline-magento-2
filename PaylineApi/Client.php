@@ -13,6 +13,7 @@ use Monext\Payline\PaylineApi\Request\DoVoid as RequestDoVoid;
 use Monext\Payline\PaylineApi\Request\DoRefund as RequestDoRefund;
 use Monext\Payline\PaylineApi\Request\DoWebPayment as RequestDoWebPayment;
 use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantSettings;
+use Monext\Payline\PaylineApi\Request\GetPaymentRecord as RequestGetPaymentRecord;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetails as RequestGetWebPaymentDetails;
 use Monext\Payline\PaylineApi\Request\ManageWebWallet as RequestManageWebWallet;
 use Monext\Payline\PaylineApi\Response\DoCapture as ResponseDoCapture;
@@ -23,6 +24,8 @@ use Monext\Payline\PaylineApi\Response\DoWebPayment as ResponseDoWebPayment;
 use Monext\Payline\PaylineApi\Response\DoWebPaymentFactory as ResponseDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Response\GetMerchantSettings as ResponseGetMerchantSettings;
 use Monext\Payline\PaylineApi\Response\GetMerchantSettingsFactory as ResponseGetMerchantSettingsFactory;
+use Monext\Payline\PaylineApi\Response\GetPaymentRecord as ResponseGetPaymentRecord;
+use Monext\Payline\PaylineApi\Response\GetPaymentRecordFactory as ResponseGetPaymentRecordFactory;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetails;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetailsFactory as ResponseGetWebPaymentDetailsFactory;
 use Monext\Payline\PaylineApi\Response\ManageWebWallet as ResponseManageWebWallet;
@@ -97,6 +100,12 @@ class Client
      * @var ModuleListInterface
      */
     protected $moduleList;
+
+    /**
+     * @var ResponseGetPaymentRecordFactory
+     */
+    protected $responseGetPaymentRecordFactory;
+
     /**
      * @var ProductMetadata
      */
@@ -113,6 +122,7 @@ class Client
      * @param ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory
      * @param ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory
      * @param ResponseManageWebWalletFactory $responseManageWebWalletFactory
+     * @param ResponseGetPaymentRecordFactory $responseGetPaymentRecordFactory
      * @param Logger $logger
      * @param EncryptorInterface $encryptor
      * @param ModuleListInterface $moduleList
@@ -128,6 +138,7 @@ class Client
         ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory,
         ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory,
         ResponseManageWebWalletFactory $responseManageWebWalletFactory,
+        ResponseGetPaymentRecordFactory $responseGetPaymentRecordFactory,
         Logger $logger,
         EncryptorInterface $encryptor,
         ModuleListInterface $moduleList,
@@ -146,6 +157,7 @@ class Client
         $this->encryptor = $encryptor;
         $this->moduleList = $moduleList;
         $this->productMetadata = $productMetadata;
+        $this->responseGetPaymentRecordFactory = $responseGetPaymentRecordFactory;
     }
 
     /**
@@ -277,6 +289,28 @@ class Client
     }
 
     /**
+     * @param RequestGetPaymentRecord $request
+     * @return ResponseGetPaymentRecord
+     */
+    public function callGetPaymentRecord(RequestGetPaymentRecord $request)
+    {
+        $this->initPaylineSDK();
+
+        /** @var ResponseGetPaymentRecord $response */
+        $response = $this->responseGetPaymentRecordFactory->create();
+        $response->fromData(
+            $this->paylineSDK->getPaymentRecord($request->getData())
+        );
+
+        $logLevel =  $response->isSuccess() ? LoggerConstants::DEBUG : LoggerConstants::ERROR;
+        $this->logger->log($logLevel, __METHOD__);
+        $this->logger->log($logLevel, 'Request: ' . print_r($request->getData(), true));
+        $this->logger->log($logLevel, 'Response: ' . print_r($response->getData(), true));
+
+        return $response;
+    }
+
+    /**
      * @param RequestManageWebWallet $request
      * @return ResponseManageWebWallet
      */
@@ -324,7 +358,7 @@ class Client
                 $this->productMetadata->getVersion() . ' - '
                 .' v'.$currentModule['setup_version']);
         //}
-        
+
 
             return $this;
     }

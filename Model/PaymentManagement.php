@@ -25,7 +25,6 @@ use Magento\Sales\Api\Data\TransactionInterface;
 use Magento\Sales\Model\Order as Order;
 use Magento\Sales\Model\Order\Payment as OrderPayment;
 use Magento\Sales\Model\Order\Payment\Transaction;
-//use Magento\Sales\Api\TransactionRepositoryInterface; Cannot use TransactionRepositoryInterface because needed methods are not exposed in
 use Magento\Sales\Model\Order\Payment\Transaction\Repository as TransactionRepository;
 use Monext\Payline\Api\PaymentManagementInterface as PaylinePaymentManagementInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
@@ -33,7 +32,6 @@ use Monext\Payline\Helper\Data as HelperData;
 use Monext\Payline\Model\CartManagement as PaylineCartManagement;
 use Monext\Payline\Model\OrderIncrementIdTokenFactory as OrderIncrementIdTokenFactory;
 use Monext\Payline\Model\OrderManagement as PaylineOrderManagement;
-use Monext\Payline\Model\WalletManagement;
 use Monext\Payline\PaylineApi\Client as PaylineApiClient;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 use Monext\Payline\PaylineApi\Request\DoCaptureFactory as RequestDoCaptureFactory;
@@ -42,6 +40,7 @@ use Monext\Payline\PaylineApi\Request\DoRefundFactory as RequestDoRefundFactory;
 use Monext\Payline\PaylineApi\Request\DoWebPaymentFactory as RequestDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetailsFactory as RequestGetWebPaymentDetailsFactory;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetails;
+use Monext\Payline\PaylineApi\Request\GetPaymentRecordFactory as PaymentRecordRequestFactory;
 use Monolog\Logger as LoggerConstants;
 use Psr\Log\LoggerInterface as Logger;
 
@@ -152,6 +151,21 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      */
     public $paylineLogger;
 
+    /**
+     * @var PaymentTypeManagementFactory
+     */
+    protected $paymentTypeManagementFactory;
+
+    /**
+     * @var PaymentRecordRequestFactory
+     */
+    protected $paymentRecordRequestFactory;
+
+    /**
+     * @var \Magento\Sales\Model\Order\Payment\Transaction\ManagerInterface
+     */
+    protected $transactionManager;
+
     public function __construct(
         CartRepositoryInterface $cartRepository,
         CartTotalRepositoryInterface $cartTotalRepository,
@@ -168,6 +182,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         RequestDoRefundFactory $requestDoRefundFactory,
         QuoteBillingAddressManagementInterface $quoteBillingAddressManagement,
         QuoteShippingAddressManagementInterface $quoteShippingAddressManagement,
+        \Magento\Sales\Model\Order\Payment\Transaction\ManagerInterface $transactionManager,
         PaylineOrderManagement $paylineOrderManagement,
         Logger $logger,
         WalletManagement $walletManagement,
@@ -176,6 +191,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         SearchCriteriaBuilder $searchCriteriaBuilder,
         SortOrderBuilder $sortOrderBuilder,
         ScopeConfigInterface $scopeConfig,
+        PaymentTypeManagementFactory $paymentTypeManagementFactory,
+        PaymentRecordRequestFactory $paymentRecordRequestFactory,
         Logger $paylineLogger
     ) {
         $this->cartRepository = $cartRepository;
@@ -202,6 +219,9 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $this->sortOrderBuilder = $sortOrderBuilder;
         $this->scopeConfig = $scopeConfig;
         $this->paylineLogger = $paylineLogger;
+        $this->paymentTypeManagementFactory = $paymentTypeManagementFactory;
+        $this->paymentRecordRequestFactory = $paymentRecordRequestFactory;
+        $this->transactionManager = $transactionManager;
     }
 
     public function saveCheckoutPaymentInformationFacade(
@@ -210,9 +230,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         AddressInterface $billingAddress = null
     ) {
         $this->checkoutPaymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
-        $result = $this->wrapCallPaylineApiDoWebPaymentFacade($cartId);
-
-        return $result;
+        return $this->wrapCallPaylineApiDoWebPaymentFacade($cartId);
     }
 
     public function wrapCallPaylineApiDoWebPaymentFacade($cartId)
@@ -336,6 +354,15 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         return $this->paylineApiClient->callDoRefund($request);
     }
 
+    protected function callPaylinePaymentRecord($contractNumber, $paymentRecordId)
+    {
+        $request = $this->paymentRecordRequestFactory->create();
+        $request->setContractNumber($contractNumber)
+            ->setPaymentRecordId($paymentRecordId);
+
+        return $this->paylineApiClient->callGetPaymentRecord($request);
+    }
+
     public function synchronizePaymentWithPaymentGatewayFacade($token, $restoreCartOnError = false)
     {
         $order = $this->paylineOrderManagement->getOrderByToken($token);
@@ -373,20 +400,21 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     {
         $response = $this->callPaylineApiGetWebPaymentDetails($token);
         $payment->setData('payline_response', $response);
-
+        $paymentTypeManagement = $this->paymentTypeManagementFactory->create($payment);
         if ($response->isSuccess()) {
-            if ($this->ensurePaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
+            if ($paymentTypeManagement->validate($response, $payment)) {
                 $this->handlePaymentSuccessFacade($response, $payment);
             }
         } else {
             $message = $response->getResultCode() . ' : ' . $response->getShortErrorMessage();
 
             if ($response->isWaitingAcceptance()) {
-                if ($this->ensurePaymentGatewayAmountSameAsOrderAmount($response, $payment)) {
+                if ($paymentTypeManagement->validate($response, $payment)) {
                     $this->handlePaymentWaitingAcceptance($payment, $message);
                 }
             } elseif ($response->isCanceled()) {
-                $this->handlePaymentCanceled($payment->setData('is_in_error', true), $message);
+                $this->flagPaymentAsInError($payment, $message);
+                $paymentTypeManagement->handlePaymentCanceled($payment);
             } elseif ($response->isAbandoned()) {
                 $this->handlePaymentAbandoned($payment->setData('is_in_error', true), $message);
             } elseif ($response->isFraud()) {
@@ -405,30 +433,12 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         ResponseGetWebPaymentDetails $response,
         OrderPayment $payment
     ) {
-        $this->handlePaymentSuccess($response, $payment);
+        $paymentTypeManagement = $this->paymentTypeManagementFactory->create($payment);
+        $paymentTypeManagement->handlePaymentSuccess($response, $payment);
         $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
         $this->paylineOrderManagement->sendNewOrderEmail($payment->getOrder());
 
         return $this;
-    }
-
-    protected function handlePaymentSuccess(
-        ResponseGetWebPaymentDetails $response,
-        OrderPayment $payment
-    ) {
-        $transactionData = $response->getTransactionData();
-        $paymentData = $response->getPaymentData();
-
-        $payment->setTransactionId($transactionData['id']);
-
-        // TODO Add controls to avoid double authorization/capture
-        if ($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION) {
-            $payment->setIsTransactionClosed(false);
-            $payment->authorize(false, $this->helperData->mapPaylineAmountToMagentoAmount($paymentData['amount']));
-        } elseif ($paymentData['action'] == PaylineApiConstants::PAYMENT_ACTION_AUTHORIZATION_CAPTURE) {
-            $payment->getMethodInstance()->setSkipCapture(true);
-            $payment->capture();
-        }
     }
 
     protected function handlePaymentFraud(OrderPayment $payment, $message = null)
@@ -471,16 +481,13 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         );
     }
 
-    protected function handlePaymentCanceled(OrderPayment $payment, $message = null)
-    {
-        $this->paylineOrderManagement->handleSetOrderStateStatus(
-            $payment->getOrder(),
-            Order::STATE_CANCELED,
-            HelperConstants::ORDER_STATUS_PAYLINE_CANCELED,
-            $message
-        );
-    }
-
+    /**
+     * @param OrderInterface $order
+     * @param OrderPaymentInterface $payment
+     * @param $amount
+     * @return $this
+     * @throws \Magento\Framework\Exception\InputException
+     */
     public function callPaylineApiDoCaptureFacade(
         OrderInterface $order,
         OrderPaymentInterface $payment,
@@ -499,8 +506,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         $authorizationTransaction = $this->transactionRepository->getByTransactionType(
             Transaction::TYPE_AUTH,
-            $payment->getId(),
-            $payment->getParentId()
+            $payment->getId()
         );
 
         if (!$authorizationTransaction) {
@@ -556,6 +562,70 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @param OrderPayment $payment
+     * @param $paymentRecordId
+     * @return $this
+     * @throws \Exception
+     */
+    public function callPaylinePaymentRecordFacade(OrderPayment $payment, $paymentRecordId) {
+        $response = $this->callPaylinePaymentRecord($payment->getAdditionalInformation('contract_number'), $paymentRecordId);
+        $orderIsUpdated = false;
+        if (!$response->isSuccess()) {
+            $this->logger->log(LoggerConstants::ERROR, 'PaymentRecord error : '.$response->getLongErrorMessage());
+            throw new \Exception($response->getShortErrorMessage());
+        }
+
+        $nbTxnSuccess = 0;
+        foreach ($response->getBillingRecords() as $record) {
+            if (in_array($record['status'], PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_CYCLING_SUCCESS)) {
+                ++$nbTxnSuccess;
+                if ($this->checkIfTransactionExists($record['transaction']['id'], $payment) === false) {
+                    $payment->setTransactionId($record['transaction']['id']);
+                    $payment->setParentTransactionId($payment->getLastTransId());
+                    $payment->setTransactionAdditionalInfo('payline_record', $record['transaction']);
+                    $payment->registerCaptureNotification($this->helperData->mapPaylineAmountToMagentoAmount($record['amount']), true);
+                    $orderIsUpdated = true;
+
+                }
+            } elseif (in_array($record['status'], PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_CYCLING_ERROR)) {
+                $payment->getOrder()->addStatusHistoryComment(__('Error code %1 => %2', $record['result']['code'], $record['result']['longMessage']), false);
+                $orderIsUpdated = true;
+            }
+        }
+
+        if (
+            $payment->getOrder()->getState() === Order::STATE_COMPLETE
+            && $payment->getOrder()->getStatus() === HelperConstants::ORDER_STATUS_PAYLINE_CYCLE_PAYMENT_CAPTURE
+            && count($response->getBillingRecords()) === $nbTxnSuccess
+        ) {
+            $payment->getOrder()->addStatusHistoryComment(__('All payment cycle received'), true);
+            $payment->getOrder()->setPaiementCompleted(true);
+            $orderIsUpdated = true;
+        } else {
+            $payment->getOrder()->setPaiementCompleted(false);
+        }
+
+        if ($orderIsUpdated === true) {
+            $payment->getOrder()->save();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param $transactionId
+     * @param OrderPayment $payment
+     * @return bool
+     */
+    protected function checkIfTransactionExists($transactionId, OrderPayment $payment) {
+        return $this->transactionManager->isTransactionExists(
+            $transactionId,
+            $payment->getId(),
+            $payment->getOrder()->getId()
+        );
     }
 
     public function callPaylineApiDoRefundFacade(
@@ -617,24 +687,10 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         return $this;
     }
 
-    protected function ensurePaymentGatewayAmountSameAsOrderAmount(
-        ResponseGetWebPaymentDetails $response,
-        OrderPayment $payment
-    ) {
-        $orderAmount = $this->helperData->mapMagentoAmountToPaylineAmount($payment->getOrder()->getGrandTotal());
-        $responseAmount = $response->getAmount();
+    protected function flagPaymentAsInError(OrderPayment $payment, $message =null) {
 
-        if ($responseAmount == $orderAmount) {
-            return true;
-        } else {
-            $message = __(
-                'ERROR for order ; payment gateway amount %1 does not match order amount %2.',
-                $response->getAmount(),
-                $this->helperData->mapMagentoAmountToPaylineAmount($payment->getOrder()->getGrandTotal())
-            );
-            $payment->setAmountToCancel($response->getAmount());
-            $this->handlePaymentCanceled($payment->setData('is_in_error', true), $message);
-            return false;
-        }
+        $payment->setData('payline_in_error', true);
+        $payment->setData('payline_error_message', $message);
+        return $payment;
     }
 }

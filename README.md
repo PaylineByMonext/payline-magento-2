@@ -1,5 +1,8 @@
 # Magento 2 Payline Module #
 
+## Compatibility ##
+Magento >= 2.3
+
 ## Installation (EN)
 
 Log in to the Magento server, go to your Magento install dir.

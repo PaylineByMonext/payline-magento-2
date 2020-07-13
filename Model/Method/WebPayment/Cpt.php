@@ -2,7 +2,6 @@
 
 namespace Monext\Payline\Model\Method\WebPayment;
 
-use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Model\Order\Payment as OrderPayment;
 use Monext\Payline\Model\Method\AbstractMethod;
 use Monext\Payline\Helper\Constants as HelperConstants;
@@ -45,30 +44,7 @@ class Cpt extends AbstractMethod
         }
 
         $stateObject->setData('status', $status);
-        
-        return $this;
-    }
-    
-    public function capture(InfoInterface $payment, $amount)
-    {
-        if ($this->canCapture() && !$this->getSkipCapture() && $payment instanceof OrderPayment) {
-            $this->paylinePaymentManagement->callPaylineApiDoCaptureFacade($payment->getOrder(), $payment, $amount);
-        }
 
         return $this;
-    }
-    
-    public function void(InfoInterface $payment)
-    {
-        if ($this->canVoid() && !$this->getSkipVoid() && $payment instanceof OrderPayment) {
-            $this->paylinePaymentManagement->callPaylineApiDoVoidFacade($payment->getOrder(), $payment);
-        }
-    }
-    
-    public function refund(InfoInterface $payment, $amount)
-    {
-        if ($this->canRefund() && !$this->getSkipRefund() && $payment instanceof OrderPayment) {
-            $this->paylinePaymentManagement->callPaylineApiDoRefundFacade($payment->getOrder(), $payment, $amount);
-        }
     }
 }

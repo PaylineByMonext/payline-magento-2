@@ -2,10 +2,10 @@
 
 namespace Monext\Payline\Model\System\Config\Source;
 
-use Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 use Payline\PaylineSDK;
 
-class Environment implements ArrayInterface
+class Environment implements OptionSourceInterface
 {
     /**
      * @return array

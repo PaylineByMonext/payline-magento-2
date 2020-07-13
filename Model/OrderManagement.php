@@ -75,6 +75,10 @@ class OrderManagement
         }
     }
 
+    /**
+     * @param $token
+     * @return Order
+     */
     public function getOrderByToken($token)
     {
         $orderIncrementId = $this->orderIncrementIdTokenFactory->create()->getOrderIncrementIdByToken($token);

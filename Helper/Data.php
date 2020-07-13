@@ -119,7 +119,7 @@ class Data extends AbstractHelper
 
     public function isPaymentFromPayline(\Magento\Sales\Model\Order\Payment $payment)
     {
-        return $payment->getMethod() == HelperConstants::WEB_PAYMENT_CPT;
+        return in_array($payment->getMethod(),HelperConstants::AVAILABLE_WEB_PAYMENT_PAYLINE);
     }
 
     public function getDeliverySetting() {

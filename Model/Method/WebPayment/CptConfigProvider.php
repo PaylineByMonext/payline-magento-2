@@ -10,7 +10,6 @@ use Magento\Payment\Model\MethodInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\Model\ContractManagement;
 use Monext\Payline\Model\Method\AbstractMethodConfigProvider;
-use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
 class CptConfigProvider extends AbstractMethodConfigProvider
 {
@@ -35,28 +34,15 @@ class CptConfigProvider extends AbstractMethodConfigProvider
         $this->method = $this->paymentHelper->getMethodInstance(HelperConstants::WEB_PAYMENT_CPT);
     }
 
+    /**
+     * @return array
+     * @throws \ReflectionException
+     */
     public function getConfig()
     {
-        $config = parent::getConfig();
-
+        $config = array();
         $config['payment']['paylineWebPaymentCpt']['integrationType'] = $this->getMethodConfigData('integration_type');
         $config['payment']['paylineWebPaymentCpt']['widgetDisplay'] = $this->getMethodConfigData('widget_display');
-
         return $config;
-    }
-
-    public function getCardTypeImageFileNames()
-    {
-        return [
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_CB => 'cb.png',
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_CB_3DS => 'cb.png',
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_PAYPAL => 'paypal.png',
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_AMEX => 'amex.gif',
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_ONEY => 'oney.png',
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_3XONEY => 'oney.png',
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_4XONEY => 'oney.png',
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_3XONEY_SF => 'oney.png',
-            PaylineApiConstants::PAYMENT_CONTRACT_CARD_TYPE_4XONEY_SF => 'oney.png',
-        ];
     }
 }

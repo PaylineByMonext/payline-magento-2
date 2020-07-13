@@ -20,7 +20,7 @@ class AuthorizeCommandPlugin
      * @var \Monext\Payline\Helper\Data
      */
     protected $helperData;
-    
+
     public function __construct(
         PaylineOrderManagement $paylineOrderManagement,
         \Monext\Payline\Helper\Data $helperData
@@ -29,15 +29,13 @@ class AuthorizeCommandPlugin
         $this->helperData = $helperData;
     }
 
-    public function aroundExecute(
+    public function afterExecute(
         AuthorizeCommand $subject,
-        \Closure $proceed,
+        $result,
         OrderPaymentInterface $payment,
         $amount,
         OrderInterface $order
     ) {
-        $result = $proceed($payment, $amount, $order);
-
         if ($order->getState() == SalesOrder::STATE_PROCESSING
         && $this->helperData->isPaymentFromPayline($order->getPayment())) {
             $this->paylineOrderManagement->handleSetOrderStateStatus(

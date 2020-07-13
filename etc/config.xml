@@ -23,7 +23,18 @@
             <payline_web_payment_cpt>
                 <active>0</active>
                 <model>Monext\Payline\Model\Method\WebPayment\Cpt</model>
+                <order_status>payline_captured</order_status>
             </payline_web_payment_cpt>
+            <payline_web_payment_nx>
+                <active>0</active>
+                <model>Monext\Payline\Model\Method\WebPayment\Nx</model>
+                <payment_action>101</payment_action> <!-- Force a auth + capture -->
+                <billing_occurrences>2</billing_occurrences>
+                <billing_cycle>10</billing_cycle>
+                <order_status>payline_captured</order_status>
+                <cost_type>0</cost_type>
+                <cost_amount>0</cost_amount>
+            </payline_web_payment_nx>
         </payment>
     </default>
 </config>

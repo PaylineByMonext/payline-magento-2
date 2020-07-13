@@ -2,10 +2,10 @@
 
 namespace Monext\Payline\Model\System\Config\Source;
 
-use Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
-class IntegrationType implements ArrayInterface
+class IntegrationType implements OptionSourceInterface
 {
     /**
      * @return array

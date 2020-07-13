@@ -37,14 +37,11 @@ class RedirectToPaymentGateway extends Action
         try {
             $order = $this->orderRepository->get($this->checkoutSession->getLastOrderId());
             $additionalInformation = $order->getPayment()->getAdditionalInformation();
-
             // TODO Handle case if data is not present
             $resultRedirect->setUrl($additionalInformation['do_web_payment_response_data']['redirect_url']);
-        } catch(\Exception $e) {
-            $this->loggerPayline->critical(__CLASS__. ' : ' .__FUNCTION__);
-            $this->loggerPayline->critical('Token # '.$this->getToken());
-            $this->loggerPayline->critical('Last Order ID # '.$this->checkoutSession->getLastOrderId());
-            $this->loggerPayline->critical($e->getMessage());
+        } catch (\Exception $e) {
+            $this->loggerPayline->critical(__METHOD__, ['token' => $this->getToken(), 'last_order_id' => $this->checkoutSession->getLastOrderId(), 'exception' => ['message' => $e->getMessage(), 'code' => $e->getCode()]]);
+
             $resultRedirect->setPath('checkout');
         }
 

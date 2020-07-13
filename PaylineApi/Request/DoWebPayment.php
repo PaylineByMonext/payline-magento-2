@@ -15,7 +15,6 @@ use Monext\Payline\Helper\Currency as HelperCurrency;
 use Monext\Payline\Helper\Data as HelperData;
 use Monext\Payline\Model\ContractManagement;
 use Monext\Payline\PaylineApi\AbstractRequest;
-use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
 
 class DoWebPayment extends AbstractRequest
 {
@@ -84,6 +83,11 @@ class DoWebPayment extends AbstractRequest
      */
     protected $timezone;
 
+    /**
+     * @var DoWebPaymentTypeFactory
+     */
+    protected $doWebPaymentTypeFactory;
+
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         HelperCurrency $helperCurrency,
@@ -91,7 +95,8 @@ class DoWebPayment extends AbstractRequest
         UrlInterface $urlBuilder,
         ContractManagement $contractManagement,
         DateTime $dateTime,
-        DateTime\Timezone $timezone
+        DateTime\Timezone $timezone,
+        DoWebPaymentTypeFactory $doWebPaymentTypeFactory
     )
     {
         $this->scopeConfig = $scopeConfig;
@@ -101,6 +106,7 @@ class DoWebPayment extends AbstractRequest
         $this->contractManagement = $contractManagement;
         $this->dateTime = $dateTime;
         $this->timezone = $timezone;
+        $this->doWebPaymentTypeFactory = $doWebPaymentTypeFactory;
     }
 
     public function setCart(CartInterface $cart)
@@ -156,17 +162,7 @@ class DoWebPayment extends AbstractRequest
             $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
             $integrationType = $this->scopeConfig->getValue('payment/' . $paymentMethod . '/integration_type');
 
-            if ($integrationType == PaylineApiConstants::INTEGRATION_TYPE_REDIRECT) {
-                $data['payment']['contractNumber'] = $paymentAdditionalInformation['contract_number'];
-                $data['contracts'] = [$paymentAdditionalInformation['contract_number']];
-                $this->prepareUrlsForIntegrationTypeRedirect($data);
-            } elseif ($integrationType == PaylineApiConstants::INTEGRATION_TYPE_WIDGET) {
-                $usedContracts = $this->contractManagement->getUsedContracts();
-                $data['payment']['contractNumber'] = $usedContracts->getFirstItem()->getNumber();
-                $data['contracts'] = $usedContracts->getColumnValues('number');
-                $this->prepareUrlsForIntegrationTypeWidget($data);
-            }
-
+            $this->doWebPaymentTypeFactory->create($this->payment)->getData($data);
             $this->data = $data;
         }
 
@@ -262,28 +258,6 @@ class DoWebPayment extends AbstractRequest
         $expectedDate = $currentDate->add(new \DateInterval('P'.$expectedDelay.'D'));
 
         return $expectedDate->format('d/m/Y');
-    }
-
-    protected function prepareUrlsForIntegrationTypeRedirect(&$data)
-    {
-        $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
-        $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfrompaymentgateway');
-        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
-    }
-
-    protected function prepareUrlsForIntegrationTypeWidget(&$data)
-    {
-        $customer = $this->cart->getCustomer();
-
-        if ($customer->getId()) {
-            $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
-            $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
-        } else {
-            $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/guestreturnfromwidget');
-            $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/guestreturnfromwidget');
-        }
-
-        $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
     }
 
     protected function prepareBuyerData(&$data)
