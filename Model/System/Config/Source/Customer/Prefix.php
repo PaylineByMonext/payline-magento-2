@@ -7,7 +7,7 @@ use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Class used as a datasource for deliveryTime
- * @from https://payline.atlassian.net/wiki/spaces/DT/pages/28901418/Codes+-+Title
+ * @from https://docs.payline.com/display/DT/Codes+-+Title
  * @note only codes 3 and 4 are currently accepted on Payline side
  * @note this is a discrepancy with the documentation and it will be fixed
  *

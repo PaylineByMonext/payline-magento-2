@@ -6,7 +6,7 @@ use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Class used as a datasource for deliveryTime
- * @from https://payline.atlassian.net/wiki/spaces/DT/pages/1192854248/Codes+-+deliveryTime
+ * @from https://docs.payline.com/display/DT/Codes+-+deliveryTime
  *
  */
 class Time implements OptionSourceInterface

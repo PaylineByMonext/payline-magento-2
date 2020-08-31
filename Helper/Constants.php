@@ -15,6 +15,13 @@ class Constants
     const CONFIG_PATH_PAYLINE_GENERAL_DEBUG = 'payline/general/debug';
     const CONFIG_PATH_PAYLINE_GENERAL_CONTRACTS = 'payline/general/contracts';
 
+    const CONFIG_PATH_PAYLINE_DELIVERY = 'payline/payline_common/address';
+    const CONFIG_PATH_PAYLINE_PREFIX = 'payline/payline_common/prefix';
+    const CONFIG_PATH_PAYLINE_DEFAULT_DELIVERYTIME = 'payline/common_default/deliverytime';
+    const CONFIG_PATH_PAYLINE_DEFAULT_DELIVERYMODE = 'payline/common_default/deliverymode';
+    const CONFIG_PATH_PAYLINE_DEFAULT_DELIVERY_EXPECTED_DELAY = 'payline/common_default/delivery_expected_delay';
+    const CONFIG_PATH_PAYLINE_DEFAULT_PREFIX = 'payline/common_default/prefix';
+
     const ORDER_STATUS_PAYLINE_PENDING = 'payline_pending';
     const ORDER_STATUS_PAYLINE_WAITING_CAPTURE = 'payline_waiting_capture';
     const ORDER_STATUS_PAYLINE_CAPTURED = 'payline_captured';

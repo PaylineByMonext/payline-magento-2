@@ -151,7 +151,6 @@ class DoWebPayment extends AbstractRequest
             $this->prepareShippingAddressData($data);
 
             $data['languageCode'] = $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_LANGUAGE);
-            $data['languageCode'] = 'fr';
 
             $paymentMethod = $this->payment->getMethod();
             $paymentAdditionalInformation = $this->payment->getAdditionalInformation();

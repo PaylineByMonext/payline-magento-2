@@ -195,21 +195,21 @@
                         <field id="default_address_deliverytime" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
                             <label>Delivery time</label>
                             <source_model>Monext\Payline\Model\System\Config\Source\Delivery\Time</source_model>
-                            <config_path>payment/payline_common_default/deliverytime</config_path>
+                            <config_path>payline/common_default/deliverytime</config_path>
                         </field>
                         <field id="default_address_deliverymode" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                             <label>Delivery mode</label>
                             <source_model>Monext\Payline\Model\System\Config\Source\Delivery\Mode</source_model>
-                            <config_path>payment/payline_common_default/deliverymode</config_path>
+                            <config_path>payline/common_default/deliverymode</config_path>
                         </field>
                         <field id="default_address_delivery_expected_delay" translate="label" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
                             <label>Delivery expected delay</label>
-                            <config_path>payment/payline_common_default/delivery_expected_delay</config_path>
+                            <config_path>payline/common_default/delivery_expected_delay</config_path>
                         </field>
                         <field id="default_address_prefix" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
                             <label>Prefix</label>
                             <source_model>\Monext\Payline\Model\System\Config\Source\Customer\Title</source_model>
-                            <config_path>payment/payline_common_default/prefix</config_path>
+                            <config_path>payline/common_default/prefix</config_path>
                         </field>
                     </group>
                 </group>

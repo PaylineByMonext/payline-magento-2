@@ -10,13 +10,6 @@ use Monext\Payline\Helper\Constants as HelperConstants;
 
 class Data extends AbstractHelper
 {
-    const XML_PATH_PAYLINE_DELIVERY = 'payline/payline_common/address';
-    const XML_PATH_PAYLINE_PREFIX = 'payline/payline_common/prefix';
-    const XML_PATH_PAYLINE_DEFAULT_DELIVERYTIME = 'payment/payline_common_default/deliverytime';
-    const XML_PATH_PAYLINE_DEFAULT_DELIVERYMODE = 'payment/payline_common_default/deliverymode';
-    const XML_PATH_PAYLINE_DEFAULT_DELIVERY_EXPECTED_DELAY = 'payment/payline_common/default/delivery_expected_delay';
-    const XML_PATH_PAYLINE_DEFAULT_PREFIX = 'payment/payline_common_default/prefix';
-
     private $delivery = null;
 
     private $prefix = null;
@@ -132,7 +125,7 @@ class Data extends AbstractHelper
     public function getDeliverySetting() {
         if(is_null($this->delivery)) {
             $this->delivery = [];
-            $addressConfigSerialized = $this->scopeConfig->getValue(self::XML_PATH_PAYLINE_DELIVERY);
+            $addressConfigSerialized = $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_DELIVERY);
             if ($addressConfigSerialized) {
                 try {
                     $this->delivery = $this->serialize->unserialize($addressConfigSerialized);
@@ -145,10 +138,9 @@ class Data extends AbstractHelper
     }
 
     public function getPrefixSetting() {
-
         if(is_null($this->prefix)) {
             $this->prefix = [];
-            $prefixConfigSerialized = $this->scopeConfig->getValue(self::XML_PATH_PAYLINE_PREFIX);
+            $prefixConfigSerialized = $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_PREFIX);
             if ($prefixConfigSerialized) {
                 try {
                     $this->prefix = $this->serialize->unserialize($prefixConfigSerialized);
@@ -161,18 +153,18 @@ class Data extends AbstractHelper
     }
 
     public function getDefaultDeliveryTime() {
-        return $this->scopeConfig->getValue(self::XML_PATH_PAYLINE_DEFAULT_DELIVERYTIME);
+        return $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_DEFAULT_DELIVERYTIME);
     }
 
     public function getDefaultDeliveryMode() {
-        return $this->scopeConfig->getValue(self::XML_PATH_PAYLINE_DEFAULT_DELIVERYMODE);
+        return $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_DEFAULT_DELIVERYMODE);
     }
 
     public function getDefaultDeliveryExpectedDelay() {
-        return $this->scopeConfig->getValue(self::XML_PATH_PAYLINE_DEFAULT_DELIVERY_EXPECTED_DELAY);
+        return $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_DEFAULT_DELIVERY_EXPECTED_DELAY);
     }
 
     public function getDefaultPrefix() {
-        return $this->scopeConfig->getValue(self::XML_PATH_PAYLINE_DEFAULT_PREFIX);
+        return $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_DEFAULT_PREFIX);
     }
 }

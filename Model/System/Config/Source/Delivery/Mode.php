@@ -6,7 +6,7 @@ use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Class used as a datasource for deliveryTime
- * @from https://payline.atlassian.net/wiki/spaces/DT/pages/28901416/Codes+-+deliveryMode
+ * @from https://docs.payline.com/display/DT/Codes+-+deliveryMode
  *
  */
 class Mode implements OptionSourceInterface
