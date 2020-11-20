@@ -9,6 +9,9 @@ class Cpt extends AbstractDoWebPaymentType
 {
     const PAYMENT_METHOD = Constants::WEB_PAYMENT_CPT;
 
+    /**
+     * {@inheritDoc}
+     */
     public function getData(&$data)
     {
         $integrationType = $this->scopeConfig->getValue('payment/' . static::PAYMENT_METHOD . '/integration_type');
@@ -25,18 +28,20 @@ class Cpt extends AbstractDoWebPaymentType
         }
     }
 
+    /**
+     * @param $data
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
     protected function prepareWidgetUrls(&$data)
     {
-        $customer = $this->cart->getCustomer();
-
-        if ($customer->getId()) {
+        if ($this->cart->getQuote()->getCustomerId()) {
             $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
             $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/returnfromwidget');
         } else {
             $data['returnURL'] = $this->urlBuilder->getUrl('payline/webpayment/guestreturnfromwidget');
             $data['cancelURL'] = $this->urlBuilder->getUrl('payline/webpayment/guestreturnfromwidget');
         }
-
         $data['notificationURL'] = $this->urlBuilder->getUrl('payline/webpayment/notifyfrompaymentgateway');
     }
 

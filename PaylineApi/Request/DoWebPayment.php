@@ -145,6 +145,10 @@ class DoWebPayment extends AbstractRequest
         return $this;
     }
 
+    /**
+     * @return array
+     * @throws \Exception
+     */
     public function getData()
     {
         if (!isset($this->data)) {

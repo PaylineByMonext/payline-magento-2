@@ -3,7 +3,7 @@
 namespace Monext\Payline\PaylineApi\Request\DoWebPaymentType;
 
 use Magento\Framework\UrlInterface;
-use Magento\Quote\Api\Data\CartInterface;
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Monext\Payline\Helper\Data as PaylineHelper;
@@ -17,7 +17,7 @@ abstract class AbstractDoWebPaymentType
     protected $urlBuilder;
 
     /**
-     * @var CartInterface
+     * @var CheckoutSession
      */
     protected $cart;
 
@@ -45,7 +45,7 @@ abstract class AbstractDoWebPaymentType
     /**
      * AbstractDoWebPaymentType constructor.
      * @param UrlInterface $urlBuilder
-     * @param CartInterface $cart
+     * @param CheckoutSession $cart
      * @param ScopeConfigInterface $scopeConfig
      * @param ContractManagement $contractManagement
      * @param PaylineHelper $paylineHelper
@@ -53,7 +53,7 @@ abstract class AbstractDoWebPaymentType
      */
     public function __construct(
         UrlInterface $urlBuilder,
-        CartInterface $cart,
+        CheckoutSession $cart,
         ScopeConfigInterface $scopeConfig,
         ContractManagement $contractManagement,
         PaylineHelper $paylineHelper,
@@ -71,6 +71,7 @@ abstract class AbstractDoWebPaymentType
     /**
      * @param $data array
      * @return array
+     * @throws \Exception
      */
     abstract public function getData(&$data);
 
