@@ -26,6 +26,9 @@ class Constants
     const CONFIG_PATH_PAYLINE_DEFAULT_DELIVERY_EXPECTED_DELAY = 'payline/common_default/delivery_expected_delay';
     const CONFIG_PATH_PAYLINE_DEFAULT_PREFIX = 'payline/common_default/prefix';
 
+    //Const NX
+    const CONFIG_PATH_PAYLINE_NX_MINIMUM_AMOUNT = 'payment/'.self::WEB_PAYMENT_NX.'/active_amount_min';
+
     const ORDER_STATUS_PAYLINE_PENDING = 'payline_pending';
     const ORDER_STATUS_PAYLINE_WAITING_CAPTURE = 'payline_waiting_capture';
     const ORDER_STATUS_PAYLINE_CAPTURED = 'payline_captured';

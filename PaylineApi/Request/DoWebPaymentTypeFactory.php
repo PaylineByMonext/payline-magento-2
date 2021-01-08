@@ -2,34 +2,24 @@
 
 namespace Monext\Payline\PaylineApi\Request;
 
-use Magento\Framework\ObjectManagerInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Monext\Payline\PaylineApi\Request\DoWebPaymentType\AbstractDoWebPaymentType;
 
 class DoWebPaymentTypeFactory
 {
     /**
-     * @var ObjectManagerInterface
-     */
-    protected $objectManager;
-
-    /**
      * @var AbstractDoWebPaymentType[]
      */
     protected $availableDoWebPaymentTypeClass;
 
-
     /**
      * DoWebPaymentTypeFactory constructor.
-     * @param ObjectManagerInterface $objectManager
      * @param array $availableDoWebPaymentTypeClass
      */
     public function __construct(
-        ObjectManagerInterface $objectManager,
         $availableDoWebPaymentTypeClass = array()
     )
     {
-        $this->objectManager = $objectManager;
         $this->availableDoWebPaymentTypeClass = $availableDoWebPaymentTypeClass;
     }
 
@@ -40,7 +30,7 @@ class DoWebPaymentTypeFactory
      */
     public function create(PaymentInterface $payment)
     {
-        return $this->objectManager->create($this->getDoWebPaymentTypeClass($payment->getMethod()), ['payment' => $payment]);
+        return $this->getDoWebPaymentTypeClass($payment->getMethod())->setPayment($payment);
     }
 
     /**

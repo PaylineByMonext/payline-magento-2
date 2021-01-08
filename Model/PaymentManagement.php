@@ -194,7 +194,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         PaymentTypeManagementFactory $paymentTypeManagementFactory,
         PaymentRecordRequestFactory $paymentRecordRequestFactory,
         Logger $paylineLogger
-    ) {
+    )
+    {
         $this->cartRepository = $cartRepository;
         $this->cartTotalRepository = $cartTotalRepository;
         $this->checkoutPaymentInformationManagement = $checkoutPaymentInformationManagement;
@@ -228,7 +229,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $cartId,
         PaymentInterface $paymentMethod,
         AddressInterface $billingAddress = null
-    ) {
+    )
+    {
         $this->checkoutPaymentInformationManagement->savePaymentInformation($cartId, $paymentMethod, $billingAddress);
         return $this->wrapCallPaylineApiDoWebPaymentFacade($cartId);
     }
@@ -270,7 +272,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         $this->paylineCartManagement->handleReserveCartOrderId($cart->getId());
 
-        $this->paylineLogger->debug(__METHOD__, ['reserved_order_id'=>$cart->getReservedOrderId()]);
+        $this->paylineLogger->debug(__METHOD__, ['reserved_order_id' => $cart->getReservedOrderId()]);
 
         if ($cart->getIsVirtual()) {
             $shippingAddress = null;
@@ -297,7 +299,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         PaymentInterface $payment,
         AddressInterface $billingAddress,
         AddressInterface $shippingAddress = null
-    ) {
+    )
+    {
         $request = $this->requestDoWebPaymentFactory->create();
         $request
             ->setCart($cart)
@@ -322,7 +325,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function callPaylineApiDoCapture(
         TransactionInterface $authorizationTransaction,
         array $paymentData
-    ) {
+    )
+    {
         $request = $this->requestDoCaptureFactory->create();
         $request
             ->setAuthorizationTransaction($authorizationTransaction)
@@ -333,7 +337,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
     protected function callPaylineApiDoVoid(
         array $paymentData
-    ) {
+    )
+    {
         $request = $this->requestDoVoidFactory->create();
         $request->setPaymentData($paymentData);
 
@@ -344,7 +349,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         OrderInterface $order,
         OrderPaymentInterface $payment,
         array $paymentData
-    ) {
+    )
+    {
         $request = $this->requestDoRefundFactory->create();
         $request
             ->setOrder($order)
@@ -432,7 +438,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     protected function handlePaymentSuccessFacade(
         ResponseGetWebPaymentDetails $response,
         OrderPayment $payment
-    ) {
+    )
+    {
         $paymentTypeManagement = $this->paymentTypeManagementFactory->create($payment);
         $paymentTypeManagement->handlePaymentSuccess($response, $payment);
         $this->walletManagement->handleWalletReturnFromPaymentGateway($response, $payment);
@@ -492,7 +499,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         OrderInterface $order,
         OrderPaymentInterface $payment,
         $amount
-    ) {
+    )
+    {
         $token = $this->orderIncrementIdTokenFactory->create()->getTokenByOrderIncrementId($order->getIncrementId());
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
@@ -529,10 +537,11 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     public function callPaylineApiDoVoidFacade(
         OrderInterface $order,
         $payment
-    ) {
+    )
+    {
         // Check existing transaction - else void impossible
         if (!$payment->getTransactionId()) {
-            $this->logger->log(LoggerConstants::ERROR, 'No transaction found for this order : '.$order->getId());
+            $this->logger->log(LoggerConstants::ERROR, 'No transaction found for this order : ' . $order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
 
@@ -541,7 +550,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
         if (!$response1->isSuccess()) {
-            $this->logger->log(LoggerConstants::ERROR, 'No payment details found : '.$response1->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'No payment details found : ' . $response1->getLongErrorMessage());
             throw new \Exception($response1->getShortErrorMessage());
         }
 
@@ -557,7 +566,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response2 = $this->callPaylineApiDoVoid($paymentData);
 
         if (!$response2->isSuccess()) {
-            $this->logger->log(LoggerConstants::ERROR, 'DoVoid error : '.$response2->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'DoVoid error : ' . $response2->getLongErrorMessage());
             throw new \Exception($response2->getShortErrorMessage());
         }
 
@@ -565,16 +574,23 @@ class PaymentManagement implements PaylinePaymentManagementInterface
     }
 
     /**
-     * @param OrderPayment $payment
+     * @param OrderPaymentInterface $payment
      * @param $paymentRecordId
      * @return $this
      * @throws \Exception
      */
-    public function callPaylinePaymentRecordFacade(OrderPayment $payment, $paymentRecordId) {
+    public function callPaylinePaymentRecordFacade(OrderPaymentInterface $payment, $paymentRecordId)
+    {
+        if ($payment->getOrder()->hasData('save_mode')) {
+            $this->paylineLogger->debug('BO Ship Mode');
+        } else {
+            $this->paylineLogger->debug('NotifyCyclingPaymentFromPaymentGateway Mode');
+        }
+
         $response = $this->callPaylinePaymentRecord($payment->getAdditionalInformation('contract_number'), $paymentRecordId);
         $orderIsUpdated = false;
         if (!$response->isSuccess()) {
-            $this->logger->log(LoggerConstants::ERROR, 'PaymentRecord error : '.$response->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'PaymentRecord error : ' . $response->getLongErrorMessage());
             throw new \Exception($response->getShortErrorMessage());
         }
 
@@ -588,7 +604,6 @@ class PaymentManagement implements PaylinePaymentManagementInterface
                     $payment->setTransactionAdditionalInfo('payline_record', $record['transaction']);
                     $payment->registerCaptureNotification($this->helperData->mapPaylineAmountToMagentoAmount($record['amount']), true);
                     $orderIsUpdated = true;
-
                 }
             } elseif (in_array($record['status'], PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_CYCLING_ERROR)) {
                 $payment->getOrder()->addStatusHistoryComment(__('Error code %1 => %2', $record['result']['code'], $record['result']['longMessage']), false);
@@ -596,19 +611,31 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             }
         }
 
-        if (
-            $payment->getOrder()->getState() === Order::STATE_COMPLETE
-            && $payment->getOrder()->getStatus() === HelperConstants::ORDER_STATUS_PAYLINE_CYCLE_PAYMENT_CAPTURE
-            && count($response->getBillingRecords()) === $nbTxnSuccess
-        ) {
-            $payment->getOrder()->addStatusHistoryComment(__('All payment cycle received'), true);
+        $this->paylineLogger->debug('Count billing records : ' . count($response->getBillingRecords()));
+        $this->paylineLogger->debug('Nb records Sucess : ' . $nbTxnSuccess);
+        if (count($response->getBillingRecords()) === $nbTxnSuccess) {
+            $switchStatus = false;
+            if (
+                $payment->getOrder()->getState() === Order::STATE_COMPLETE
+                && $payment->getOrder()->getStatus() === HelperConstants::ORDER_STATUS_PAYLINE_CYCLE_PAYMENT_CAPTURE
+            ) {
+                $switchStatus = true;
+            }
+            $this->paylineLogger->debug('Switch Status : ' . $switchStatus);
+            $payment->getOrder()->addStatusHistoryComment(__('All payment cycle received'), $switchStatus);
             $payment->getOrder()->setPaiementCompleted(true);
             $orderIsUpdated = true;
         } else {
             $payment->getOrder()->setPaiementCompleted(false);
         }
 
-        if ($orderIsUpdated === true) {
+        $isPaymentCyclingCompleted = ($payment->getOrder()->getPaiementCompleted()) ? '1' : '0';
+        $this->paylineLogger->debug('Paiement Cycling Completed : ' . $isPaymentCyclingCompleted);
+        $this->paylineLogger->debug('Order status : ' . $payment->getOrder()->getStatus());
+        $this->paylineLogger->debug('Order state : ' . $payment->getOrder()->getState());
+
+        //save_mode => flag pour la livraison après ou pendant les échéances
+        if ($orderIsUpdated === true && !$payment->getOrder()->hasData('save_mode')) {
             $payment->getOrder()->save();
         }
 
@@ -620,7 +647,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
      * @param OrderPayment $payment
      * @return bool
      */
-    protected function checkIfTransactionExists($transactionId, OrderPayment $payment) {
+    protected function checkIfTransactionExists($transactionId, OrderPayment $payment)
+    {
         return $this->transactionManager->isTransactionExists(
             $transactionId,
             $payment->getId(),
@@ -632,7 +660,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         OrderInterface $order,
         $payment,
         $amount
-    ) {
+    )
+    {
         // Get first transaction used - Always use it for refund
         $filters[] = $this->filterBuilder
             ->setField(TransactionInterface::ORDER_ID)
@@ -651,7 +680,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
 
         // Check existing transaction - else refund impossible
         if (!$transaction || ($transaction && !trim($transaction->getTxnId()))) {
-            $this->logger->log(LoggerConstants::ERROR, 'No transaction found for this order : '.$order->getId());
+            $this->logger->log(LoggerConstants::ERROR, 'No transaction found for this order : ' . $order->getId());
             throw new \Exception(__('No transaction found for this order.'));
         }
 
@@ -660,7 +689,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response1 = $this->callPaylineApiGetWebPaymentDetails($token);
 
         if (!$response1->isSuccess()) {
-            $this->logger->log(LoggerConstants::ERROR, 'No payment details found : '.$response1->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'No payment details found : ' . $response1->getLongErrorMessage());
             throw new \Exception($response1->getShortErrorMessage());
         }
 
@@ -677,7 +706,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         $response2 = $this->callPaylineApiDoRefund($order, $payment, $paymentData);
 
         if (!$response2->isSuccess()) {
-            $this->logger->log(LoggerConstants::ERROR, 'DoRefund error : '.$response2->getLongErrorMessage());
+            $this->logger->log(LoggerConstants::ERROR, 'DoRefund error : ' . $response2->getLongErrorMessage());
             throw new \Exception($response2->getShortErrorMessage());
         }
 
@@ -687,7 +716,8 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         return $this;
     }
 
-    protected function flagPaymentAsInError(OrderPayment $payment, $message =null) {
+    protected function flagPaymentAsInError(OrderPayment $payment, $message = null)
+    {
 
         $payment->setData('payline_in_error', true);
         $payment->setData('payline_error_message', $message);

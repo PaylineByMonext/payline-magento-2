@@ -86,4 +86,10 @@ abstract class AbstractDoWebPaymentType
         }
         return $this->payment;
     }
+
+    public function setPayment(PaymentInterface $payment)
+    {
+        $this->payment = $payment;
+        return $this;
+    }
 }

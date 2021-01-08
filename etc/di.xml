@@ -12,19 +12,25 @@
             <argument name="paylineLogger" xsi:type="object">paylineLogger</argument>
         </arguments>
     </type>
+    <type name="Monext\Payline\Plugin\Model\ResourceModel\Order\Handler\StatePlugin">
+        <arguments>
+            <argument name="paylineLogger" xsi:type="object">paylineLogger</argument>
+        </arguments>
+    </type>
+    <!-- Les Factory pourrais être refacto avec un virtualType à tester les impacts sur l'assignation du payment -->
     <type name="Monext\Payline\PaylineApi\Request\DoWebPaymentTypeFactory">
         <arguments>
             <argument name="availableDoWebPaymentTypeClass" xsi:type="array">
-                <item name="payline_web_payment_cpt" xsi:type="string">Monext\Payline\PaylineApi\Request\DoWebPaymentType\Cpt</item>
-                <item name="payline_web_payment_nx" xsi:type="string">Monext\Payline\PaylineApi\Request\DoWebPaymentType\Nx</item>
+                <item name="payline_web_payment_cpt" xsi:type="object">Monext\Payline\PaylineApi\Request\DoWebPaymentType\Cpt</item>
+                <item name="payline_web_payment_nx" xsi:type="object">Monext\Payline\PaylineApi\Request\DoWebPaymentType\Nx</item>
             </argument>
         </arguments>
     </type>
     <type name="Monext\Payline\Model\PaymentTypeManagementFactory">
         <arguments>
             <argument name="availablePaymentTypeManagementClass" xsi:type="array">
-                <item name="payline_web_payment_cpt" xsi:type="string">Monext\Payline\Model\PaymentTypeManagement\Cpt</item>
-                <item name="payline_web_payment_nx" xsi:type="string">Monext\Payline\Model\PaymentTypeManagement\Nx</item>
+                <item name="payline_web_payment_cpt" xsi:type="object">Monext\Payline\Model\PaymentTypeManagement\Cpt</item>
+                <item name="payline_web_payment_nx" xsi:type="object">Monext\Payline\Model\PaymentTypeManagement\Nx</item>
             </argument>
         </arguments>
     </type>
@@ -37,27 +43,21 @@
         </arguments>
     </virtualType>
     <type name="Magento\Sales\Model\Order\Payment\State\AuthorizeCommand">
-        <plugin name="set_payline_status_after_authorize"
-                type="Monext\Payline\Plugin\Model\Order\Payment\State\AuthorizeCommandPlugin"/>
+        <plugin name="set_payline_status_after_authorize" type="Monext\Payline\Plugin\Model\Order\Payment\State\AuthorizeCommandPlugin"/>
     </type>
     <type name="Magento\Sales\Model\Order\Payment\State\CaptureCommand">
-        <plugin name="set_payline_status_after_capture"
-                type="Monext\Payline\Plugin\Model\Order\Payment\State\CaptureCommandPlugin"/>
+        <plugin name="set_payline_status_after_capture" type="Monext\Payline\Plugin\Model\Order\Payment\State\CaptureCommandPlugin"/>
     </type>
     <type name="Magento\Sales\Api\OrderRepositoryInterface">
-        <plugin name="handle_save_wallet"
-                type="Monext\Payline\Plugin\Model\OrderRepositoryPlugin"/>
+        <plugin name="handle_save_wallet" type="Monext\Payline\Plugin\Model\OrderRepositoryPlugin"/>
     </type>
     <type name="Magento\Sales\Model\Order">
-        <plugin name="handle_save_wallet"
-                type="Monext\Payline\Plugin\Model\OrderPlugin"/>
+        <plugin name="handle_save_wallet" type="Monext\Payline\Plugin\Model\OrderPlugin"/>
     </type>
     <type name="Magento\Quote\Observer\SubmitObserver">
-        <plugin name="monextPaylinePreventAutoSendOrderEmailPlugin"
-                type="Monext\Payline\Plugin\Observer\Quote\PreventAutoSendOrderEmailPlugin"/>
+        <plugin name="monextPaylinePreventAutoSendOrderEmailPlugin" type="Monext\Payline\Plugin\Observer\Quote\PreventAutoSendOrderEmailPlugin"/>
     </type>
     <type name="Magento\Sales\Model\ResourceModel\Order\Handler\State">
-        <plugin name="set_payline_status_cycle_paiement_after_complete_order"
-                type="Monext\Payline\Plugin\Model\ResourceModel\Order\Handler\StatePlugin"/>
+        <plugin name="set_payline_status_cycle_paiement_after_complete_order" type="Monext\Payline\Plugin\Model\ResourceModel\Order\Handler\StatePlugin"/>
     </type>
 </config>

@@ -66,7 +66,6 @@ class NotifyCyclingPaymentFromPaymentGateway extends Action
         $transactionId = $this->getRequest()->getParam('transactionId');
         $orderRef = $this->getRequest()->getParam('orderRef');
         $billingRecordDate = $this->getRequest()->getParam('billingRecordDate');
-
         $this->loggerPayline->debug(__METHOD__, ['params' => $this->getRequest()->getParams()]);
         try {
             if (!($notificationType === 'BILL' && $paymentRecordId && $walletId && $transactionId && $orderRef && $billingRecordDate)) {

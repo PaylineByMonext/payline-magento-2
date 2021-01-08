@@ -2,34 +2,24 @@
 
 namespace Monext\Payline\Model;
 
-use Magento\Framework\ObjectManagerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Monext\Payline\Model\PaymentTypeManagement\AbstractPaymentTypeManagement;
 
 class PaymentTypeManagementFactory
 {
     /**
-     * @var ObjectManagerInterface
-     */
-    protected $objectManager;
-
-    /**
      * @var AbstractPaymentTypeManagement[]
      */
     protected $availablePaymentTypeManagementClass;
 
-
     /**
      * DoWebPaymentTypeFactory constructor.
-     * @param ObjectManagerInterface $objectManager
      * @param array $availablePaymentTypeManagementClass
      */
     public function __construct(
-        ObjectManagerInterface $objectManager,
         $availablePaymentTypeManagementClass = array()
     )
     {
-        $this->objectManager = $objectManager;
         $this->availablePaymentTypeManagementClass = $availablePaymentTypeManagementClass;
     }
 
@@ -40,7 +30,7 @@ class PaymentTypeManagementFactory
      */
     public function create(OrderPaymentInterface $payment)
     {
-        return $this->objectManager->create($this->getPaymentTypeManagementClass($payment->getMethod()));
+        return $this->getPaymentTypeManagementClass($payment->getMethod());
     }
 
     /**

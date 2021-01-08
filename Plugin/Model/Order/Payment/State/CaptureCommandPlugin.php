@@ -50,23 +50,27 @@ class CaptureCommandPlugin
 
         $result = $proceed($payment, $amount, $order);
 
-        if (
-            $payment->getMethod() === HelperConstants::WEB_PAYMENT_NX
-            && !$payment->getIsTransactionPending()
-            && !$payment->getIsFraudDetected()
-        ) {
-            $methodTitle = $payment->getAdditionalInformation()['method_title'] ?? '';
-            $result = __('%1: Captured amount of %2 online.', [$methodTitle, $order->getBaseCurrency()->formatTxt($amount)]);
+        //Cas NX
+        if ($payment->getMethod() === HelperConstants::WEB_PAYMENT_NX) {
+            if(
+                !$payment->getIsTransactionPending()
+                && !$payment->getIsFraudDetected()
+            ) {
+                $methodTitle = $payment->getAdditionalInformation()['method_title'] ?? '';
+                $result = __('%1: Captured amount of %2 online.', [$methodTitle, $order->getBaseCurrency()->formatTxt($amount)]);
+            }
+
+            if(
+                $orderStateBeforeProceed == SalesOrder::STATE_COMPLETE
+                && $orderStatusBeforeProceed == HelperConstants::ORDER_STATUS_PAYLINE_CYCLE_PAYMENT_CAPTURE
+            ){
+                $order->setState($orderStateBeforeProceed);
+                $order->setStatus($orderStatusBeforeProceed);
+            }
         }
 
+        //Cas CPT
         if (
-            $orderStateBeforeProceed == SalesOrder::STATE_COMPLETE
-            && $orderStatusBeforeProceed == HelperConstants::ORDER_STATUS_PAYLINE_CYCLE_PAYMENT_CAPTURE
-            && $payment->getMethod() === HelperConstants::WEB_PAYMENT_NX
-        ) {
-            $order->setState($orderStateBeforeProceed);
-            $order->setStatus($orderStatusBeforeProceed);
-        } else if (
             $order->getState() == SalesOrder::STATE_PROCESSING
             && $payment->getMethod() === HelperConstants::WEB_PAYMENT_CPT
         ) {

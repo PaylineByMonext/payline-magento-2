@@ -2,6 +2,7 @@
 
 namespace Monext\Payline\Helper;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Math\Random as MathRandom;
@@ -166,5 +167,12 @@ class Data extends AbstractHelper
 
     public function getDefaultPrefix() {
         return $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_DEFAULT_PREFIX);
+    }
+
+    public function getNxMinimumAmountCart($store = null)
+    {
+        $amount = $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_NX_MINIMUM_AMOUNT, 'stores', $store);
+        $amount = ($amount < 0) ? 0 : $amount;
+        return $amount;
     }
 }
