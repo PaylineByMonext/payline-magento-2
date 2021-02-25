@@ -180,10 +180,7 @@ class Client
             $this->paylineSDK->doWebPayment($data)
         );
 
-        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -201,10 +198,7 @@ class Client
             $this->paylineSDK->doCapture($request->getData())
         );
 
-        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -222,10 +216,7 @@ class Client
             $this->paylineSDK->doReset($request->getData())
         );
 
-        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -243,10 +234,7 @@ class Client
             $this->paylineSDK->doRefund($request->getData())
         );
 
-        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -264,6 +252,8 @@ class Client
             $this->paylineSDK->getMerchantSettings($request->getData())
         );
 
+        $this->logApiCall($request, $response);
+
         return $response;
     }
 
@@ -275,15 +265,13 @@ class Client
     {
         $this->initPaylineSDK();
 
+        /** @var ResponseGetWebPaymentDetails $response */
         $response = $this->responseGetWebPaymentDetailsFactory->create();
         $response->fromData(
             $this->paylineSDK->getWebPaymentDetails($request->getData())
         );
 
-        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -302,10 +290,7 @@ class Client
             $this->paylineSDK->getPaymentRecord($request->getData())
         );
 
-        $logLevel =  $response->isSuccess() ? LoggerConstants::DEBUG : LoggerConstants::ERROR;
-        $this->logger->log($logLevel, __METHOD__);
-        $this->logger->log($logLevel, 'Request: ' . print_r($request->getData(), true));
-        $this->logger->log($logLevel, 'Response: ' . print_r($response->getData(), true));
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -323,14 +308,14 @@ class Client
             $this->paylineSDK->manageWebWallet($request->getData())
         );
 
-        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
 
+    /**
+     * @return $this
+     */
     protected function initPaylineSDK()
     {
         // RESET Singleton on this because sdk::privateData are not resetable
@@ -348,9 +333,8 @@ class Client
                 'logLevel' => LoggerConstants::INFO,
             );
 
-            if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-                $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
-            }
+
+            $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
 
             $this->paylineSDK = $this->paylineSDKFactory->create($paylineSdkParams);
             $currentModule = $this->moduleList->getOne(HelperConstants::MODULE_NAME);
@@ -363,6 +347,26 @@ class Client
             return $this;
     }
 
+
+    /**
+     * @param AbstractRequest $request
+     * @param AbstractResponse $response
+     */
+    protected function logApiCall(\Monext\Payline\PaylineApi\AbstractRequest $request,
+                                  \Monext\Payline\PaylineApi\AbstractResponse $response) {
+
+        $logLevel =  $response->isSuccess() ? LoggerConstants::DEBUG : LoggerConstants::ERROR;
+        $this->logger->log($logLevel,
+            get_class($request),
+            ['Request'=> print_r($request->getData(), true),
+                'Response'=> print_r($response->getData(), true)]);
+
+    }
+
+    /**
+     * @param array $privateData
+     * @return $this
+     */
     protected function addPrivateDataToPaylineSDK(array $privateData)
     {
         foreach ($privateData as $privateDataItem) {

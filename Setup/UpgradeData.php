@@ -223,20 +223,6 @@ class UpgradeData implements UpgradeDataInterface
             );
         }
 
-        if (version_compare($context->getVersion(), '1.2.8', '<')) {
-            $setup->getConnection()->insertArray(
-                $setup->getTable('sales_order_status'),
-                ['status', 'label'],
-                [['status' => HelperConstants::ORDER_STATUS_PAYLINE_PENDING_ONEY, 'label' => __('Awaiting acceptance by Oney')]]
-            );
-
-            $setup->getConnection()->insertArray(
-                $setup->getTable('sales_order_status_state'),
-                ['status', 'state', 'is_default', 'visible_on_front'],
-                [['status' => HelperConstants::ORDER_STATUS_PAYLINE_PENDING_ONEY, 'state' => Order::STATE_PENDING_PAYMENT, 'default' => 0, 'visible_on_front' => 1]]
-            );
-        }
-
         $setup->endSetup();
     }
 }

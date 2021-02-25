@@ -1,6 +1,7 @@
 # 1.2.9
 Released on 2020-10-31
-- Add feature NX
+- Add NX payment
+- Fix on setup script to prevent error using magento/data-migration-tool
 - System config field "Delivery expected delay" is required
 - Compatible Magento >= 2.3
 

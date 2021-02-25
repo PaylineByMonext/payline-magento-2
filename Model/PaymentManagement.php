@@ -260,15 +260,15 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         PaymentInterface $payment,
         AddressInterface $billingAddress,
         AddressInterface $shippingAddress = null
-    ) {
-        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $logData = [
-                'grand_total' => $totals->getGrandTotal(),
-                'shipping_amount' => $totals->getShippingInclTax(),
-                'discount_amount' => $totals->getDiscountAmount(),
-            ];
-            $this->paylineLogger->log(LoggerConstants::DEBUG, print_r($logData, true));
-        }
+    )
+    {
+        $logData = [
+            'cart_id' => $cart->getId(),
+            'grand_total' => $totals->getGrandTotal(),
+            'shipping_amount' => $totals->getShippingInclTax(),
+            'discount_amount' => $totals->getDiscountAmount(),
+        ];
+        $this->paylineLogger->debug(__METHOD__, $logData);
 
         $this->paylineCartManagement->handleReserveCartOrderId($cart->getId());
 
@@ -380,23 +380,23 @@ class PaymentManagement implements PaylinePaymentManagementInterface
         // IN CASE PAYMENT METHOD IS NOT PAYLINE WE EXIT
         $this->paylineOrderManagement->checkOrderPaymentFromPayline($order);
 
-        if ($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $logData = [
-                'grand_total' => $order->getGrandTotal(),
-                'shipping_amount' => $order->getShippingInclTax(),
-                'discount_amount' => $order->getDiscountAmount(),
-            ];
-            $this->paylineLogger->log(LoggerConstants::DEBUG, print_r($logData, true));
-        }
+        $logData = [
+            'token' => $token,
+            'order_id' => $order->getId(),
+            'grand_total' => $order->getGrandTotal(),
+            'shipping_amount' => $order->getShippingInclTax(),
+            'discount_amount' => $order->getDiscountAmount(),
+        ];
+        $this->paylineLogger->debug(__METHOD__, $logData);
 
         $this->synchronizePaymentWithPaymentGateway($order->getPayment(), $token);
 
-        if ($order->getPayment()->getData('is_in_error')) {
+        if ($order->getPayment()->getData('payline_in_error')) {
             if ($restoreCartOnError) {
                 $this->paylineCartManagement->restoreCartFromOrder($order);
             }
 
-            throw new \Exception(__($order->getPayment()->getData('payline_response')->getLongErrorMessage() ?? 'Payment is in error.'));
+            throw new \Exception(__($order->getPayment()->getData('payline_response')->getLongErrorMessage() ?? $order->getPayment()->getData('payline_error_message') ?: 'Payment is in error.'));
         }
 
         return $this;
@@ -422,11 +422,14 @@ class PaymentManagement implements PaylinePaymentManagementInterface
                 $this->flagPaymentAsInError($payment, $message);
                 $paymentTypeManagement->handlePaymentCanceled($payment);
             } elseif ($response->isAbandoned()) {
-                $this->handlePaymentAbandoned($payment->setData('is_in_error', true), $message);
+                $this->flagPaymentAsInError($payment, $message);
+                $this->handlePaymentAbandoned($payment);
             } elseif ($response->isFraud()) {
-                $this->handlePaymentFraud($payment->setData('is_in_error', true), $message);
+                $this->flagPaymentAsInError($payment, $message);
+                $this->handlePaymentFraud($payment);
             } else {
-                $this->handlePaymentRefused($payment->setData('is_in_error', true), $message);
+                $this->flagPaymentAsInError($payment, $message);
+                $this->handlePaymentRefused($payment);
             }
         }
 
@@ -454,7 +457,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $payment->getOrder(),
             Order::STATE_PROCESSING,
             HelperConstants::ORDER_STATUS_PAYLINE_FRAUD,
-            $message
+            $message ?? $payment->getData('payline_error_message')
         );
     }
 
@@ -464,7 +467,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $payment->getOrder(),
             Order::STATE_PROCESSING,
             HelperConstants::ORDER_STATUS_PAYLINE_WAITING_ACCEPTANCE,
-            $message
+            $message ?? $payment->getData('payline_error_message')
         );
     }
 
@@ -474,7 +477,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $payment->getOrder(),
             Order::STATE_CANCELED,
             HelperConstants::ORDER_STATUS_PAYLINE_ABANDONED,
-            $message
+            $message ?? $payment->getData('payline_error_message')
         );
     }
 
@@ -484,7 +487,7 @@ class PaymentManagement implements PaylinePaymentManagementInterface
             $payment->getOrder(),
             Order::STATE_CANCELED,
             HelperConstants::ORDER_STATUS_PAYLINE_REFUSED,
-            $message
+            $message ?? $payment->getData('payline_error_message')
         );
     }
 

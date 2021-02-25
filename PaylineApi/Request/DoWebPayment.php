@@ -162,10 +162,6 @@ class DoWebPayment extends AbstractRequest
 
             $data['languageCode'] = $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_LANGUAGE);
 
-            $paymentMethod = $this->payment->getMethod();
-            $paymentAdditionalInformation = $this->payment->getAdditionalInformation();
-            $integrationType = $this->scopeConfig->getValue('payment/' . $paymentMethod . '/integration_type');
-
             $this->doWebPaymentTypeFactory->create($this->payment)->getData($data);
             $this->data = $data;
         }

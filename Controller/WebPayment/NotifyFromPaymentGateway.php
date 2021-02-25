@@ -23,11 +23,11 @@ class NotifyFromPaymentGateway extends Action
     public function __construct(
         Context $context,
         PaylinePaymentManagement $paylinePaymentManagement,
-        Logger $loggerPayline
+        Logger $paylineLogger
     ) {
         parent::__construct($context, $paylineLogger);
         $this->paylinePaymentManagement = $paylinePaymentManagement;
-        $this->loggerPayline = $loggerPayline;
+        $this->paylineLogger = $paylineLogger;
     }
 
     public function execute()
@@ -35,10 +35,7 @@ class NotifyFromPaymentGateway extends Action
         try {
             $this->paylinePaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), false);
         } catch (\Exception $e) {
-            $this->loggerPayline->critical(__CLASS__. ' : ' .__FUNCTION__);
-            $this->loggerPayline->critical('Token # '.$this->getToken());
-            $this->loggerPayline->critical($e->getMessage());
-            $this->loggerPayline->debug($e->getMessage());
+            $this->loggerPayline->critical(__METHOD__, ['token'=>$this->getToken(), 'exception'=>['message'=>$e->getMessage(), 'code'=>$e->getCode()]]);
         }
 
         $resultRaw = $this->resultFactory->create(ResultFactory::TYPE_RAW);
