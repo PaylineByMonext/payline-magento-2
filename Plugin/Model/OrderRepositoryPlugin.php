@@ -9,7 +9,7 @@ use Monext\Payline\Model\WalletManagement;
 class OrderRepositoryPlugin
 {
     /**
-     * @var WalletManagement 
+     * @var WalletManagement
      */
     protected $walletManagement;
 

@@ -3,6 +3,8 @@
 namespace Monext\Payline\Controller\WebPayment;
 
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\View\Element\Template;
 use Monext\Payline\Controller\Action;
 use Monext\Payline\Model\PaymentManagement as PaylinePaymentManagement;
 
@@ -15,26 +17,25 @@ class ReturnFromWidget extends Action
 
     public function __construct(
         Context $context,
+        \Psr\Log\LoggerInterface $loggerPayline,
         PaylinePaymentManagement $paylinePaymentManagement
     )
     {
-        parent::__construct($context);
+        parent::__construct($context, $loggerPayline);
         $this->paylinePaymentManagement = $paylinePaymentManagement;
     }
 
-    public function execute() 
+    public function execute()
     {
         $isSuccess = true;
-
         try {
             $this->paylinePaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), true);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
+            $this->loggerPayline->critical(__METHOD__, ['token'=>$this->getToken(), 'exception'=>['message'=>$e->getMessage(), 'code'=>$e->getCode()]]);
+            $this->messageManager->addErrorMessage($e->getMessage());
             $isSuccess = false;
         }
 
-        $resultRedirect = $this->resultRedirectFactory->create();
-        $resultRedirect->setPath($isSuccess ? 'checkout/onepage/success' : 'checkout');
-        return $resultRedirect;
+        return $this->getRedirect($isSuccess);
     }
 }
-

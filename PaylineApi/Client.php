@@ -5,6 +5,7 @@ namespace Monext\Payline\PaylineApi;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\App\ProductMetadata;
 use Monext\Payline\Helper\Constants as HelperConstants;
 use Monext\Payline\PaylineApi\PaylineSDKFactory;
 use Monext\Payline\PaylineApi\Request\DoCapture as RequestDoCapture;
@@ -12,6 +13,7 @@ use Monext\Payline\PaylineApi\Request\DoVoid as RequestDoVoid;
 use Monext\Payline\PaylineApi\Request\DoRefund as RequestDoRefund;
 use Monext\Payline\PaylineApi\Request\DoWebPayment as RequestDoWebPayment;
 use Monext\Payline\PaylineApi\Request\GetMerchantSettings as RequestGetMerchantSettings;
+use Monext\Payline\PaylineApi\Request\GetPaymentRecord as RequestGetPaymentRecord;
 use Monext\Payline\PaylineApi\Request\GetWebPaymentDetails as RequestGetWebPaymentDetails;
 use Monext\Payline\PaylineApi\Request\ManageWebWallet as RequestManageWebWallet;
 use Monext\Payline\PaylineApi\Response\DoCapture as ResponseDoCapture;
@@ -22,6 +24,8 @@ use Monext\Payline\PaylineApi\Response\DoWebPayment as ResponseDoWebPayment;
 use Monext\Payline\PaylineApi\Response\DoWebPaymentFactory as ResponseDoWebPaymentFactory;
 use Monext\Payline\PaylineApi\Response\GetMerchantSettings as ResponseGetMerchantSettings;
 use Monext\Payline\PaylineApi\Response\GetMerchantSettingsFactory as ResponseGetMerchantSettingsFactory;
+use Monext\Payline\PaylineApi\Response\GetPaymentRecord as ResponseGetPaymentRecord;
+use Monext\Payline\PaylineApi\Response\GetPaymentRecordFactory as ResponseGetPaymentRecordFactory;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetails as ResponseGetWebPaymentDetails;
 use Monext\Payline\PaylineApi\Response\GetWebPaymentDetailsFactory as ResponseGetWebPaymentDetailsFactory;
 use Monext\Payline\PaylineApi\Response\ManageWebWallet as ResponseManageWebWallet;
@@ -97,6 +101,33 @@ class Client
      */
     protected $moduleList;
 
+    /**
+     * @var ResponseGetPaymentRecordFactory
+     */
+    protected $responseGetPaymentRecordFactory;
+
+    /**
+     * @var ProductMetadata
+     */
+    private $productMetadata;
+
+    /**
+     * Client constructor.
+     * @param \Monext\Payline\PaylineApi\PaylineSDKFactory $paylineSDKFactory
+     * @param ScopeConfigInterface $scopeConfig
+     * @param ResponseDoWebPaymentFactory $responseDoWebPaymentFactory
+     * @param ResponseDoCaptureFactory $responseDoCaptureFactory
+     * @param ResponseDoVoidFactory $responseDoVoidFactory
+     * @param ResponseDoRefundFactory $responseDoRefundFactory
+     * @param ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory
+     * @param ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory
+     * @param ResponseManageWebWalletFactory $responseManageWebWalletFactory
+     * @param ResponseGetPaymentRecordFactory $responseGetPaymentRecordFactory
+     * @param Logger $logger
+     * @param EncryptorInterface $encryptor
+     * @param ModuleListInterface $moduleList
+     * @param ProductMetadata $productMetadata
+     */
     public function __construct(
         PaylineSDKFactory $paylineSDKFactory,
         ScopeConfigInterface $scopeConfig,
@@ -107,11 +138,12 @@ class Client
         ResponseGetMerchantSettingsFactory $responseGetMerchantSettingsFactory,
         ResponseGetWebPaymentDetailsFactory $responseGetWebPaymentDetailsFactory,
         ResponseManageWebWalletFactory $responseManageWebWalletFactory,
+        ResponseGetPaymentRecordFactory $responseGetPaymentRecordFactory,
         Logger $logger,
         EncryptorInterface $encryptor,
-        ModuleListInterface $moduleList
-    )
-    {
+        ModuleListInterface $moduleList,
+        ProductMetadata $productMetadata
+    ) {
         $this->paylineSDKFactory = $paylineSDKFactory;
         $this->scopeConfig = $scopeConfig;
         $this->responseDoWebPaymentFactory = $responseDoWebPaymentFactory;
@@ -124,6 +156,8 @@ class Client
         $this->logger = $logger;
         $this->encryptor = $encryptor;
         $this->moduleList = $moduleList;
+        $this->productMetadata = $productMetadata;
+        $this->responseGetPaymentRecordFactory = $responseGetPaymentRecordFactory;
     }
 
     /**
@@ -146,10 +180,7 @@ class Client
             $this->paylineSDK->doWebPayment($data)
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -167,10 +198,7 @@ class Client
             $this->paylineSDK->doCapture($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -188,10 +216,7 @@ class Client
             $this->paylineSDK->doReset($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -209,10 +234,7 @@ class Client
             $this->paylineSDK->doRefund($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -230,6 +252,8 @@ class Client
             $this->paylineSDK->getMerchantSettings($request->getData())
         );
 
+        $this->logApiCall($request, $response);
+
         return $response;
     }
 
@@ -241,15 +265,32 @@ class Client
     {
         $this->initPaylineSDK();
 
+        /** @var ResponseGetWebPaymentDetails $response */
         $response = $this->responseGetWebPaymentDetailsFactory->create();
         $response->fromData(
             $this->paylineSDK->getWebPaymentDetails($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
+
+        return $response;
+    }
+
+    /**
+     * @param RequestGetPaymentRecord $request
+     * @return ResponseGetPaymentRecord
+     */
+    public function callGetPaymentRecord(RequestGetPaymentRecord $request)
+    {
+        $this->initPaylineSDK();
+
+        /** @var ResponseGetPaymentRecord $response */
+        $response = $this->responseGetPaymentRecordFactory->create();
+        $response->fromData(
+            $this->paylineSDK->getPaymentRecord($request->getData())
+        );
+
+        $this->logApiCall($request, $response);
 
         return $response;
     }
@@ -267,14 +308,14 @@ class Client
             $this->paylineSDK->manageWebWallet($request->getData())
         );
 
-        if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-            $this->logger->log(LoggerConstants::DEBUG, print_r($request->getData(), true));
-            $this->logger->log(LoggerConstants::DEBUG, print_r($response->getData(), true));
-        }
+        $this->logApiCall($request, $response);
 
         return $response;
     }
 
+    /**
+     * @return $this
+     */
     protected function initPaylineSDK()
     {
         // RESET Singleton on this because sdk::privateData are not resetable
@@ -292,24 +333,45 @@ class Client
                 'logLevel' => LoggerConstants::INFO,
             );
 
-            if($this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_DEBUG)) {
-                $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
-            }
+
+            $this->logger->log(LoggerConstants::DEBUG, print_r($paylineSdkParams, true));
 
             $this->paylineSDK = $this->paylineSDKFactory->create($paylineSdkParams);
             $currentModule = $this->moduleList->getOne(HelperConstants::MODULE_NAME);
-            $this->paylineSDK->usedBy(HelperConstants::PAYLINE_API_USED_BY_PREFIX.' v'.$currentModule['setup_version']);
+            $this->paylineSDK->usedBy(      HelperConstants::PAYLINE_API_USED_BY_PREFIX . ' ' .
+                $this->productMetadata->getVersion() . ' - '
+                .' v'.$currentModule['setup_version']);
         //}
 
-        return $this;
+
+            return $this;
     }
 
+
+    /**
+     * @param AbstractRequest $request
+     * @param AbstractResponse $response
+     */
+    protected function logApiCall(\Monext\Payline\PaylineApi\AbstractRequest $request,
+                                  \Monext\Payline\PaylineApi\AbstractResponse $response) {
+
+        $logLevel =  $response->isSuccess() ? LoggerConstants::DEBUG : LoggerConstants::ERROR;
+        $this->logger->log($logLevel,
+            get_class($request),
+            ['Request'=> print_r($request->getData(), true),
+                'Response'=> print_r($response->getData(), true)]);
+
+    }
+
+    /**
+     * @param array $privateData
+     * @return $this
+     */
     protected function addPrivateDataToPaylineSDK(array $privateData)
     {
-        foreach($privateData as $privateDataItem) {
+        foreach ($privateData as $privateDataItem) {
             $this->paylineSDK->addPrivateData($privateDataItem);
         }
-
         return $this;
     }
 }

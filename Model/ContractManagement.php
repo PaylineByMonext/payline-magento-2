@@ -14,12 +14,12 @@ use Monext\Payline\PaylineApi\Request\GetMerchantSettingsFactory as RequestGetMe
 class ContractManagement
 {
     /**
-     * @var CacheInterface 
+     * @var CacheInterface
      */
     protected $cache;
     
     /**
-     * @var ContractFactory 
+     * @var ContractFactory
      */
     protected $contractFactory;
     
@@ -34,17 +34,17 @@ class ContractManagement
     protected $requestGetMerchantSettingsFactory;
     
     /**
-     * @var ContractCollectionFactory 
+     * @var ContractCollectionFactory
      */
     protected $contractCollectionFactory;
     
     /**
-     * @var ScopeConfigInterface 
+     * @var ScopeConfigInterface
      */
     protected $scopeConfig;
     
     /**
-     * @var ContractCollection 
+     * @var ContractCollection
      */
     protected $usedContracts;
     
@@ -55,8 +55,7 @@ class ContractManagement
         RequestGetMerchantSettingsFactory $requestGetMerchantSettingsFactory,
         ContractCollectionFactory $contractCollectionFactory,
         ScopeConfigInterface $scopeConfig
-    )
-    {
+    ) {
         $this->cache = $cache;
         $this->contractFactory = $contractFactory;
         $this->paylineApiClient = $paylineApiClient;
@@ -75,17 +74,17 @@ class ContractManagement
     {
         $contractsFlag = $this->cache->load(HelperConstants::CACHE_KEY_MERCHANT_CONTRACT_IMPORT_FLAG);
         
-        if(!$contractsFlag) {
+        if (!$contractsFlag) {
             $request = $this->requestGetMerchantSettingsFactory->create();
             $response = $this->paylineApiClient->callGetMerchantSettings($request);
             
-            if($response->isSuccess()) {
+            if ($response->isSuccess()) {
                 // TODO Create a contract repository class
                 $contractCollection = $this->contractCollectionFactory->create();
 
-                foreach($response->getContractsData() as $contractData) {
+                foreach ($response->getContractsData() as $contractData) {
                     $contract = $contractCollection->getItemByColumnValue('number', $contractData['number']);
-                    if(!$contract || !$contract->getId()) {
+                    if (!$contract || !$contract->getId()) {
                         $contract = $this->contractFactory->create();
                     }
                                         
@@ -94,8 +93,8 @@ class ContractManagement
                     $contract->save();
                 }
 
-                foreach($contractCollection as $contract) {
-                    if(!$contract->getIsUpdated()) {
+                foreach ($contractCollection as $contract) {
+                    if (!$contract->getIsUpdated()) {
                         $contract->delete();
                     }
                 }
@@ -109,12 +108,34 @@ class ContractManagement
     
     public function getUsedContracts()
     {
-        if(!isset($this->usedContracts)) {
+        if (!isset($this->usedContracts)) {
             $this->usedContracts = $this->contractCollectionFactory->create()
                 ->addFieldToFilter('id', ['in' => $this->scopeConfig->getValue(HelperConstants::CONFIG_PATH_PAYLINE_GENERAL_CONTRACTS)]);
         }
         
         return $this->usedContracts;
     }
-}
 
+
+    /**
+     * @deprecated
+     *
+     * DO not used but for test to avoid error
+     *
+     *     [result] => Array
+    (
+    [code] => 02716
+    [shortMessage] => REFUSED
+    [longMessage] => SelectedContractList must be filled with only one contract per payment method or enable the option Isolate the payment method in the payment page
+    )
+
+     *
+     * @return array
+     */
+    public function getUsedContractsByDisctinctType()
+    {
+        $usedContracts = $this->getUsedContracts();
+        return array_values(array_column($usedContracts->getData(), 'number', 'card_type'));
+    }
+
+}

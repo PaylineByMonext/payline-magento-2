@@ -8,4 +8,3 @@ class GetMerchantSettings extends AbstractRequest
 {
 
 }
-

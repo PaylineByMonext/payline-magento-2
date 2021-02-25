@@ -21,7 +21,7 @@ class Fieldset extends BaseFieldset
         }
 
         $html = '<div class="comment">' .
-            __($element->getComment(), $groupConfig['help_url']) 
+            __($element->getComment(), $groupConfig['help_url'])
         . '</div>';
 
         return $html;

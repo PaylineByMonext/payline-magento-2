@@ -15,7 +15,8 @@ define(
             fullScreenLoader.startLoader();
 
             return storage.post(
-                serviceUrl, JSON.stringify(payload)
+                serviceUrl,
+                JSON.stringify(payload)
             ).fail(
                 function (response) {
                     errorProcessor.process(response, messageContainer);

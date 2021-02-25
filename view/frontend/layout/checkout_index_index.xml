@@ -1,14 +1,8 @@
 <?xml version="1.0"?>
-<!--
-/**
- * Copyright © 2016 Magento. All rights reserved.
- * See COPYING.txt for license details.
- */
--->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="content">
-            <block class="Magento\Framework\View\Element\Template" name="payline.agreements.binder" template="Monext_Payline::agreements/binder.phtml" cacheable="false"></block>
+            <block class="Monext\Payline\Block\Checkout\Agreements" name="payline.agreements.binder" template="Monext_Payline::agreements/binder.phtml" cacheable="false"></block>
         </referenceContainer>
         <referenceBlock name="checkout.root">
             <arguments>
@@ -30,6 +24,14 @@
                                                                     <item name="component" xsi:type="string">Monext_Payline/js/view/payment/payline</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="payline_web_payment_cpt" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
+                                                                <item name="payline-nx" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Monext_Payline/js/view/payment/payline-nx</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="payline_web_payment_nx" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
                                                                     </item>

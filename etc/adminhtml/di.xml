@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <virtualType name="selectAllShippingMethod" type="Monext\Payline\Block\Adminhtml\System\Config\Renderer\Select">
+        <arguments>
+            <argument name="source" xsi:type="object">Monext\Payline\Model\System\Config\Source\AllMethods</argument>
+            <argument name="config" xsi:type="array">
+                <item name="show_value_in_label" xsi:type="boolean">false</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="selectDeliveryMode" type="Monext\Payline\Block\Adminhtml\System\Config\Renderer\Select">
+        <arguments>
+            <argument name="source" xsi:type="object">Monext\Payline\Model\System\Config\Source\Delivery\Mode</argument>
+            <argument name="config" xsi:type="array">
+                <item name="show_value_in_label" xsi:type="boolean">true</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="selectDeliveryTime" type="Monext\Payline\Block\Adminhtml\System\Config\Renderer\Select">
+        <arguments>
+            <argument name="source" xsi:type="object">Monext\Payline\Model\System\Config\Source\Delivery\Time</argument>
+            <argument name="config" xsi:type="array">
+                <item name="show_value_in_label" xsi:type="boolean">true</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="selectPrefix" type="Monext\Payline\Block\Adminhtml\System\Config\Renderer\Select">
+        <arguments>
+            <argument name="source" xsi:type="object">Monext\Payline\Model\System\Config\Source\Customer\Prefix</argument>
+            <argument name="config" xsi:type="array">
+                <item name="show_value_in_label" xsi:type="boolean">false</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="selectTitle" type="Monext\Payline\Block\Adminhtml\System\Config\Renderer\Select">
+        <arguments>
+            <argument name="source" xsi:type="object">Monext\Payline\Model\System\Config\Source\Customer\Title</argument>
+            <argument name="config" xsi:type="array">
+                <item name="show_value_in_label" xsi:type="boolean">false</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Monext\Payline\Block\Adminhtml\System\Config\RendererSelectFactory">
+        <arguments>
+            <argument name="sources" xsi:type="array">
+                <item name="deliverymode" xsi:type="string">selectDeliveryMode</item>
+                <item name="deliverytime" xsi:type="string">selectDeliveryTime</item>
+                <item name="customer_prefix" xsi:type="string">selectPrefix</item>
+                <item name="customer_title" xsi:type="string">selectTitle</item>
+                <item name="shipping_method" xsi:type="string">selectAllShippingMethod</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

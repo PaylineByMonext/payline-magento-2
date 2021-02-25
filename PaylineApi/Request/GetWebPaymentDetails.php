@@ -7,7 +7,7 @@ use Monext\Payline\PaylineApi\AbstractRequest;
 class GetWebPaymentDetails extends AbstractRequest
 {
     /**
-     * @var string 
+     * @var string
      */
     protected $token;
 
@@ -17,7 +17,7 @@ class GetWebPaymentDetails extends AbstractRequest
         return $this;
     }
 
-    public function getData() 
+    public function getData()
     {
         $data = parent::getData();
 
@@ -26,4 +26,3 @@ class GetWebPaymentDetails extends AbstractRequest
         return $data;
     }
 }
-

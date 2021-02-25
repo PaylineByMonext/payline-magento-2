@@ -1,10 +1,4 @@
 <?xml version="1.0"?>
-<!--
-/**
- * Copyright © 2016 Magento. All rights reserved.
- * See COPYING.txt for license details.
- */
--->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
         <payline>
@@ -12,12 +6,30 @@
                 <merchant_id>MERCHANT_ID</merchant_id>
                 <environment>HOMO</environment>
             </general>
+            <common_default>
+                <deliverytime>2</deliverytime>
+                <deliverymode>4</deliverymode>
+                <delivery_expected_delay>3</delivery_expected_delay>
+                <prefix>4</prefix>
+            </common_default>
         </payline>
         <payment>
             <payline_web_payment_cpt>
                 <active>0</active>
                 <model>Monext\Payline\Model\Method\WebPayment\Cpt</model>
+                <order_status>payline_captured</order_status>
             </payline_web_payment_cpt>
+            <payline_web_payment_nx>
+                <active>0</active>
+                <model>Monext\Payline\Model\Method\WebPayment\Nx</model>
+                <payment_action>101</payment_action> <!-- Force a auth + capture -->
+                <billing_occurrences>2</billing_occurrences>
+                <billing_cycle>10</billing_cycle>
+                <order_status>payline_captured</order_status>
+                <cost_type>0</cost_type>
+                <cost_amount>0</cost_amount>
+                <active_amount_min>0</active_amount_min>
+            </payline_web_payment_nx>
         </payment>
     </default>
 </config>

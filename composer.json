@@ -1,18 +1,35 @@
 {
     "name": "monext/module-payline",
-    "description": "N/A",
+    "description": "Magento2 Extension to use the Payline payment solution by Monext",
     "require": {
         "monext/payline-sdk": "*"
     },
     "type": "magento2-module",
-    "version": "1.2.4",
+    "version": "1.2.9",
     "authors" : [
         {
             "name" : "Matthieu BOUCHOT",
             "email" : "matthieu.bouchot@agence-tbd.com",
-            "homepage" : "https://www.agence-tbd.com/"
+            "homepage" : "https://www.agence-tbd.com/",
+            "role": "Developer"
+        },
+        {
+            "name" : "Vincent PIETRI",
+            "email" : "vincent.pietri@tbdgroup.com",
+            "homepage" : "https://www.agence-tbd.com/",
+            "role": "Developer"
+        },
+        {
+            "name" : "Christopher BROUARD",
+            "email" : "christopher.brouard@tbdgroup.com",
+            "homepage" : "https://www.agence-tbd.com/",
+            "role": "Developer"
         }
     ],
+    "support": {
+        "email": "support@payline.com",
+        "docs": "https://docs.payline.com/"
+    },
     "autoload": {
         "files": [
             "registration.php"
@@ -20,5 +37,12 @@
         "psr-4": {
             "Monext\\Payline\\": ""
         }
-    }
+    },
+    "keywords": [ "Payline",
+        "Monext",
+        "Magento 2",
+        "Payment",
+        "Wallet",
+        "Widget"
+    ]
 }

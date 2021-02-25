@@ -8,8 +8,8 @@ use Magento\Framework\View\Result\PageFactory;
 
 class Wallet extends Action
 {
-    /** 
-     * @var PageFactory 
+    /**
+     * @var PageFactory
      */
     protected $resultPageFactory;
 
@@ -28,6 +28,6 @@ class Wallet extends Action
      */
     public function execute()
     {
-    	return $this->resultPageFactory->create();
+        return $this->resultPageFactory->create();
     }
 }

@@ -12,39 +12,38 @@ class GuestReturnFromWidget extends Action
      * @var PaylineGuestPaymentManagement
      */
     protected $paylineGuestPaymentManagement;
-    
+
     /**
-     * @var ResultRawFactory 
+     * @var ResultRawFactory
      */
     protected $resultRawFactory;
-    
+
     /**
-     * @var TemplateFactory 
+     * @var TemplateFactory
      */
     protected $templateFactory;
-    
+
     public function __construct(
         Context $context,
+        \Psr\Log\LoggerInterface $loggerPayline,
         PaylineGuestPaymentManagement $paylineGuestPaymentManagement
     )
     {
-        parent::__construct($context);
+        parent::__construct($context, $loggerPayline);
         $this->paylineGuestPaymentManagement = $paylineGuestPaymentManagement;
     }
-    
-    public function execute() 
+
+    public function execute()
     {
         $isSuccess = true;
-
         try {
             $this->paylineGuestPaymentManagement->synchronizePaymentWithPaymentGatewayFacade($this->getToken(), true);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
+            $this->loggerPayline->critical(__METHOD__, ['token'=>$this->getToken(), 'exception'=>['message'=>$e->getMessage(), 'code'=>$e->getCode()]]);
+            $this->messageManager->addErrorMessage($e->getMessage());
             $isSuccess = false;
         }
 
-        $resultRedirect = $this->resultRedirectFactory->create();
-        $resultRedirect->setPath($isSuccess ? 'checkout/onepage/success' : 'checkout');
-        return $resultRedirect;
+        return $this->getRedirect($isSuccess);
     }
 }
-

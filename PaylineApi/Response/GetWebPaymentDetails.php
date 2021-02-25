@@ -2,10 +2,9 @@
 
 namespace Monext\Payline\PaylineApi\Response;
 
-use Monext\Payline\PaylineApi\AbstractResponse;
-use Monext\Payline\PaylineApi\Constants as PaylineApiConstants;
+use Monext\Payline\PaylineApi\AbstractPaymentResponse;
 
-class GetWebPaymentDetails extends AbstractResponse
+class GetWebPaymentDetails extends AbstractPaymentResponse
 {
     public function getTransactionData()
     {
@@ -15,6 +14,11 @@ class GetWebPaymentDetails extends AbstractResponse
     public function getPaymentData()
     {
         return $this->data['payment'];
+    }
+
+    public function getContractNumber()
+    {
+        return $this->getPaymentData()['contractNumber'];
     }
 
     public function getWalletData()
@@ -28,34 +32,28 @@ class GetWebPaymentDetails extends AbstractResponse
         return isset($paymentData['amount']) ? $paymentData['amount'] : null;
     }
 
-    public function isSuccess()
+    // Cas NX / RC
+
+    /**
+     * @return string | null
+     */
+    public function getPaymentRecordId()
     {
-        return in_array($this->getResultCode(), PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_APPROVED);
+        return $this->data['paymentRecordId'];
     }
-    
-    public function isCanceled()
+
+    /**
+     * @param array $filter
+     * @return array | null
+     */
+    public function getBillingRecords($filter = array())
     {
-        return in_array($this->getResultCode(), PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_CANCELED);
-    }
-    
-    public function isWaitingAcceptance()
-    {
-        return in_array($this->getResultCode(), PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_WAITING_ACCEPTANCE);
-    }
-    
-    public function isAbandoned()
-    {
-        return in_array($this->getResultCode(), PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_ABANDONED);
-    }
-    
-    public function isFraud()
-    {
-        return in_array($this->getResultCode(), PaylineApiConstants::PAYMENT_BACK_CODES_RETURN_GET_WEB_PAYMENT_DETAILS_TRANSACTION_FRAUD);
-    }
-    
-    public function isRefused()
-    {
-        return !$this->isSuccess() && !$this->isCanceled() && !$this->isAbandoned() && !$this->isWaitingAcceptance() && !$this->isFraud();
+        $billingRecords = $this->data['billingRecordList']['billingRecord'];
+        if (!empty($filter)) {
+            foreach ($billingRecords as $key => $billingRecord) {
+                $billingRecords[$key] = array_intersect_key($billingRecord, array_flip($filter));
+            }
+        }
+        return $billingRecords;
     }
 }
-

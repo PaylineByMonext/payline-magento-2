@@ -6,6 +6,7 @@ use Magento\Framework\Setup\UpgradeDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Sales\Model\Order;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Monext\Payline\Helper\Constants as HelperConstants;
 
 class UpgradeData implements UpgradeDataInterface
@@ -29,8 +30,7 @@ class UpgradeData implements UpgradeDataInterface
         \Magento\Customer\Model\AttributeFactory $customerAttributeFactory,
         \Magento\Eav\Model\Entity\Attribute\SetFactory $attributeSetFactory,
         \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory
-    )
-    {
+    ) {
         $this->customerAttributeFactory = $customerAttributeFactory;
         $this->attributeSetFactory = $attributeSetFactory;
         $this->eavSetupFactory = $eavSetupFactory;
@@ -54,7 +54,8 @@ class UpgradeData implements UpgradeDataInterface
             $setup->getConnection()->insertArray(
                 $setup->getTable('sales_order_status'),
                 ['status', 'label'],
-                $data
+                $data,
+                AdapterInterface::REPLACE
             );
 
             $data = [];
@@ -65,7 +66,8 @@ class UpgradeData implements UpgradeDataInterface
             $setup->getConnection()->insertArray(
                 $setup->getTable('sales_order_status_state'),
                 ['status', 'state', 'is_default', 'visible_on_front'],
-                $data
+                $data,
+                AdapterInterface::REPLACE
             );
         }
 
@@ -81,7 +83,8 @@ class UpgradeData implements UpgradeDataInterface
             $setup->getConnection()->insertArray(
                 $setup->getTable('sales_order_status'),
                 ['status', 'label'],
-                $data
+                $data,
+                AdapterInterface::REPLACE
             );
 
             $data = [];
@@ -92,7 +95,8 @@ class UpgradeData implements UpgradeDataInterface
             $setup->getConnection()->insertArray(
                 $setup->getTable('sales_order_status_state'),
                 ['status', 'state', 'is_default', 'visible_on_front'],
-                $data
+                $data,
+                AdapterInterface::REPLACE
             );
         }
 
@@ -119,7 +123,8 @@ class UpgradeData implements UpgradeDataInterface
             $setup->getConnection()->insertArray(
                 $setup->getTable('sales_order_status'),
                 ['status', 'label'],
-                $data
+                $data,
+                AdapterInterface::REPLACE
             );
 
             $data = [];
@@ -135,61 +140,89 @@ class UpgradeData implements UpgradeDataInterface
             $setup->getConnection()->insertArray(
                 $setup->getTable('sales_order_status_state'),
                 ['status', 'state', 'is_default', 'visible_on_front'],
-                $data
+                $data,
+                AdapterInterface::REPLACE
             );
         }
 
         if (version_compare($context->getVersion(), '1.2.0', '<')) {
+            /** @var \Magento\Customer\Model\Attribute $attribute */
             $attribute = $this->customerAttributeFactory->create();
 
-            $attribute->setData(array(
-                'entity_type_id' => \Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER,
-                'attribute_code' => 'wallet_id',
-                'type' => 'static',
-                'frontend_label' => 'Wallet Id',
-                'frontend_input' => 'text',
-                'sort_order' => 200,
-                'position' => 200,
-                'is_user_defined' => 1,
-                'is_unique' => 1,
-                'is_visible' => 1,
-            ));
+            $walletAttribute = $attribute->getIdByCode(\Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER, 'wallet_id');
 
-            $attribute->save();
+            if (!$walletAttribute) {
+                $attribute->setData(array(
+                    'entity_type_id' => \Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER,
+                    'attribute_code' => 'wallet_id',
+                    'type' => 'static',
+                    'frontend_label' => 'Wallet Id',
+                    'frontend_input' => 'text',
+                    'sort_order' => 200,
+                    'position' => 200,
+                    'is_user_defined' => 1,
+                    'is_unique' => 1,
+                    'is_visible' => 1,
+                ));
 
-            $data = array(
-                array('form_code' => 'adminhtml_customer', 'attribute_id' => $attribute->getId())
-            );
+                $attribute->save();
 
-            $setup->getConnection()
-                ->insertMultiple($setup->getTable('customer_form_attribute'), $data);
+                $data = array(
+                    array('form_code' => 'adminhtml_customer', 'attribute_id' => $attribute->getId())
+                );
 
-            $attributeSet = $this->attributeSetFactory->create()->load(\Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER);
+                $setup->getConnection()
+                    ->insertMultiple($setup->getTable('customer_form_attribute'), $data);
 
-            $attribute
-                ->setAttributeGroupId($attributeSet->getDefaultGroupId())
-                ->setAttributeSetId($attributeSet->getId())
-                ->setEntityTypeId(\Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER)
-                ->save();
+                $attributeSet = $this->attributeSetFactory->create()->load(\Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER);
+
+                $attribute
+                    ->setAttributeGroupId($attributeSet->getDefaultGroupId())
+                    ->setAttributeSetId($attributeSet->getId())
+                    ->setEntityTypeId(\Magento\Customer\Api\CustomerMetadataInterface::ATTRIBUTE_SET_ID_CUSTOMER)
+                    ->save();
+            }
+
         }
 
         if (version_compare($context->getVersion(), '1.2.3', '<')) {
-            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
-            $eavSetup->addAttribute(\Magento\Catalog\Model\Category::ENTITY, 'payline_category_mapping', [
-                'type'         => 'int',
-                'label'        => 'Payline Category Mapping',
-                'input'        => 'select',
-                'source'       => 'Monext\Payline\Model\Category\Attribute\Source\CategoryMapping',
-                'visible'      => true,
-                'global'       => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
-                'group'        => 'Content',
-                'sort_order'   => 2000,
-                'required'     => false,
-                'user_defined' => true,
-            ]);
+            $categoryMapping = $attribute->getIdByCode(\Magento\Catalog\Model\Category::ENTITY, 'payline_category_mapping');
+
+            if(!$categoryMapping) {
+                /** @var  \Magento\Eav\Setup\EavSetup $eavSetup */
+                $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+
+                $eavSetup->addAttribute(\Magento\Catalog\Model\Category::ENTITY, 'payline_category_mapping', [
+                    'type'         => 'int',
+                    'label'        => 'Payline Category Mapping',
+                    'input'        => 'select',
+                    'source'       => 'Monext\Payline\Model\Category\Attribute\Source\CategoryMapping',
+                    'visible'      => true,
+                    'global'       => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                    'group'        => 'Content',
+                    'sort_order'   => 2000,
+                    'required'     => false,
+                    'user_defined' => true,
+                ]);
+            }
+        }
+
+        if (version_compare($context->getVersion(), '1.2.7', '<')) {
+            $setup->getConnection()->insertArray(
+                $setup->getTable('sales_order_status'),
+                ['status', 'label'],
+                [['status' => HelperConstants::ORDER_STATUS_PAYLINE_PENDING_ONEY, 'label' => __('Awaiting acceptance by Oney')]],
+                AdapterInterface::REPLACE
+            );
+
+            $setup->getConnection()->insertArray(
+                $setup->getTable('sales_order_status_state'),
+                ['status', 'state', 'is_default', 'visible_on_front'],
+                [['status' => HelperConstants::ORDER_STATUS_PAYLINE_PENDING_ONEY, 'state' => Order::STATE_PENDING_PAYMENT, 'default' => 0, 'visible_on_front' => 1]],
+                AdapterInterface::REPLACE
+            );
         }
 
         $setup->endSetup();
     }
 }
-

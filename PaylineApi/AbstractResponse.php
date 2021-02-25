@@ -38,4 +38,3 @@ abstract class AbstractResponse
         return $this->data['result']['code'];
     }
 }
-

@@ -7,7 +7,7 @@ use Magento\Framework\File\Csv;
 use Monext\Payline\Helper\Constants as HelperConstants;
 
 /**
- * This class serve to map Magento Categories to Payline Categories : https://payline.atlassian.net/wiki/spaces/DT/pages/28901389/Codes+Category
+ * This class serve to map Magento Categories to Payline Categories : https://docs.payline.com/display/DT/Codes+-+Category
  */
 class CategoryMapping extends \Magento\Eav\Model\Entity\Attribute\Source\AbstractSource
 {
@@ -24,8 +24,7 @@ class CategoryMapping extends \Magento\Eav\Model\Entity\Attribute\Source\Abstrac
     public function __construct(
         ComponentRegistrar $componentRegistrar,
         Csv $csvReader
-    )
-    {
+    ) {
         $this->componentRegistrar = $componentRegistrar;
         $this->csvReader = $csvReader;
     }

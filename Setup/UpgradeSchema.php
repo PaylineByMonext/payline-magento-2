@@ -81,8 +81,8 @@ class UpgradeSchema implements UpgradeSchemaInterface
         
         if (version_compare($context->getVersion(), '1.0.2') < 0) {
             $table = $setup->getConnection()->addColumn(
-                $setup->getTable('payline_contract'), 
-                'label', 
+                $setup->getTable('payline_contract'),
+                'label',
                 [
                     'type' => Table::TYPE_TEXT,
                     'length' => 255,
@@ -94,8 +94,8 @@ class UpgradeSchema implements UpgradeSchemaInterface
         
         if (version_compare($context->getVersion(), '1.0.6') < 0) {
             $table = $setup->getConnection()->addColumn(
-                $setup->getTable('payline_contract'), 
-                'point_of_sell_label', 
+                $setup->getTable('payline_contract'),
+                'point_of_sell_label',
                 [
                     'type' => Table::TYPE_TEXT,
                     'length' => 255,
